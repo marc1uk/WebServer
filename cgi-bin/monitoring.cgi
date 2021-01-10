@@ -7,7 +7,7 @@ echo "
 </head>
 "
 
-echo `cat /web/html/header.html`
+echo `cat /var/www/html/header.html`
 
 echo "
 
@@ -16,11 +16,11 @@ echo "
 "
 for file in `ls ../monitoringplots/`
 do
- echo " <img src=\"/images/monitoringplots/$file\"  width=\"40%\" height=\"40%\"> "
+    echo " <img src=\"/images/monitoringplots/$file\"  width=\"40%\" height=\"40%\"> "
 done
 
 echo "<p>"
 
-echo `cat /web/html/footer.html`
+echo `cat /var/www/html/footer.html`
 
                                                                                                                          

@@ -50,7 +50,7 @@
 #define HAVE_UNISTD_H 1
 
 /* The host system cgicc was configured for */
-#define HOST "x86_64-unknown-linux-gnu"
+#define HOST "armv7l-unknown-linux-gnueabi"
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */

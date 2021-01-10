@@ -1,0 +1,132 @@
+﻿
+<html>
+  <style>
+    div.text{
+	position: relative;
+	left: 30px;
+    }
+  </style>
+  
+  <head> <meta http-equiv="refresh" content-"60"><meta http-equiv="Content-Type" cpntent"text/html; carset=iso-8859-1"/>
+    <title>GAD Remote Control</title>
+  </head>
+  
+  <!--#include file="header.html" -->
+  
+  <h1 align="center">GAD Remote Control</h1>
+  
+  
+  <img src="/images/last.png"  width="40%" height="40%"> 
+  
+  
+  
+  
+  <!--  <form action="/cgi-bin/test.cgi" method="post"> -->
+    
+    <!--  <input type="text" id="source_url" name="source_url" value="/cgi-bin/test.cgi" style="display: none;"><br> -->
+    
+    
+    <div class="text">
+      <!-- Auto -->
+      <form action="/cgi-bin/transmitt_debug.cgi" method="post">
+	Auto:
+	<input type="text" name="source_url" value="URL" style="display: none;">
+	<input name="Auto" type="submit" value="Start" >
+	<input name="Auto" type="submit" value="Stop" >
+      </form>
+      
+      <!-- POWER STATE -->
+      <form action="/cgi-bin/transmitt_debug.cgi" method="post">
+	Power:
+	<input type="text" name="source_url" value="URL" style="display: none;">
+	<input type="text" name="Auto" value="Stop" style="display: none;">
+	<input name="Power" type="submit" value="ON" >
+	<input name="Power" type="submit" value="OFF" >
+      </form>
+      
+      <!-- VALVE STATE -->
+      <form action="/cgi-bin/transmitt_debug.cgi" method="post">
+	Valve:
+	<input type="text" name="source_url" value="URL" style="display: none;">
+	<input type="text" name="Auto" value="Stop" style="display: none;">
+	<input name="Valve" type="submit" value="OPEN" >
+	<input name="Valve" type="submit" value="CLOSE" >
+      </form>
+      
+      <!-- Measure -->
+      <form action="/cgi-bin/transmitt_debug.cgi" method="post">
+	Measure:
+	<input type="text" name="source_url" value="URL" style="display: none;">
+	<input type="text" name="Auto" value="Stop" style="display: none;">
+	<input type="text" name="Trace" value="" >
+	<input name="Measure" type="submit" value="Start" >
+      </form>
+      
+      <!-- Led -->
+      <form action="/cgi-bin/transmitt_debug.cgi" method="post">
+	<input type="text" id="source_url" name="source_url" value="URL" style="display: none;">
+	<input type="text" name="Auto" value="Stop" style="display: none;">
+	Please select your LED:<br>
+	Red
+	<input type="radio" id="R" name="R" value="1">
+	<label for="R">ON</label>
+	<input type="radio" id="R" name="R" value="0" checked="true">
+	<label for="R">OFF</label><br>
+	Green
+	<input type="radio" id="G" name="G" value="1">
+	<label for="G">ON</label>
+	<input type="radio" id="G" name="G" value="0" checked="true">
+	<label for="G">OFF</label><br>
+	Blue
+	<input type="radio" id="B" name="B" value="1">
+	<label for="B">ON</label>
+	<input type="radio" id="B" name="B" value="0" checked="true">
+	<label for="B">OFF</label><br>
+	White
+	<input type="radio" id="White" name="White" value="1">
+	<label for="White">ON</label>
+	<input type="radio" id="White" name="White" value="0" checked="true">
+	<label for="White">OFF</label><br>
+	385
+	<input type="radio" id="385" name="385" value="1">
+	<label for="385">ON</label>
+	<input type="radio" id="385" name="385" value="0" checked="true">
+	<label for="385">OFF</label><br>
+	260
+	<input type="radio" id="260" name="260" value="1">
+	<label for="360">ON</label>
+	<input type="radio" id="260" name="260" value="0" checked="true">
+	<label for="360">OFF</label><br>
+	275
+	<input type="radio" id="275" name="275" value="1">
+	<label for="275">ON</label>
+	<input type="radio" id="275" name="275" value="0" checked="true">
+	<label for="275">OFF</label>
+	<br>  
+	<input name="LED" type="submit" value="Change" >
+	 <input name="LED" type="submit" value="Off All" >
+      </form>
+      
+      <!-- Save -->
+      <form action="/cgi-bin/transmitt_debug.cgi" method="post">
+	<input type="text" id="source_url" name="source_url" value="URL" style="display: none;">
+	<input type="text" name="Auto" value="Stop" style="display: none;"><br>
+	<input type="text" name="Filename" value="">
+	<input name="Save" type="submit" value="Save" >
+      </form>
+      
+    </div>
+    
+    
+    <script>
+      // 	document.getElementById("source_url").value = document.URL
+      var x = document.getElementsByName("source_url");
+      var i;
+      for (i = 0; i < x.length; i++) {
+	  x[i].value = document.URL
+      }
+    </script>
+    
+    
+    <!--#include file="footer.html" -->
+    

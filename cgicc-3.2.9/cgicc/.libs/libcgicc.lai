@@ -38,4 +38,4 @@ dlopen=''
 dlpreopen=''
 
 # Directory that this library needs to be installed in:
-libdir='/c/Users/Admin/Documents/Docker/web/cgicc-3.2.9/ben/lib'
+libdir='/usr/lib'

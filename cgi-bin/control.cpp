@@ -125,7 +125,7 @@ cout <<"Content-type:text/html\r\n\r\n";
 
 
   string line;
-  ifstream myfile ("/web/html/header.html");
+  ifstream myfile ("/var/www/html/header.html");
 
   if (myfile.is_open())
   {
@@ -288,7 +288,7 @@ You could also place an image into the scroll box.</div>";
 
   cout<< "<p>Use command \"?\" to display available commands for a service </p> <p>"; 
 
-  ifstream myfile2 ("/web/html/footer.html");
+  ifstream myfile2 ("/var/www/html/footer.html");
 
   if (myfile2.is_open())
   {

@@ -22,7 +22,7 @@
 ##  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA 
 ##
 
-prefix="/c/Users/Admin/Documents/Docker/web/cgicc-3.2.9/ben"
+prefix="/usr"
 exec_prefix="${prefix}"
 includedir="${prefix}/include"
 libdir="${exec_prefix}/lib"
@@ -75,7 +75,7 @@ while test $# -gt 0; do
 	--cxxflags)  echo "$cxxflags" && exit 0 ;;
 
 	## Host information
-	--host)        echo "x86_64-unknown-linux-gnu" && exit 0 ;;	    
+	--host)        echo "armv7l-unknown-linux-gnueabi" && exit 0 ;;	    
 
 	## Version information
 	--version)     echo "3.2.9" && exit 0 ;;

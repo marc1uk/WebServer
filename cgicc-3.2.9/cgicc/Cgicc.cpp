@@ -34,7 +34,6 @@
 #include "cgicc/CgiUtils.h"
 #include "cgicc/Cgicc.h"
 
-
 namespace cgicc {
 
   // ============================================================
@@ -88,7 +87,8 @@ namespace cgicc {
   private:
     std::string fName;
   };
-  
+
+  #if __cplusplus <= 199711L
   // ============================================================
   // Function copy_if (handy, missing from STL)
   // ============================================================
@@ -108,6 +108,7 @@ namespace cgicc {
     }
     return res;
   }
+#endif
   
 } // namespace cgicc
 
@@ -324,12 +325,10 @@ cgicc::Cgicc::findEntries(const std::string& param,
   result.clear();
 
   if(byName) {
-    copy_if(fFormData.begin(), fFormData.end(), 
-	    std::back_inserter(result),FE_nameCompare(param));
+    copy_if(fFormData.begin(), fFormData.end(), std::back_inserter(result), FE_nameCompare(param));
   }
   else {
-    copy_if(fFormData.begin(), fFormData.end(), 
-	    std::back_inserter(result), FE_valueCompare(param));
+    copy_if(fFormData.begin(), fFormData.end(), std::back_inserter(result), FE_valueCompare(param));
   }
 
   return false == result.empty();
