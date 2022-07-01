@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+  <!-- HEAD -->
+  <head>
+    <meta charset="utf-8">
+    <!-- set page width to match device, and initial scale to 100% -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- specify the location of bootstrap css -->
+    
+        <!-- Bootstrap core CSS -->
+    <link href="./bootstrap-5.1.3-dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <title>GAD Control and Monitoring Website</title>
+    
+    <!-- javascript source bundle must be included, typically at the end of the head/body section -->
+    <script src="./bootstrap-5.1.3-dist/js/bootstrap.bundle.min.js"></script>
+  </head>
+  
+  <!-- BODY -->
+  <body>
+    
+    <!-- Bootstrap provides two width-aware container classes;
+       * 'container' is a fixed-width class that centres within the page
+       * 'container-fluid' is a full-width class that spans the entire width of the page
+       * 'container-sm' is a fixed-width class that centers within the page, but will become
+          a full-width container when the viewport width is below the 'sm' (small) threshold.
+       
+       - fixed width containers pad content left and right.
+       - to add top/bottom padding around the content (extending the size of the container),
+         pass an option 'pt-1' to pad the top with 1 rem(?), 'p-1' for top&bottom padding, etc.
+       - to add an x/y-margin around the div, (adding whitespace around this div),
+         use 'my-5' or 'mx-5', or 'm-5' etc
+       - note units are different - e.g. my-5 gives a y margin around the same size as p-1
+       - to draw a light grey border around the div pass the option 'border'
+       - to set the background colour, use an option such as 'bg-dark' or 'bg-primary'
+       - to set the default text colour use 'text-white' etc
+    -->
+    
+    <div class="container-fluid my-5 bg-black text-white">
+      <h1>Hello?!</h1>
+    </div>
+    
+    <!-- alignment within a div or span can be achieved with the d-flex class option
+         combined with other options that specify alignment
+         so in the below, the span is given the d-flex option to enable alignment,
+         then justify-content-between says to evenly distribute contained elements
+         between left and right edges.
+         see https://getbootstrap.com/docs/4.0/utilities/flex/ for much more.
+    -->
+    <span class="d-flex justify-content-between">
+      <span>Left</span> <span>center</span> <span>center 2</span> <span>Right</span>
+    </span>
+    
+    <!-- containers hold one object per 'row', centering and padding as necessary. -->
+    <!-- rows seem to come with massive top and bottom badding -->
+    <div class="row m-5 border">
+      <p> This is a row container... </p>
+    </div>
+    <div class="row p-1 border">
+      <p> This is another row container... </p>
+    </div>
+    
+    <!-- Content within a row may be split up using Bootstraps grid.
+         For a fixed number of columns no matter the viewport width use the 'col' class,
+         which will always show all columns, squished down as narrow as necessary.
+         For a dynamic grid use the 'col-**' classes (**=sm/md/lg). Such rows will stack
+         columns once the viewport width drops below the corresponding (sm/md/lg) threshold.
+         
+         If you don't specify any width for the columns, all will be equal width.
+         If you wish to combine varying widths, you need to split each row up into 12 units.
+         Each column's width must be specified, with the total for the row summing up to 12.
+         
+         N.B. using consistent breakpoint widths ('sm/md/lg') is not required, but if they don't
+         the columns will break onto new lines at different viewport widths, resulting in jagged
+         rows that don't fill the viewport, looking crap.
+     -->
+    <!-- 5 even-width columns that stack once the viewport width is below the medium threshold -->
+    <div class="row m-5">
+      <div class="col-md border">simple col 1</div>
+      <div class="col-md border">simple col 2</div>
+      <div class="col-md border">simple col 3</div>
+      <div class="col-md border">simple col 4</div>
+      <div class="col-md border">simple col 5</div>
+    </div>
+    <!-- 4 variable-width columns, which stack when the viewport width is below the small threshold -->
+    <div class="row m-5">
+      <div class="col-sm-3 border">.col-sm-3</div>  <!-- column 3 units wide -->
+      <div class="col-sm-3 border">.col-sm-3</div>  <!-- column 3 units wide -->
+      <div class="col-sm-4 border">.col-sm-4</div>  <!-- column 4 units wide -->
+      <div class="col-sm-2 border">.col-sm-2</div>  <!-- column 2 units wide -->
+    </div>
+    
+    <!-- make a container, with a top margin of 3rem to offset it from the content above -->
+    <div class="container mt-3">
+      <!-- a size 3 header -->
+      <h3>Description Lists</h3>
+      <!-- a paragraph comment -->
+      <p>The dl element indicates a description list:</p>
+      <!-- lists can be made with bold rows (dl) or normal rows (dd) -->
+      <dl>
+        <dt>Coffee</dt>
+        <dd>- black hot drink</dd>
+        <dt>Milk</dt>
+        <dd>- white cold drink</dd>
+      </dl>
+      <ul class="list-unstyled">  <!-- the list-unstyled attribute prevents bulleting and indenting -->
+        <li>Coffee</li>
+        <li>Tea
+          <ul>                    <!-- it doesn't propagate to sublists-->
+            <li>Black tea</li>
+            <li>Green tea</li>
+          </ul>
+        </li>
+        <li>Milk</li>
+      </ul>
+    </div>
+    
+    <code> this is an inline code block </code>
+    <pre> this is a solid code block </pre>
+    "press <kbd>ctrl+p</kbd> to print" will show a kind of button-like box for 'ctrl+p'
+    <!-- for many more formatting options see https://www.w3schools.com/bootstrap5/bootstrap_typography.php
+         and https://www.w3schools.com/bootstrap5/bootstrap_colors.php -->
+         
+    <!-- paragraphs, rows etc can have text and background colours specified
+         by adding to the class list 'text-***' or 'bg-***' where *** is the appropriate colour qualifier.
+         To easily swap colour palettes, colour qualifiers may (must?) be "context" qualifiers:
+         * muted      (grey)
+         * primary    (blue)
+         * success    (green)
+         * info       (turqoise)   * too light?
+         * warning    (orange)     * too light?
+         * danger     (red)
+         * secondary  (grey)
+         * dark       (dark grey)  * basically black
+         * white      (white)
+         * light      (very light grey) * basically white
+         * body       (black)
+      -->
+    <!-- for a colour-coordinated central text box, use an 'alert' class of the corresponding context.
+         Use the alert-link class to colour-code links within the message 
+         Add the 'alert-dissmissible' class, and the below button, to make the alert dismissible -->
+    <div class="alert alert-success alert-dismissible">
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      <strong>Success!</strong> This is a nice green box with green text in. You should 
+             <a href="#" class="alert-link">read this message</a>.
+    </div>
+    
+    <!-- To enable bootstrap styling of tables, encapsulate them within a table div.
+         To gain a horizontal scrollbar when the viewport becomes too small, use a table-resonsive div
+         (using table-responsive alone will always show the scrollbar) -->
+    <div class="table-responsive-md">
+      <!-- boostrap provides options for the table class itself to implement things like
+         * alternate row shading: table-striped
+         * an outer border: table-bordered
+         * shading of the row currently being hovered over: table-hover
+         * a compact table: table-sm (cuts the cell padding in half)
+         * dark mode; table-dark
+         To enable these options specify them as additional classes to the usual 'table' class.
+         Multiple such class qualifiers can be combined to combine effects -->
+      <table class="table table-hover">
+        <!-- as per normal html tables, specify the table header: -->
+        <thead>
+          <!-- with header columns specified by <th> -->
+          <th> Column 1 </th>
+          <th> Column2 </th>
+        </thead>
+        <!-- and table body -->
+        <tbody>
+          <!-- with rows in <tr> -->
+          <tr>
+            <!-- and columns in <td> -->
+            <td> val 1_A </td>
+            <td> val 1_B </td>
+          </tr>
+          <!-- row 2 -->
+          <tr>
+            <td> val 2_A </td>
+            <td> val 2_B </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- tables can have colours specified on a table-, row-, or cell-wise basis, with a slightly altered
+         set of context qualifiers:
+         --- not body --- (default anyway)
+         --- not muted ---
+         --- not white --- (close enough to light, use that)
+         * active   ( seems to be same colour as secondary, i.e. same effect as muted)
+     -->
+     
+     <!-- to place images use the <img src="filepath.png" alt="potato">, as per normal html.
+          Bootstrap enables left- or right-alignment with the addition of 'class="float-start"'
+          or "float-end" respectively, and mid-alignment with 'class="mx-auto d-block"'.
+          Alternatively scale to the container width with 'class="img-fluid"' -->
+    <img src="images/background.jpg" alt="mydemoimage" class="img-fluid">
+    
+    <!-- buttons are styled by adding the btn-* class (solid coloured) or btn-outline-* class.
+         again the colours are specified by the same qualifiers as before.
+         add 'active' or 'disabled' to grey the button out or highlight it.
+         add a "dropdown-menu" class div to add drop-down options to a button.
+         add class option 'btn-sm' or 'btn-lg' to change button size, or use 'btn-block'
+         to have a full width button: but this last option requires embedding the button
+         in a <div class="d-grid"> with optional d-grid option "gap-*" to control spacing
+         when multiple bttons are stacked in the div.  -->
+    <button type="button" class="btn btn-success">Success</button>
+    <button class="btn btn-outline-danger">
+      <!-- add a spinner in the button to indicate loading 
+           (spinners are a separate object, they don't need to be in a button)
+           add 'text-success' to set the spinner colour to the success context colour
+      -->
+      <span class="spinner-border spinner-border-sm"></span>
+      Loading...
+      <!-- add a badge to indicate the number of seconds until loaded, or sth -->
+      <span class="badge bg-danger">4</span>
+    </button>
+    
+    
+    <!-- button groups; combine 3 buttons into one colour block -->
+    <div class="btn-group">
+      <button type="button" class="btn btn-primary">Apple</button>
+      <button type="button" class="btn btn-primary">Samsung</button>
+      <!-- make one of buttons a dropdown -->
+      <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">Sony</button>
+      <div class="dropdown-menu">
+        <!-- dropdown items can be active or disabled,
+             you can add un-clickable headers in between options with a 'dropdown-item-header',
+             or dividing lines with 'dropdown-divider'
+        -->
+        <a class="dropdown-item" href="#">Tablet</a>
+        <a class="dropdown-item" href="#">Smartphone</a>
+      </div>
+    </div>
+    
+    <!-- progress bar. progress is specified by the 'width', unlrelated to the label 
+         add progress-bar-striped for a striped effect
+         add progress-bar-animated for animated striping
+         add bg-white and text-black for bar and text colours
+         multiple progress bars can be contained within an outer progress bar div,
+         in which case they will be added in order: internal are up to 100,
+         but should sum to at most 100%
+    -->
+    <div class="progress border">
+      <div class="progress-bar" style="width:60%">loading...</div>
+    </div>
+    
+    <!-- pagination is a box with buttons that let you select a page, with arrows at the ends -->
+    <ul class="pagination justify-content-center" style="margin:20px 0">
+      <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+      <li class="page-item"><a class="page-link" href="#">1</a></li>
+      <li class="page-item active"><a class="page-link" href="#">2</a></li>
+      <li class="page-item"><a class="page-link" href="#">3</a></li>
+      <li class="page-item"><a class="page-link" href="#">Next</a></li>
+    </ul>
+    
+    <!-- breadcrumbs show a filepath built up of clickable links
+         optionally active indicates the current level of selection -->
+    <ul class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Photos</a></li>
+      <li class="breadcrumb-item"><a href="#">Summer 2017</a></li>
+      <li class="breadcrumb-item"><a href="#">Italy</a></li>
+      <li class="breadcrumb-item active">Rome</li>
+    </ul>
+    
+    <!-- lists will fill the horizontal div with a border by default,
+         add option 'list-group-flush' to disable the border or 'list-group-horizontal'
+         to show columns instead of rows.
+         again options like 'active' and 'disabled' are available
+         'list-group-numbered' adds automatic numbering
+         'list-group-item-success' colours items
+         on-click actions can be enabled with 'list-group-item-action'
+    -->
+    <div class="list-group">
+      <a href="#" class="list-group-item disabled list-group-item-action">First item</a>
+      <a href="#" class="list-group-item list-group-item-action">Second item</a>
+      <a href="#" class="list-group-item active list-group-item-action">Third item</a>
+    </div>
+    
+    <!-- a card is like a little webpage in itself: it can have a header, body, footer,
+         a top or bottom image, a title, text etc.  -->
+    <div class="card m-5" style="width:400px">
+      <img class="card-img-top" src="images/logo.png" alt="Card image">
+      <div class="card-header bg-white">HHHeader</div>
+      <div class="card-body">
+        <h4 class="card-title">John Doe</h4>
+        <p class="card-text">Some example text.</p>
+        <a href="#" class="btn btn-primary">See Profile</a>
+      </div>
+      <div class="card-footer">Footer</div>
+    </div>
+    
+    <!-- make an element collapsable by adding class 'collapse', along with a unique name,
+         then make a link or button with the option data-bs-toggle="collapse", and specify
+         the target by pointing href to the unique name. add 'show' along with 'collapse'
+         to make the item shown by default.
+     -->
+     <!-- the collapse link; add 'class="btn"' to make it into a button -->
+     <a data-bs-toggle="collapse" href="#demo">Simple collapsible</a>
+     <!-- the collapsable element -->
+     <div id="demo" class="collapse">
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit,
+        sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+        quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+     </div>
+    
+    <!-- By enclosing multiple collapsibles inside a parent element and specifying the parent with
+        'data-bs-parent="#unique_name_of_parent"' to the collapsable, at most one collapsable item
+         will be shown at a time. This can be used to make e.g. an accordion of stacked cards,
+         where the headers always show, but the bodies expand only on click.
+     -->
+    <!-- enclosing element -->
+    <div id="myaccordion" class="m-5 bg-light rounded">
+      <!-- stack some cards. cards are suitable as little pages with a header and an inner body -->
+      <div class="card">
+        <!-- the header will always show, so not collapsable -->
+        <div class="card-header">
+          <!-- the header contains a button that will show the body when clicked -->
+          <a class="btn" data-bs-toggle="collapse" href="#collapseOne">Item #1</a>  <!-- button text -->
+        </div>
+        <!-- the body is collapsable, shown by default, and the enclosing parent is specified -->
+        <div id="collapseOne" class="collapse show" data-bs-parent="#myaccordion">
+          <!-- card body contains hidden content -->
+          <div class="card-body"> Lorem ipsum.. </div>
+        </div>
+      </div>  <!-- end card class -->
+      
+      <!-- next accordian item -->
+      <div class="card">
+        <div class="card-header">
+          <a class="btn" data-bs-toggle="collapse" href="#collapseTwo">Item #1</a>  <!-- button text -->
+        </div>
+        <div class="card-body collapse" id="collapseTwo" data-bs-parent="#myaccordion"> Lorem ipsum.. </div>
+      </div>
+      
+    </div> <!-- end accordian class -->
+    
+    <!-- a bare navbar is just a list of links.
+         * to control horizontal alignment add "justify-content-***" to the list container
+         * to make it a vertical list add "flex-column" instead
+    -->
+    <ul class="nav">  <!-- list container, specialised with "nav" class for styling -->
+      <!-- each destination requires two things; a list item specialised with "nav-item" -->
+      <li class="nav-item">
+        <!-- within which is a link to the content, specialised with "nav-link" -->
+        <a class="nav-link" href="#">Link</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link disabled" href="#">Disabled</a>
+      </li>
+    </ul>
+    
+    <!-- that makes just a bare list of links; to make it into a tabbar:
+         * add "nav-tabs" to the list container classes
+         * add the 'data-bs-toggle="tab"' attribute to each page link
+      -->
+    <div class="container mt-3">
+      <!-- Nav tabs -->
+      <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+          <a class="nav-link active" data-bs-toggle="tab" href="#home">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" href="#menu1">Menu 1</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" href="#menu2">Menu 2</a>
+        </li>
+      </ul>
+      <!-- to add content beneath the tabbar, i.e. tab panes:
+           * make a div with the "tab-content" class
+           * embed a series of container divs with the "tab-pane" class
+           * specify 'active' to the *first* tab in the list: this is always initially selected in the tabbar
+           * add 'fade' to all tabs and 'fade show' to the first tab to animate switching
+      -->
+      <!-- tab container -->
+      <div class="tab-content">
+        <!-- series of containers for each pane -->
+        <div id="home" class="container tab-pane active fade show"><br>
+          <p>This is the home page.</p>
+        </div>
+        <div id="menu1" class="container tab-pane fade"><br>
+          <p>This is the manu 1 page.</p>
+        </div>
+        <div id="menu2" class="container tab-pane fade"><br>
+          <p>This is the menu 2 page.</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- a navbar is pretty similar, but the 'nav' list container is replaced by a 'navbar-nav' list container,
+         and the whole thing is wrapped in a container-fluid, then within a <nav class="navbar">
+         * add 'class="navbar-text"' to non-link spans within your container to give them the proper styling
+         * add a logo by adding a "navbar-brand" link in the container, and "me-auto" to your navbar-nav.
+         * control bg colour with 'bg-success', but control text colour with 'navbar-light' / 'navbar-dark'.
+     -->
+    <nav class="navbar navbar-expand-md bg-dark navbar-dark mb-4">
+      <div class="container-fluid">
+        
+        <!-- logo entry -->
+        <a class="navbar-brand" href="#">Top navbar</a>
+        
+        <!-- to make it collapse into a burger menu when the viewport is small, add a button: -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <!-- and then wrap the item list within a navbar-collapse div -->
+        <div class="collapse navbar-collapse" id="collapsibleNavbar">
+        <!-- end of burger menu -->
+        
+        <!-- begin list of links -->
+        <ul class="navbar-nav me-auto mb-2 mb-md-0">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="#">Home</a>
+          </li>
+          <!-- a dropdown menu entry -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Dropdown</a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#">Link</a></li>
+              <li><a class="dropdown-item" href="#">Another link</a></li>
+              <li><a class="dropdown-item" href="#">A third link</a></li>
+            </ul>
+          </li>
+          <!-- end dropdown menu -->
+          <li class="nav-item">
+            <a class="nav-link disabled">Disabled</a>
+          </li>
+        </ul>
+        <!-- end list of links -->
+        
+        <!-- forms can be included in the navbar by including a d-flex -->
+        <form class="d-flex">
+          <input class="form-control me-2" type="text" placeholder="Search">
+          <button class="btn btn-primary" type="button">Search</button>
+        </form>
+        
+      </div>
+    </nav>
+
+
+
+    
+  </body>
+  
+</html>
+
