@@ -68,14 +68,14 @@
       <!-- + power ("powerstate" = json: "status" = 'ON'/'OFF') [W] -->
       Power:
       <input name="Power" type="submit"
-             <?php $data = file_get_contents("http://192.168.2.53/cgi-bin/marcus/get_power_state.cgi",0); echo $data; ?> >
+             <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_power_state.cgi",0); echo $data; ?> >
       <input type="text" class="btn" name="source_url" value="URL" style="display: none;">
       
       <!-- PUMP STATE -->
       <!-- + pump ("pumpstate" = json: "state" = 'ON'/'OFF') [W] -->
       Pump:
       <input name="Pump" type="submit"
-             <?php $data = file_get_contents("http://192.168.2.53/cgi-bin/marcus/get_pump_state.cgi",0); echo $data; ?> >
+             <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_pump_state.cgi",0); echo $data; ?> >
       <input type="text" class="btn" name="source_url" value="URL" style="display: none;">
       
       <!-- VALVE STATE -->
@@ -83,10 +83,10 @@
       <!-- + outlet valve ("valvestate_inlet" = json: "state" = 'OPEN'/'CLOSED') [W] -->
       Inlet Valve:
       <input name="Valve_inlet" type="submit"
-             <?php $data = file_get_contents("http://192.168.2.53/cgi-bin/marcus/get_valve_state.cgi?a=inlet",0); echo $data; ?> >
+             <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_valve_state.cgi?a=inlet",0); echo $data; ?> >
       Outlet Valve:
       <input name="Valve_outlet" type="submit"
-             <?php $data = file_get_contents("http://192.168.2.53/cgi-bin/marcus/get_valve_state.cgi?a=outlet",0); echo $data; ?> >
+             <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_valve_state.cgi?a=outlet",0); echo $data; ?> >
       <input type="text" class="btn" name="source_url" value="URL" style="display: none;">
       <!-- <br> -->
       
@@ -95,8 +95,9 @@
       <!-- could decouple this from power and have manual connection -->
       <label class="form-check-label">PWM board connected: </label>
       <input class="form-check-input" type="checkbox" id="pwmboard"
-             <?php $data = file_get_contents("http://192.168.2.53/cgi-bin/marcus/get_pwmboard_state.cgi",0); echo $data; ?>
-             onclick="this.checked=!this.checked;" style="vertical-align: middle; margin: 25px auto;" >
+             onclick="this.checked=!this.checked;" style="vertical-align: middle; margin: 25px auto;"
+             <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_pwmboard_state.cgi",0); echo $data; ?>
+             <!-- note; no closing '>' here! -->
       <!--<br> -->
       
       <!-- SPECTROMETER -->
@@ -104,14 +105,15 @@
       <!-- + spectrometer ("spectrometer_connected" = json: bare bool ) [W] -->
       <label class="form-check-label">Spectrometer connected: </label>
       <input class="form-check-input" type="checkbox" id="spectrometer"
-             <?php $data = file_get_contents("http://192.168.2.53/cgi-bin/marcus/get_spectrometer_state.cgi",0); echo $data; ?>
-             onclick="this.checked=!this.checked;" style="vertical-align: middle; margin: 25px auto;" >
+             onclick="this.checked=!this.checked;" style="vertical-align: middle; margin: 25px auto;"
+             <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_spectrometer_state.cgi",0); echo $data; ?>
+             <!-- note; no closing '>' here! -->
     </form>
     
     <!-- LED STATES -->
     <!-- + leds ("ledStatuses" = json: <ledname>:<integer> ) [W] -->
     <div class="form-check form-switch">
-      <?php $data = file_get_contents("http://192.168.2.53/cgi-bin/marcus/get_led_states.cgi",0); echo $data; ?>
+      <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_led_states.cgi",0); echo $data; ?>
     </div>
     
   </div>
@@ -122,7 +124,7 @@
   <!-- RUN INFO -->
   <!-- + run, start time, end time, runconfig, notes, git tag [R] -->
   <?php
-       $data = file_get_contents("http://192.168.2.53/cgi-bin/marcus/get_run_info.cgi",0);
+       $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_run_info.cgi",0);
        $run_info = json_decode($data);  // by default it makes an object, access members with ->
    ?>
   <!-- MORE RUN INFO -->
@@ -130,17 +132,17 @@
        + calibration function paramter set version - ("calibration_version" = json: bare integer?) [D]
        + output file ("output_filename" = json: "filename" ) [W] -->
   <?php
-       $data = file_get_contents("http://192.168.2.53/cgi-bin/marcus/get_more_run_info.cgi",0);
+       $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_more_run_info.cgi",0);
        $more_run_info = json_decode($data, true);   // with 'true', it makes an associative array
    ?>
   <div class="container-md bg-muted">  <!-- add mx-3 to class list to left-align it -->
     <div class="input-group mb-3">
       <span class="input-group-text">Run</span>
-      <input id="run" type="number" readonly style="background-color: white" class="form-control" value="<?php echo $run_info->runnum; ?>" >
+      <input id="run" type="text" readonly style="background-color: white" class="form-control" value="<?php echo $run_info->runnum; ?>" >
 <!--    </div>-->
 <!--    <div class="input-group mb-3">-->
       <span class="input-group-text">Run Config ID</span>
-      <input id="runconfig" type="number" readonly style="background-color: white" class="form-control" value="<?php echo $run_info->runconfig; ?>" >
+      <input id="runconfig" type="text" readonly style="background-color: white" class="form-control" value="<?php echo $run_info->runconfig; ?>" >
 <!--    </div>-->
 <!--    <div class="input-group mb-3">-->
       <span class="input-group-text">Git Tag</span>
@@ -158,7 +160,7 @@
 <!--    </div>-->
 <!--    <div class="input-group mb-3">-->
       <span class="input-group-text">Calibration Curve Version</span>
-      <input id="calibver" type="number" readonly style="background-color: white" class="form-control" value="<?php echo $more_run_info['calib_curve_ver']; ?>" >
+      <input id="calibver" type="text" readonly style="background-color: white" class="form-control" value="<?php echo $more_run_info['calib_curve_ver']; ?>" >
     </div>
     <div class="input-group mb-3">
       <span class="input-group-text">Run Notes</span>
@@ -182,7 +184,7 @@
       <table class="table table-striped table-hover">
         <tbody id="scheduler_commands">
         <script src="../../get_scheduler_commands.js?version=1">  </script>
-            <!-- <?php $data = file_get_contents("http://192.168.2.53/cgi-bin/marcus/get_scheduler_commands.cgi",0); echo $data; ?> -->
+            <!-- <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_scheduler_commands.cgi",0); echo $data; ?> -->
         </tbody>
       </table>
     </div>
@@ -248,51 +250,73 @@
   
   <!-- seems like javascript must be in the parent directory or it doesn't work? -->
   <!-- plotly javascript uses getElementById('...') to insert graph into a specified div -->
-  <script src="../../get_pure_trace.js?version=1"></script>
+  <script src="../../update_traces.js?version=1" type="module"></script>
   
   <?php
-    $fitstatusjson = file_get_contents("http://192.168.2.53/cgi-bin/marcus/get_measurement_status.cgi",0);
+    $fitstatusjson = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_fit_results.cgi",0);
+    #echo "fitstatusjson is ${fitstatusjson}";
+    #var_dump($fitstatusjson);
     $fitstatus = json_decode($fitstatusjson, true);   // with 'true', it makes an associative array
+    #{"purefit":1, "fits":[ {"method":"raw", "absfit":1, "peakdiff":0.138002, "gdconc":0.057087 }, {"method":"simple", "absfit":1, "peakdiff":0.121950, "gdconc":0.057033 }, {"method":"complex", "absfit":1, "peakdiff":0.123711, "gdconc":0.056937 } ] }
+    #var_dump($fitstatus);
+    #var_dump($fitstatus['purefit']);
   ?>
+  
   <div class="container-md bg-muted">  <!-- add mx-3 to class list to left-align it -->
     <div class="input-group mb-3">
       <span class="input-group-text">Pure Fit Status</span>
       <input id="purefitstat" type="text" class="form-control 
       <?php
-         if($fitstatus->purefit==1) echo 'text-success" value="Success"';
-         else echo 'text-danger" value="Failed';
-       ?>" >
-      <span class="input-group-text">Absorbance Fit Status</span>
-      <input id="absfitstat" type="text" class="form-control 
-      <?php
-         if($fitstatus->absfit==1) echo 'text-success" value="Success"';
-         else echo 'text-danger" value="Failed';
-       ?>" >
+         if($fitstatus['purefit']==1) echo 'text-success" value="Success"';
+         else echo 'text-danger" value="Failed"';
+       ?> >
     </div>
-    <div class="input-group mb-3">
-      <span class="input-group-text">Absorbance Peak Height Difference</span>
-      <input id="peakdiff" type="number" class="form-control" value="<?php echo $fitstatus->peakdiff; ?>" >
-      <span class="input-group-text">Gd Concentration</span>
-      <input id="gdconc" type="number" class="form-control" value="<?php echo $fitstatus->gdconc; ?>" >
-    </div>
+
+    <?php
+      # loop over absorption fitting methods and add a row for each method's status
+      $fits = $fitstatus['fits'];
+      #var_dump($fits);
+      foreach($fits as $afit) {
+        #var_dump($afit);
+        $methodname = $afit['method'];
+        $fitsuccess = $afit['absfit'];
+        $peakdiff = $afit['peakdiff'];
+        $conc = $afit['gdconc'];
+        echo '    <div class="input-group mb-3">' . "\n";
+        echo '      <span class="input-group-text">Absorbance Fit Method</span>' . "\n";
+        echo '      <input id="method_' . "{$methodname}" . '" type="text" class="form-control" value="' . "{$methodname}" . '" >' . "\n";
+        echo '      <span class="input-group-text">Fit Status</span>' . "\n";
+        echo '      <input id="absfitstat_' . "{$methodname}" . '" type="text" class="form-control ';
+        if($fitsuccess==1) echo 'text-success" value="Success"';
+                      else echo 'text-danger" value="Failed"';
+        echo ' >' . "\n";
+        echo '      <span class="input-group-text">Peak Height Difference</span>' . "\n";
+        echo '      <input id="peakdiff_' . "{$methodname}" . '" type="text" inputmode="numeric" class="form-control" value="' . "{$peakdiff}" . '" >' . "\n";
+        echo '      <span class="input-group-text">Gd Concentration</span>' . "\n";
+        echo '      <input id="gdconc_' . "{$methodname}" . '" type="text" class="form-control" value="' . "{$conc}" . '" >' . "\n";
+        echo '    </div>' . "\n";
+      }
+    ?>
   </div>
   
   <!-- Accordion of histograms -->
   <div id="histograms" class="m-5 bg-light rounded">
     <?php
-      $traces = ['darktrace_params',     // mean, width
-                 'rawtrace_params',      // min, max
-                 'pure_fit_pars',        // x-scaling, y-scaling, x-shift, y-shift, linear component grad
-                 'left_abspk_fit_pars',  //
-                 'right_abspk_fit_pars', //
-                 'gdconcentration'
-                 //'pure_fit_status',
-                 //'left_abspk_fit_status',
-                 //'right_abspk_fit_status',
+      $histos = ['darktrace_pars',      // mean, width
+                 'rawtrace_pars',       // min, max
+                 'purefit_pars',        // x-scaling, y-scaling, x-shift, y-shift, linear component grad
+                 'rawfit_pars',         //
+                 'simplefit_pars',     //
+                 'complexfit_pars',    //
+                 'gdconcentration'      //
                  ];
-      $tracenames = [ 'Last Trace',
-                      'Dark Subtracted Data',
-                      'Absorbance'
+      $histonames = [ 'Dark Trace Parameters',
+                      'Raw Trace Parameters',
+                      'Pure Fit Parameters',
+                      'Raw Fit Parameters',
+                      'Simple Fit Parameters',
+                      'Complex Fit Parameters',
+                      'Gd Concentration'
                     ];
       
 //	 + dark trace params - ("darktrace_params" = json: "mean", "width") [D]
@@ -305,44 +329,64 @@
 //	 + LHS absorbance peak fitresultptr ("left_abspk_fit_status" = json from fitresultptr) [D]
 //	 + RHS absorbance peak fitresultptr ("right_abspk_fit_status" = json from fitresultptr) [D]
       
-      
-      for($i=0; $i < count($traces); ++$i){
+      for($i=0; $i < count($histos); ++$i){
           echo PHP_EOL;
+          
           // each plot is embedded within a bootstrap 'card'.
-          // cards are suitable as they have a header that can always show the title of the plot,
-          // and an inner (collapsible) body to contain the actual plot
           echo '    <div class="card">' . PHP_EOL;
+          // the card has a header...
           echo '      <div class="card-header">' . PHP_EOL;
-          // header contains button that specifies trace and controls collapsible body
-          echo '        <a class="btn" data-bs-toggle="collapse" href="#plot' . "{$i}" . '">' . "{$tracenames[$i]}" . '</a>' . "\n";
-          echo '      </div>' . PHP_EOL;
-          // body must specify a height since contained plot is reactive and needs a size
-          echo '      <div id="plot' . "{$i}" . '" class="card-body collapse';
+          // ...that contains button with a descriptive name to controls collapse
+          echo '        <a class="btn" data-bs-toggle="collapse" href="#card' . "{$i}" . '">' . "{$histonames[$i]}" . '</a>' . PHP_EOL;
+          echo '      </div>' . PHP_EOL;  // close card header
+          
+          // the card body must specify a height since contained plot is reactive and needs a size
+          echo '      <div id="card' . "{$i}" . '" class="card-body collapse';
           if($i == 0) echo " show";
-          echo '" data-bs-parent="#plots"  height:500px>' . PHP_EOL;
-          //the plot itself must be within a nested div for margins to work, for some reason
-          echo '        <div id="' . "{$traces[$i]}" . '" class="dataplot" style="width:100%"></div>' . "\n";
-          echo '      </div>' . PHP_EOL;
-          echo '    </div>' . PHP_EOL;
+          //echo '" data-bs-parent="#histograms" height:500px>' . PHP_EOL;
+          echo '"  height:500px>' . PHP_EOL;
+          
+          // within the card body we'll put a tabbar
+          echo '<ul class="card-body nav nav-tabs" role="tablist" style="width:100%">' . PHP_EOL;
+          // a tabbar is just a series of links
+          echo '  <li class="nav-item">' . PHP_EOL;
+          // link one: time series page
+          echo '    <a class="nav-link active" data-bs-toggle="tab" href="#TS_' . "{$histos[$i]}" . '">Time Series</a>' . PHP_EOL;
+          echo '  </li>' . PHP_EOL;
+          // link two: histogram page
+          echo '  <li class="nav-item">' . PHP_EOL;
+          echo '    <a class="nav-link" data-bs-toggle="tab" href="#H_' . "${histos[$i]}" . '">Histogram</a>' . PHP_EOL;
+          echo '  </li>' . PHP_EOL;
+          echo '</ul>' . PHP_EOL;   // end tabbar
+          
+         /*
+           to add content to the tabbar we actually do that afterwards by linking content:
+           * make a div instance of the "tab-content" class
+           * embed a series of container divs, one for each tab, each of the "tab-pane" class
+           * specify 'active' to the *first* tab in the list: this is always initially selected in the tabbar
+           * add 'fade' to all tabs and 'fade show' to the first tab to animate switching
+         */
+          echo '<div id="' . "{$histos[$i]}" . '" class="tab-content resultplot">' . PHP_EOL;
+          // within the div of tab pane 1 we'll put time series
+          echo '<div id="TS_' . "{$histos[$i]}" . '" class="container tab-pane active fade show"><br>' . PHP_EOL;
+          echo '<div id="timeseries_' . "{$histos[$i]}" . '" class="timeplot" style="width:100%"></div>' . PHP_EOL;
+          echo '</div>' . PHP_EOL;  // end tab page
+          // and in tab pane 2 a histogram
+          echo '<div id="H_' . "{$histos[$i]}" . '" class="container tab-pane fade"><br>' . PHP_EOL;
+          echo '<div id="histo_' . "{$histos[$i]}" . '" class="histoplot" style="width:100%"></div>' . PHP_EOL;
+          echo '</div>' . PHP_EOL;  // end tab page
+          echo '</div>' . PHP_EOL; //  end tab-content
+          
+          echo '</div>' . PHP_EOL;  // end card body
+          echo '</div>' . PHP_EOL;  // end card class
       }
-      
-      /* result should look like the following
-      <! -- PURE TRACE -->
-      <div class="card">
-        <!-- header -->
-        <div class="card-header">
-          <a class="btn" data-bs-toggle="collapse" href="#plot2">Pure Trace</a>
-        </div>
-        <!-- body -->
-        <div id="plot2" class="card-body collapse" data-bs-parent="#plots">
-          <div id="pure_trace" class="dataplot" style="width:100% height:500px"></div>
-        </div>
-      </div>
-      */
       
     ?>
     
   </div> <!-- end of histogram accordion -->
+  
+  <!-- script that'll populate those histograms -->
+  <script src="../../update_histos.js?version=1" type="module"></script>
   
 <!--        <li class="list-group-item d-flex justify-content-between align-items-center"> start </li>-->
 <!--      <li class="list-group-item active d-flex justify-content-between align-items-center"> power </li>-->
@@ -352,7 +396,7 @@
 <!--      </li>-->
 <!--      <li class="list-group-item d-flex justify-content-between align-items-center"> measure dark </li>-->
   
-<!--  <iframe src="http://192.168.2.53/marcus/main.html" width=100%></iframe>-->
+<!--  <iframe src="http://192.168.2.54/marcus/main.html" width=100%></iframe>-->
   
     <!--
     * website table:

@@ -45,7 +45,7 @@ function updateSchedulerCommands() {
 	// or by giving the active row a unique class, and setting the css style of it?
 	try {
 		// GetDataFetchRequest is defined in last_trace.js
-		GetDataFetchRequest("http://192.168.2.53/cgi-bin/marcus/get_scheduler_commands.cgi").then(
+		GetDataFetchRequest("http://192.168.2.54/cgi-bin/marcus/get_scheduler_commands.cgi").then(
 			function(result){
 				// get the div element to update
 				let HTMLDIV = document.getElementById('scheduler_commands');
@@ -55,17 +55,20 @@ function updateSchedulerCommands() {
 				// scroll the command list if necessary to ensure the currently
 				// active command is in view.
 				let scrollElement = document.getElementById('activeCommand');
-				let activeCommand = scrollElement.innerHTML;
-				//console.log("currently active command: ",activeCommand);
-				// e.g. '<td>quit</td>'
-				
-				// only update position on change, to try to limit how disruptive
-				// this is for the user
-				if(updateSchedulerCommands.lastActiveCommand!=activeCommand){
-					//scrollElement.scrollIntoView();   // scrolls whole page
-					//ElementPosition(scrollElement);   // this too, but more manually...
-					document.getElementById('scheduler_table').scrollTop = scrollElement.offsetTop-10;
-					updateSchedulerCommands.lastActiveCommand = activeCommand;
+				// in case we couldn't identify the currently active command, skip scrolling to it
+				if(scrollElement != null){
+					let activeCommand = scrollElement.innerHTML;
+					//console.log("currently active command: ",activeCommand);
+					// e.g. '<td>quit</td>'
+					
+					// only update position on change, to try to limit how disruptive
+					// this is for the user
+					if(updateSchedulerCommands.lastActiveCommand!=activeCommand){
+						//scrollElement.scrollIntoView();   // scrolls whole page
+						//ElementPosition(scrollElement);   // this too, but more manually...
+						document.getElementById('scheduler_table').scrollTop = scrollElement.offsetTop-10;
+						updateSchedulerCommands.lastActiveCommand = activeCommand;
+					}
 				}
 			},
 			function(error){

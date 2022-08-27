@@ -9,9 +9,14 @@
 // import { getDataFetchRequest } from './last_trace.js';
 // not sure if that works with constants, though...
 
+export { getDataFetchRequest };
+export { compareTimestamp };
+export { config };
+export { parseTrace };
+
 // a general asynchronous getter for fetching data from a url
 async function getDataFetchRequest(url, json_or_text="text"){
-	console.log("get_pure_trace::getDataFetchRequest(",url,")");
+	//console.log("get_pure_trace::getDataFetchRequest(",url,")");
 	try {
 		let response = await fetch(url);
 		let thetext = "";
@@ -77,25 +82,42 @@ const layout=  {
 // this results in weird oscillating sizes when plots are put into an accordian, so disable it
 const config = {responsive: false}
 
+var toType = function(obj) {
+  return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+}
+
+
 // a function for parsing a json data string into a Plotly trace
-function parseTrace(theData, theName){
+async function parseTrace(theData, theName){
 	
-	//console.log("parseTrace ",theName," parsing data ",theData);
+	// since we make this function async, but stringify is presumably not async(?) so requires real data
+	// (not a promise to data), we need to wait for the data to come in before we start parsing.
+	theData = await theData;
+	//console.log("parseTrace json string for ",theName," is ",theData);
 	
 	// split data
 	let jsonstring = JSON.stringify(theData);
 	let dataarray = JSON.parse(jsonstring);
+	// apparently this can fail to parse "over-stringified" strings.
+	// but we previously had issues when we DIDN'T stringify the data.
+	// so we may need to parse it twice??? ffs....
+	//if(theName=='rawfit_pars'){ console.log("going to attempt to parse rawfit dataarray: '",dataarray,"'"); }
+	//if(theName=='rawfit_pars') console.log(theName," dataarray is '",dataarray,"'");
+	if(typeof dataarray==='string') dataarray = JSON.parse(dataarray);
 	let xvals = dataarray['xvals'];
 	let yvals = dataarray['yvals'];
-	let adcerrors = dataarray['yerrs'];
+	if(xvals == undefined){
+		console.log("undefined x val array parsed for ",name," from ",jsonstring);
+	}
 	
 	let thistrace = {
-		type: 'scatter',
-		mode: 'lines+markers',
 		x: xvals,
 		y: yvals,
 		name: theName
 	};
+	
+	if(dataarray['xerrs'] != null){ thistrace['error_x'] = dataarray['xerrs']; }
+	if(dataarray['yerrs'] != null){ thistrace['error_y'] = dataarray['yerrs']; }
 	
 	return thistrace;
 }
@@ -111,12 +133,14 @@ function compareTimestamp(name, timestamp){
 	
 	if(compareTimestamp.lastupdatetime[name] != timestamp){
 		// time for an update
-		compareTimestamp.lastupdatetime = timestamp;
-		return Promise.resolve(true);
+		compareTimestamp.lastupdatetime[name] = timestamp;
+		//console.log("new timestamp for ",name,", new val: ",timestamp,
+		//            ", last recorded: ",compareTimestamp.lastupdatetime[name]);
+		return true;
 		
 	} else {
 		// don't bother updating the plot, no new data.
-		return Promise.reject(false);
+		return false;
 	}
 }
 
@@ -129,27 +153,30 @@ async function UpdatePlot(name){
 	if(name=="dark_subtracted_data"){
 		// we'll overlay several traces on this plot - the dark subtracted trace,
 		// split into the sideband (fitted) region and the in-band (absorption) region
-		let intraceUrl = "http://192.168.2.53/cgi-bin/marcus/get_latest_trace.cgi?a=dark_subtracted_data_in";
-		let outtraceUrl = "http://192.168.2.53/cgi-bin/marcus/get_latest_trace.cgi?a=dark_subtracted_data_out";
+		let intraceUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=dark_subtracted_data_in";
+		let outtraceUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=dark_subtracted_data_out";
 		// we'll also overlay the original pure, and the result of the pure fitted to the data
-		let pureTraceUrl = "http://192.168.2.53/cgi-bin/marcus/get_latest_trace.cgi?a=dark_subtracted_pure";
-		let pureFittedUrl = "http://192.168.2.53/cgi-bin/marcus/get_latest_trace.cgi?a=pure_scaled";
+		let pureTraceUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=dark_subtracted_pure";
+		let pureFittedUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=pure_scaled";
 		// fetch tha data for all traces in parallel
-		let intracedata_promise = GetDataFetchRequest(intraceUrl, "json");
-		let outtracedata_promise = GetDataFetchRequest(outtraceUrl, "json");
-		let puretracedata_promise = GetDataFetchRequest(pureTraceUrl, "json");
-		let purefitteddata_promise = GetDataFetchRequest(pureFittedUrl, "json");
-		// wait for the promises of data to be fulfilled
-		let intracedata = await intracedata_promise;
-		let outtracedata = await outtracedata_promise;
-		let puretracedata = await puretracedata_promise;
-		let purefitteddata = await purefitteddata_promise;
+		let intracedata_promise = getDataFetchRequest(intraceUrl, "json");
+		let outtracedata_promise = getDataFetchRequest(outtraceUrl, "json");
+		let puretracedata_promise = getDataFetchRequest(pureTraceUrl, "json");
+		let purefitteddata_promise = getDataFetchRequest(pureFittedUrl, "json");
 		
 		// parse the arrays and build traces
-		let intrace = parseTrace(intracedata, 'dark_subtracted_data_in');
-		let outtrace = parseTrace(outtracedata, 'dark_subtracted_data_out');
-		let puretrace = parseTrace(puretracedata, 'pure_reference');
-		let purescaledtrace = parseTrace(purefitteddata, 'pure_fitted');
+		let intrace_promise = parseTrace(intracedata_promise, 'dark_subtracted_data_in');
+		let outtrace_promise = parseTrace(outtracedata_promise, 'dark_subtracted_data_out');
+		let puretrace_promise = parseTrace(puretracedata_promise, 'pure_reference');
+		let purefitted_promise = parseTrace(purefitteddata_promise, 'pure_fitted');
+		
+		// wait for the promises of data to be fulfilled
+		let intrace = await intrace_promise;
+		let outtrace = await outtrace_promise;
+		let puretrace = await puretrace_promise;
+		let purescaledtrace = await purefitted_promise;
+//		console.log("outtrace is ",outtrace);
+//		console.log("outtrace.x is ",outtrace.x);
 		
 		// to make a 'gap' between the data in the sideband region plot
 		// so that it doesn't draw a connecting line over the absorption region
@@ -167,10 +194,16 @@ async function UpdatePlot(name){
 		traces = [ intrace, outtrace, puretrace, purescaledtrace ];
 	} else {
 		//console.log("getting plot data for trace ",name);
-		let dataUrl = "http://192.168.2.53/cgi-bin/marcus/get_latest_trace.cgi?a=" + name;
-		let newdata = await GetDataFetchRequest(dataUrl, "json");
+		let dataUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=" + name;
+		let newdata_promise = getDataFetchRequest(dataUrl, "json");
 		//console.log("building traces from data ",newdata);
-		traces = [ parseTrace(newdata, name) ];
+		traces = [ await parseTrace(newdata_promise, name) ];
+	}
+	
+	for(let i=0; i<traces.length; i++){
+		traces[i]['type'] = 'scatter';
+		if(traces[i]['name'] == 'pure_fitted') traces[i]['mode'] = 'lines';
+		else traces[i]['mode'] = 'lines+markers';
 	}
 	
 	// tell plotly the data has changed
@@ -186,26 +219,22 @@ async function UpdatePlot(name){
 	
 }
 
-//==============//
-// main routine 
-//==============//
-
 // retrieve new data and update the plot
 function check_for_new_data(name) {
 	
-	let getTimeUrl = "http://192.168.2.53/cgi-bin/marcus/get_last_trace_time.cgi?a=" + name;
+	let getTimeUrl = "http://192.168.2.54/cgi-bin/marcus/get_last_trace_time.cgi?a=" + name;
 	//console.log("checking for new data for ",name," at ",getTimeUrl);
 	
 	try {
 		// get the timestamp of when the data was last updated
-		let newdataavailable = GetDataFetchRequest(getTimeUrl).then(
-			function(result){
-				//console.log("timeUrl returned ",result," seeing if it's new");
-				return compareTimestamp(name, result);
+		let newdataavailable = getDataFetchRequest(getTimeUrl).then(
+			function(latest_timestamp){
+				//console.log("timeUrl returned ",latest_timestamp," seeing if it's new");
+				return compareTimestamp(name, latest_timestamp);
 			},
 			function(error){
 				console.log("timeUrl returned an error: ",error);
-				return ProcessTimestampError(error);
+				return false;
 			}
 		);
 		
@@ -218,11 +247,8 @@ function check_for_new_data(name) {
 					// retrieve and plot new data
 					UpdatePlot(name);
 				}  // else no need to update plot
-			},
-			// handler function if the promise of new data rejected
-			function(error){
-				console.log("error from promise of new data: ",error);
 			}
+			// no need to register a rejection handler; newdataavailable should always resolve
 		);
 	} catch(error){
 		console.log(error);
@@ -230,7 +256,12 @@ function check_for_new_data(name) {
 	
 }
 
-// on load, find all plots and register events
+
+//==============//
+// main routine 
+//==============//
+
+// on load, find all plots and register a timer that periodically updates it
 var timerHandleMap = {};
 document.addEventListener("DOMContentLoaded", function(){
 	const plots = document.getElementsByClassName("dataplot");
@@ -249,17 +280,17 @@ document.addEventListener("DOMContentLoaded", function(){
 		// add events for when a plot is shown from the accordian
 		parentdiv.addEventListener("shown.bs.collapse", function(){
 			//console.log("registering for periodic updates")
-			var handle = setInterval(function(){ check_for_new_data(plotdiv.id) }, 3000);
+			var handle = setInterval(function(){ check_for_new_data(plotdiv.id) }, 3000); // FIXME div 10
 			timerHandleMap[plotdiv.id] = handle;
 			
-			if(plotdiv.id=="dark_subtracted_data" || plotdiv.id=="absorbance_trace"){
-				// an initial zoom to region of interest
-				layout.xaxis.autorange = false;
-				layout.xaxis.range=[250, 310];
-			} else {
+//			if(plotdiv.id=="dark_subtracted_data" || plotdiv.id=="absorbance_trace"){
+//				// an initial zoom to region of interest
+//				layout.xaxis.autorange = false;
+//				layout.xaxis.range=[250, 310];
+//			} else {
 				layout.xaxis.autorange = true;
 				layout.yaxis.autorange = true;
-			}
+//			}
 			// tell plotly the ui has changed
 			layout.uirevision = Math.random();
 			
@@ -279,13 +310,14 @@ document.addEventListener("DOMContentLoaded", function(){
 			if(timerHandleMap[plotdiv.id] != null){
 				//console.log("clearing interval ",timerHandleMap[plotdiv.id]);
 				clearInterval(timerHandleMap[plotdiv.id]);
+				timerHandleMap[plotdiv.id]=null;
 			}
 		});
 		
 	}
 	
 	// finally add period updates to the initially open trace
-	var handle = setInterval(function(){ check_for_new_data('last_trace') }, 3000);
+	var handle = setInterval(function(){ check_for_new_data('last_trace') }, 3000); // FIXME div 10
 	timerHandleMap['last_trace'] = handle;
 });
 

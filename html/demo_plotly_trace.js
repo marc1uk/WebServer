@@ -131,6 +131,7 @@ function ParseData(theData){
 	let wavelengths = dataarray['xvals'];
 	let adccounts = dataarray['yvals'];
 	let adcerrors = dataarray['yerrs'];
+	let wlerrs = dataarray['xerrs'];
 	//console.log("wavelengths are: ",wavelengths);
 	
 	// form into Plotly traces
@@ -139,8 +140,13 @@ function ParseData(theData){
 			type: 'scatter',
 			x: wavelengths,
 			y: adccounts,
-			/*error_y: {
+			/*
+			error_x: {
 				//type: 'data', // default. Can also use 'constant' or 'percent', combined with 'value: 0.1'
+				array: wlerrs
+			},
+			error_y: {
+				type: 'data',
 				array: adcerrors
 			}, */
 			//visible: "legendonly", hide it by default, but can be enabled by clicking it in the legend
@@ -242,7 +248,7 @@ function check_for_new_data() {
 	console.log("last_trace.js checking for new data");
 	
 	// check if the timestamp of the last trace has changed
-	let timeUrl = "http://192.168.2.53/cgi-bin/marcus/get_last_trace_time.cgi";
+	let timeUrl = "http://192.168.2.54/cgi-bin/marcus/get_last_trace_time.cgi";
 	
 	// make a fetch request (i.e. invoke cgi script) to obtain a promise to data.
 	let timestampPromise = GetDataFetchRequest(timeUrl, 'text');
@@ -283,7 +289,7 @@ function check_for_new_data() {
 				// newest timestamp suggests we have new data! let's plot it.
 				//console.log("timestamp promise said we had new data, let's fetch it");
 				
-				let dataUrl = "http://192.168.2.53/cgi-bin/marcus/get_latest_trace.cgi";
+				let dataUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi";
 				// we can attach 'then' handlers straight onto a function call that returns a promise
 				GetDataFetchRequest(dataUrl, "json").then(
 					// hanlder function once new data is returned

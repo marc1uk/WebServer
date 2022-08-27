@@ -58,7 +58,7 @@ function parseTrace(theData, theName){
 	return thistrace;
 }
 
-function compareTimestamp(name, timestamp){
+function checkReturnedTimeStamp(name, timestamp){
 	// identify when there is new data to plot by comparing the given timestamp to the last one seen
 	// we keep one timestamp per trace, identified by name
 	
@@ -79,6 +79,10 @@ function compareTimestamp(name, timestamp){
 		console.log("new time ",result," has not changed since last update time ",checkReturnedTimeStamp.lasttracetime);
 		// don't bother updating the plot, no new data.
 		return Promise.reject('no new data');
+		// or equivalently
+		//throw new Error('no new data');
+		// which can then be either handled with a rejection handler function registered
+		// as the second argument of 'then', or as an exception handler registered with a '.catch(...)' after '.then(...)'
 	}
 	
 }
@@ -124,64 +128,72 @@ function check_for_new_data() {
 	// ---------------
 	// get the timestamp of when the last trace was most recently updated
 	try {
-		let timestamp = GetDataFetchRequest("http://192.168.2.53/cgi-bin/marcus/get_last_trace_time.cgi");
+		let timestamp = GetDataFetchRequest("http://192.168.2.54/cgi-bin/marcus/get_last_trace_time.cgi");
 		let newdataavailable = checkReturnedTimeStamp('last_trace', timestamp);
 		let newdata = newdataavailable.then(
-			GetDataFetchRequest("http://192.168.2.53/cgi-bin/marcus/get_latest_trace.cgi");
+			
 		);
-		let newtrace = ParseData(newdata);
-		PlotData('last_trace', newtrace);
+		// register callbacks for when the timestamp promise returns
+		newdataavailable.then(
+			/*
+			// first handler is for when promise succeeded; i.e. timestamp checker says we have new data.
+			// note that handlers can only accept one argument which is the return value of the called function.
+			UpdateIfNewData,
+			// the second handler is an optional rejection handler
+			DoThisIfNoNewData
+			*/
+			// we can also register anonymous inline functions as the handlers: note the difference in syntax!
+			// when using named functions, arguments are passed implicitly: only here do we need to name them!
+			function(result){
+				// the first handler is for fulfilled (successfully resolved) promises
+				// in this case we wrapped a promise around a normal function call that we know always succeeds,
+				if(result == true){
+					// newest timestamp suggests we have new data! let's plot it.
+					console.log("timestamp promise said we had new data, let's fetch it");
+					
+					let dataUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi";
+					// we can attach 'then' handlers straight onto a function call that returns a promise
+					GetDataFetchRequest(dataUrl).then(
+						// hanlder function once new data is returned
+						function(result){
+							let traces = ParseData(result);
+							console.log("traces are ",traces);
+							
+							// user interaction will set autorange to false, so we need to reset it to true
+							layout.xaxis.autorange = true;
+							layout.yaxis.autorange = true;
+							
+							// not changing uirevision will ensure that user interactions are unchanged
+							// uncommenting this line will instead result in resetting the plot axes
+							// layout.uirevision = Math.random();
+							
+							// in a similar vein, when Plotly.react is called, Plotly will assume it the data
+							// is unchanged unless layout.datarevision is set to some new value
+							// (or the 
+							layout.datarevision = Math.random();
+							
+							// get the div element to insert plot into
+							let HTMLDIV = document.getElementById('last_trace');
+							
+							// get plotly to make/update the plot
+							Plotly.react( HTMLDIV, traces, layout, config);
+						},
+						// handler function if the promise of new data rejected
+						function(error){
+							console.log("promise of new data was a lie ;_;");
+						}
+					);
+				} else {
+					console.log("timestampPromise said there was no new data");
+				}
+			}
+			// if checkReturnedTimeStamp rejects there's no need to take any action
+			// so skip registration of a rejection handler
+		);
 	} catch(error){
 		console.log(error);
 	}
 	
-	newDataPromise.then(
-		// btw: we can also register anonymous inline functions as the handlers: note the difference in syntax!
-		// when using named functions, arguments are passed implicitly: only here do we need to name them!
-		function(result){
-			// the first handler is for fulfilled (successfully resolved) promises: since we wrapped
-			// a normal function call, it shouldn't reject, but we need to check what the timestamp comparison said
-			if(result == true){
-				// newest timestamp suggests we have new data! let's plot it.
-				console.log("timestamp promise said we had new data, let's fetch it");
-				
-				let dataUrl = "http://192.168.2.53/cgi-bin/marcus/get_latest_trace.cgi";
-				// we can attach 'then' handlers straight onto a function call that returns a promise
-				GetDataFetchRequest(dataUrl).then(
-					// hanlder function once new data is returned
-					function(result){
-						let traces = ParseData(result);
-						console.log("traces are ",traces);
-						
-						// user interaction will set autorange to false, so we need to reset it to true
-						layout.xaxis.autorange = true;
-						layout.yaxis.autorange = true;
-						
-						// not changing uirevision will ensure that user interactions are unchanged
-						// uncommenting this line will instead result in resetting the plot axes
-						// layout.uirevision = Math.random();
-						
-						// in a similar vein, when Plotly.react is called, Plotly will assume it the data
-						// is unchanged unless layout.datarevision is set to some new value
-						// (or the 
-						layout.datarevision = Math.random();
-						
-						// get the div element to insert plot into
-						let HTMLDIV = document.getElementById('last_trace');
-						
-						// get plotly to make/update the plot
-						Plotly.react( HTMLDIV, traces, layout, config);
-					},
-					// handler function if the promise of new data rejected
-					function(error){
-						console.log("promise of new data was a lie ;_;");
-					}
-				);
-			} else {
-				console.log("timestampPromise said there was no new data");
-			}
-		}
-	);
 	
 }
 
