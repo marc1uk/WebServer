@@ -305,17 +305,21 @@
       $histos = ['darktrace_pars',      // mean, width
                  'rawtrace_pars',       // min, max
                  'purefit_pars',        // x-scaling, y-scaling, x-shift, y-shift, linear component grad
-                 'rawfit_pars',         //
                  'simplefit_pars',     //
                  'complexfit_pars',    //
+                 'peak1_height',
+                 'peak2_height',
+                 'peak_diff',
                  'gdconcentration'      //
                  ];
       $histonames = [ 'Dark Trace Parameters',
                       'Raw Trace Parameters',
                       'Pure Fit Parameters',
-                      'Raw Fit Parameters',
                       'Simple Fit Parameters',
                       'Complex Fit Parameters',
+                      'Peak 1 Height',
+                      'Peak 2 Height',
+                      'Peak Height Difference',
                       'Gd Concentration'
                     ];
       

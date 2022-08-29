@@ -94,6 +94,104 @@ const layout2=  {
 		// setting uirevision='true' allows retaining zoom level between redraws / refreshes.
 		uirevision: true,
 		
+		// set x axis type
+		type: 'date',
+		
+		// set the title
+		title: { text: 'Time' },
+		
+		// add buttons for discrete time ranges
+		rangeselector: {
+			buttons: [
+				{
+					count: 1,
+					label: '1hr',
+					step: 'hour',
+					stepmode: 'backward'
+				},
+				{
+					count: 3,
+					label: '3hr',
+					step: 'hour',
+					stepmode: 'backward'
+				},
+				{
+					count: 6,
+					label: '6hr',
+					step: 'hour',
+					stepmode: 'backward'
+				},
+				{
+					count: 12,
+					label: '12h',
+					step: 'hour',
+					stepmode: 'backward'
+				},
+				{
+					count: 24,
+					label: '24hr',
+					step: 'hour',
+					stepmode: 'backward'
+				},
+				{
+					count: 3,
+					label: '3d',
+					step: 'day',
+					stepmode: 'backward'
+				},
+				{
+					count: 7,
+					label: '1w',
+					step: 'day',
+					stepmode: 'backward'
+				},
+				{
+					count: 1,
+					label: '1m',
+					step: 'month',
+					stepmode: 'backward'
+				},
+			
+				{step: 'all'}
+			
+			]
+		}
+		
+		// to reset changes to the ui view (and restore auto-range), set layout.uirevision to
+		// a different numeric value than before (e.g. call `layout.uirevision = Math.random();`)
+	},
+	yaxis: {
+		autorange: true,
+		//rangemode: 'nonnegative',  // some parameter values may be negative...
+		uirevision: true,
+		title: {
+			text: 'Value'  // FIXME somehow we should set the units...?
+		},
+	},
+	//width: 800,
+	//height: 500,
+	margin: {
+		b: 80,
+		t: 0,
+		r: 5
+	},
+	/*modebar: {
+		orientation: 'v'
+	}
+	*/
+	//plot_bgcolor:"black",
+	//paper_bgcolor:"#FFF3"
+}
+
+const layout3=  {
+	autosize: true,
+	xaxis: {
+		autorange:  true,  // auto-range by default
+		// note user interaction will set this to false, but we should re-set it to true on updates
+		
+		// setting uirevision='true' allows retaining zoom level between redraws / refreshes.
+		uirevision: true,
+		
 		// to reset changes to the ui view (and restore auto-range), set layout.uirevision to
 		// a different numeric value than before (e.g. call `layout.uirevision = Math.random();`)
 	},
@@ -151,28 +249,34 @@ async function GetTraces(name){
 		                ["shoulder_pos","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shoulderpos"]]);
 	}
 	
-	if(name=="rawfit_pars"){
-		// custom object (success, chi2, fit pars?)
-		urls = new Map([["peak1_height","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight1"],
-		                ["peak2_height","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight2"],
-		                ["peakheight_diff","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheightdiff"]]);
-	}
-	
 	if(name=="simplefit_pars"){
-		// custom object (success, chi2, fit pars?)
+		// custom object (chi2, TODO fit pars?)
 		urls = new Map([["peak1_chi2","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak1_chi2"],
-		                ["peak2_chi2","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak2_chi2"],
-		                ["peak1_height","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight1"],
-		                ["peak2_height","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight2"],
-		                ["peakheight_diff","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheightdiff"]]);
+		                ["peak2_chi2","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak2_chi2"]]);
 	}
 	
 	if(name=="complexfit_pars"){
-		// custom object (success, chi2, fit pars?)
-		urls = new Map([["chi2","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_chi2"],
-		                ["peak1_height","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight1"],
-		                ["peak2_height","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight2"],
-		                ["peakheight_diff","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheightdiff"]]);
+		// custom object (chi2, TODO fit pars?)
+		urls = new Map([["chi2","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_chi2"]
+		                ]);
+	}
+	
+	if(name=="peak1_height"){
+		urls = new Map([["rawfit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight1"],
+		                ["simplefit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight1"],
+		                ["complexfit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight1"]]);
+	}
+	
+	if(name=="peak2_height"){
+		urls = new Map([["rawfit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight2"],
+		                ["simplefit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight2"],
+		                ["complexfit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight2"]]);
+	}
+	
+	if(name=="peak_diff"){
+		urls = new Map([["rawfit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheightdiff"],
+		                ["simplefit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheightdiff"],
+		                ["complexfit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheightdiff"]]);
 	}
 	
 	if(name=="gdconcentration"){
@@ -206,6 +310,12 @@ async function GetTraces(name){
 	//console.log("GetTraces got ",traces.length," traces for name ",name);
 	//console.log("GetTraces for ",name," returning: ",traces);
 	
+	// TODO find a nicer way to do this
+	// for plots with 2 traces, put them on different axes
+	if(traces.length==2){
+		traces[1]['yaxis']='y2';
+	}
+	
 	return traces;
 	
 }
@@ -231,18 +341,45 @@ async function UpdateHisto(name){
 		traces[i]['type'] = 'histogram';
 		traces[i]['x'] = traces[i]['y'];
 		delete traces[i]['y'];
-		traces[i]['x']['opacity'] = 0.75;
+		traces[i]['opacity'] = 0.5;
 	}
 	
-	let mylayout = layout2;
+	
+	// for plots with 2 traces, put them on different x axes
+	if(traces.length==2){
+		traces[1]['xaxis']='x2';
+		traces[1]['yaxis']='y2';
+	}
+	
+	// XXX so it seems like this is acting as capturing a reference rather than making a copy,
+	// which means if we use 'mylayout = layout2' or even 'mylayoutX = layout2' in both
+	// UpdateTimeSeries and UpdateHisto, then even though 'mylayout' is a local variable,
+	// the histograms inherit the time axis and scrubber, and if we delete them, they disappear
+	// from the time plots too. :( OK, so just need to make two const layouts.
+	let mylayout2 = layout3;
 	
 	// set x axis title
-	mylayout.xaxis['title'] = { text: 'Value' };
-	mylayout.yaxis['title'] = { text: 'Occurrences' };
-	mylayout['barmode'] = "overlay";
+	if(traces.length>2) mylayout2.yaxis['title'] = { text: 'Occurrences' };
+	else mylayout2.yaxis['title'] = { text: traces[0]['name'] + ' Occurrences' };
+	if(traces.length>2) mylayout2.xaxis['title'] = 'Value';
+	else mylayout2.xaxis['title'] = traces[0]['name'];
+	mylayout2['barmode'] = "overlay";
+	
+	// add another y axis if 2 traces
+	if(traces.length==2){
+		mylayout2['yaxis2'] = { overlaying: 'y',
+		                       side: 'right',
+		                       title: traces[1]['name'] + ' Occurrences'
+		                      };
+		mylayout2['xaxis2'] = { overlaying: 'x',
+		                       side: 'top',
+		                       title: traces[1]['name'],
+		                       type: '-',
+		                      };
+	}
 	
 	// tell plotly the data has changed
-	mylayout.datarevision = Math.random();
+	mylayout2.datarevision = Math.random();
 	
 	let divname = 'histo_' + name;
 	
@@ -250,7 +387,7 @@ async function UpdateHisto(name){
 	let HTMLDIV = document.getElementById(divname);
 	
 	// update the plot
-	Plotly.react(HTMLDIV, traces, mylayout, config);
+	Plotly.react(HTMLDIV, traces, mylayout2, config);
 	// trigger resizing to the containing div.
 	//Plotly.relayout(HTMLDIV, {autosize: true});
 }
@@ -285,12 +422,23 @@ async function UpdateTimeSeries(name){
 	//console.log("startTime is ",startTime);
 	//console.log("endTime is ",endTime);
 	
-	let mylayout = MakeTimeLayout(startTime, endTime);
+	let mylayout = layout2;
+	
+	// add a rangeslider to the correct range
+	mylayout.xaxis['rangeslider'] = {range: [startTime, endTime] };
 	
 	// set x axis title
-	mylayout.xaxis['title'] = { text: 'Time' };
-	mylayout.yaxis['title'] = { text: 'Value' };
-
+	if(traces.length>2) mylayout.yaxis['title'] = { text: 'Value' };
+	else mylayout.yaxis['title'] = { text: traces[0]['name'] };
+	
+	// add another y axis if 2 traces
+	if(traces.length==2){
+		mylayout['yaxis2'] = { overlaying: 'y',
+		                       side: 'right',
+		                       title: traces[1]['name']
+		                      };
+	}
+	
 	// tell plotly the data has changed
 	mylayout.datarevision = Math.random();
 	
@@ -302,76 +450,6 @@ async function UpdateTimeSeries(name){
 	// update the plot
 	Plotly.react(HTMLDIV, traces, mylayout, config);
 	
-}
-
-function MakeTimeLayout(startTime, endTime){
-	
-	let mylayout = layout2;
-	
-	// set x axis type
-	mylayout.xaxis['type'] = 'date';
-	
-	// add buttons for discrete time ranges
-	mylayout.xaxis['rangeselector'] = {
-		buttons: [
-			{
-				count: 1,
-				label: '1hr',
-				step: 'hour',
-				stepmode: 'backward'
-			},
-			{
-				count: 3,
-				label: '3hr',
-				step: 'hour',
-				stepmode: 'backward'
-			},
-			{
-				count: 6,
-				label: '6hr',
-				step: 'hour',
-				stepmode: 'backward'
-			},
-			{
-				count: 12,
-				label: '12h',
-				step: 'hour',
-				stepmode: 'backward'
-			},
-			{
-				count: 24,
-				label: '24hr',
-				step: 'hour',
-				stepmode: 'backward'
-			},
-			{
-				count: 3,
-				label: '3d',
-				step: 'day',
-				stepmode: 'backward'
-			},
-			{
-				count: 7,
-				label: '1w',
-				step: 'day',
-				stepmode: 'backward'
-			},
-			{
-				count: 1,
-				label: '1m',
-				step: 'month',
-				stepmode: 'backward'
-			},
-			
-			{step: 'all'}
-			
-		]
-	};
-	
-	// add a rangeslider to the correct range
-	mylayout.xaxis['rangeslider'] = {range: [startTime, endTime] };
-	
-	return mylayout;
 }
 
 // retrieve new data and update the plot
