@@ -55,6 +55,7 @@ const layout=  {
 		//rangeslider: {range: [wavelengths[0], wavelengths[wavelengths.length-2]] }  // why -2?
 	},
 	yaxis: {
+		fixedrange: false,
 		autorange: true,
 		rangemode: 'nonnegative',  // absorbance graph goes negative outside ROI
 		uirevision: true,
@@ -102,7 +103,7 @@ async function parseTrace(theData, theName){
 	// but we previously had issues when we DIDN'T stringify the data.
 	// so we may need to parse it twice??? ffs....
 	//if(theName=='rawfit_pars'){ console.log("going to attempt to parse rawfit dataarray: '",dataarray,"'"); }
-	//if(theName=='rawfit_pars') console.log(theName," dataarray is '",dataarray,"'");
+	if(theName=='rawfit_pars') console.log(theName," dataarray is '",dataarray,"'");
 	if(typeof dataarray==='string') dataarray = JSON.parse(dataarray);
 	let xvals = dataarray['xvals'];
 	let yvals = dataarray['yvals'];
@@ -118,6 +119,7 @@ async function parseTrace(theData, theName){
 	
 	if(dataarray['xerrs'] != null){ thistrace['error_x'] = dataarray['xerrs']; }
 	if(dataarray['yerrs'] != null){ thistrace['error_y'] = dataarray['yerrs']; }
+	if(dataarray['zvals'] != null){ thistrace['z'] = dataarray['zvals']; }
 	
 	return thistrace;
 }
@@ -280,7 +282,7 @@ document.addEventListener("DOMContentLoaded", function(){
 		// add events for when a plot is shown from the accordian
 		parentdiv.addEventListener("shown.bs.collapse", function(){
 			//console.log("registering for periodic updates")
-			var handle = setInterval(function(){ check_for_new_data(plotdiv.id) }, 3000); // FIXME div 10
+			var handle = setInterval(function(){ check_for_new_data(plotdiv.id) }, 3000);
 			timerHandleMap[plotdiv.id] = handle;
 			
 //			if(plotdiv.id=="dark_subtracted_data" || plotdiv.id=="absorbance_trace"){
@@ -317,7 +319,7 @@ document.addEventListener("DOMContentLoaded", function(){
 	}
 	
 	// finally add period updates to the initially open trace
-	var handle = setInterval(function(){ check_for_new_data('last_trace') }, 3000); // FIXME div 10
+	var handle = setInterval(function(){ check_for_new_data('last_trace') }, 3000);
 	timerHandleMap['last_trace'] = handle;
 });
 

@@ -62,61 +62,85 @@
     </div>
   </nav>
   
-  <div class="container m-3">
-    <form action="/cgi-bin/transmitt.cgi" method="post">
-      <!-- POWER STATE -->
-      <!-- + power ("powerstate" = json: "status" = 'ON'/'OFF') [W] -->
-      Power:
-      <input name="Power" type="submit"
-             <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_power_state.cgi",0); echo $data; ?> >
-      <input type="text" class="btn" name="source_url" value="URL" style="display: none;">
-      
-      <!-- PUMP STATE -->
-      <!-- + pump ("pumpstate" = json: "state" = 'ON'/'OFF') [W] -->
-      Pump:
-      <input name="Pump" type="submit"
-             <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_pump_state.cgi",0); echo $data; ?> >
-      <input type="text" class="btn" name="source_url" value="URL" style="display: none;">
-      
-      <!-- VALVE STATE -->
-      <!-- + inlet valve  ("valvestate_inlet" = json: "state" = 'OPEN'/'CLOSED') [W] -->
-      <!-- + outlet valve ("valvestate_inlet" = json: "state" = 'OPEN'/'CLOSED') [W] -->
-      Inlet Valve:
-      <input name="Valve_inlet" type="submit"
-             <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_valve_state.cgi?a=inlet",0); echo $data; ?> >
-      Outlet Valve:
-      <input name="Valve_outlet" type="submit"
-             <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_valve_state.cgi?a=outlet",0); echo $data; ?> >
-      <input type="text" class="btn" name="source_url" value="URL" style="display: none;">
-      <!-- <br> -->
-      
-      <!-- PWM BOARD -->
-      <!-- + pwm board ("pwm_connected" = json: bare integer? ) [W] -->
-      <!-- could decouple this from power and have manual connection -->
-      <label class="form-check-label">PWM board connected: </label>
-      <input class="form-check-input" type="checkbox" id="pwmboard"
-             onclick="this.checked=!this.checked;" style="vertical-align: middle; margin: 25px auto;"
-             <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_pwmboard_state.cgi",0); echo $data; ?>
-             <!-- note; no closing '>' here! -->
-      <!--<br> -->
-      
-      <!-- SPECTROMETER -->
-      <!-- could decouple this from power and have manual connection -->
-      <!-- + spectrometer ("spectrometer_connected" = json: bare bool ) [W] -->
-      <label class="form-check-label">Spectrometer connected: </label>
-      <input class="form-check-input" type="checkbox" id="spectrometer"
-             onclick="this.checked=!this.checked;" style="vertical-align: middle; margin: 25px auto;"
-             <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_spectrometer_state.cgi",0); echo $data; ?>
-             <!-- note; no closing '>' here! -->
-    </form>
-    
-    <!-- LED STATES -->
-    <!-- + leds ("ledStatuses" = json: <ledname>:<integer> ) [W] -->
-    <div class="form-check form-switch">
-      <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_led_states.cgi",0); echo $data; ?>
-    </div>
-    
+  <div class="container-fluid bg-primary text-white">
+      <h1>Detector Status</h1>
   </div>
+  <!-- container for two form columns -->
+  <div class="container-md row mx-auto">
+    <!-- container for first form column -->
+    <!-- col-sm: two columns of form items will stack when viewport width becomes small -->
+    <div class="col-sm d-flex justify-content-center">
+      
+      <!-- form of first column of buttons -->
+      <form action="/cgi-bin/transmitt.cgi" method="post">
+        
+        <!-- POWER STATE -->
+        <div class="form-row d-flex justify-content-center">
+        <label for="power" class="col col-form-label" style="text-align: right;">Power: </label>
+        <input name="Power" id="power" type="submit"
+               <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_power_state.cgi",0); echo $data; ?> >
+        <input type="text" class="btn" name="source_url" value="URL" style="display: none;">
+        </div>
+        
+        <!-- PUMP STATE -->
+        <div class="form-row d-flex justify-content-center">
+        <label for="pump" class="col col-form-label" style="text-align: right;">Pump: </label>
+        <input name="Pump" id="pump" type="submit"
+               <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_pump_state.cgi",0); echo $data; ?> >
+        <input type="text" class="btn" name="source_url" value="URL" style="display: none;">
+        </div>
+        
+        <!-- INLET VALVE -->
+        <div class="form-row d-flex justify-content-center">
+        <label for="invalve" class="col col-form-label" style="text-align: right;">Inlet Valve: </label>
+        <input name="Valve_inlet" id="invalve" type="submit"
+               <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_valve_state.cgi?a=inlet",0); echo $data; ?> >
+        </div>
+         
+        <!-- OUTLET VALVE -->
+        <div class="form-row d-flex justify-content-center">
+        <label for="outvalve" class="col col-form-label" style="text-align: right;">Outlet Valve: </label>
+        <input name="Valve_outlet" id="outvalve" type="submit"
+               <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_valve_state.cgi?a=outlet",0); echo $data; ?> >
+        <input type="text" class="btn" name="source_url" value="URL" style="display: none;">
+        </div>
+        
+        <!-- PWM BOARD -->
+        <div class="form-row d-flex justify-content-center">
+        <label class="col col-form-label" style="text-align: right;">PWM board connected: </label>
+        <input class="form-check-input align-middle" type="checkbox" id="pwmboard"
+               onclick="this.checked=!this.checked;" style="vertical-align: middle; margin: 12px auto;"
+               <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_pwmboard_state.cgi",0); echo $data; ?>
+               <!-- note; no closing '>' here! -->
+        </div>
+        
+        <!-- SPECTROMETER -->
+        <div class="form-row d-flex justify-content-center">
+        <label class="col col-form-label" style="text-align: right;">Spectrometer connected: </label>
+        <input class="form-check-input align-middle" type="checkbox" id="spectrometer"
+               onclick="this.checked=!this.checked;" style="vertical-align: middle; margin: 12px auto;"
+               <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_spectrometer_state.cgi",0); echo $data; ?>
+               <!-- note; no closing '>' here! -->
+        </div>
+        
+      </form> <!-- end first form -->
+    </div> <!-- end container for first form column -->
+    
+    <!-- second column of form items-->
+    <div class="col-sm d-flex justify-content-center">
+      <!-- form to contain the interactible elements -->
+      <form action="/cgi-bin/transmitt.cgi" method="post">
+        <!-- enclose the rows in this form column in a div for vertical alignment -->
+<!--        <div class="d-flex justify-content-center"> -->
+          <!-- LED STATES -->
+          <div class="form-check form-switch ">
+            <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_led_states.cgi",0); echo $data; ?>
+          </div>
+<!--        </div> --> <!-- end vertical alignment div -->
+      </form>
+    </div>  <!-- end container of second column form -->
+    
+  </div>  <!-- end container of two form columns -->
   
   <div class="container-fluid"> <!-- RUN INFO CONTAINER -->
   
@@ -179,7 +203,7 @@
   </div> <!-- END RUN INFO CONTAINER -->
   
   <!-- styled table -->
-  <div class="container-fluid p-5">
+  <div class="container-md p-3">
     <div class="table-responsive" style="max-height:300px;" id="scheduler_table">
       <table class="table table-striped table-hover">
         <tbody id="scheduler_commands">
@@ -191,7 +215,10 @@
   </div>
   
   <!-- Accordion of trace plots -->
-  <div id="plots" class="m-5 bg-light rounded">
+  <div class="container-fluid bg-primary text-white border">
+    <h1>Last Measurement Results</h1>
+  </div>
+  <div id="plots" class="mx-5 my-2 bg-light rounded border">
     <?php
       $traces = ['last_trace',
       //           'dark_subtracted_data_in',
@@ -200,14 +227,16 @@
       //           'pure_scaled',
       // combine all the above on a single plot
                  'dark_subtracted_data',
-                 'absorbance_trace'];
+                 'absorbance_trace',
+                 'transparency_trace'];
       $tracenames = [ 'Last Trace',
       //              'Dark Subtracted Data (absorbance region)',
       //              'Dark Subtracted Data (fitted sideband region)',
       //              'Dark Subtracted Pure Reference',
       //              'Pure Reference, Fit to Data',
                       'Dark Subtracted Data',
-                      'Absorbance'
+                      'Absorbance',
+                      'Transparency'
                     ];
       
       for($i=0; $i < count($traces); ++$i){
@@ -299,28 +328,42 @@
     ?>
   </div>
   
+  <div class="container-fluid my-1 bg-primary text-white">
+    <h1>Historic Data</h1>
+  </div>
+
+  <div class="container-md bg-muted">  <!-- add mx-3 to class list to left-align it -->
+    <div class="form-row d-flex justify-content-center">
+      <div class="input-group">
+        <span class="input-group-text">History Length</span>
+        <input id="historyLength" type="number" style="background-color: white" class="form-control" value='200' >
+      </div>
+    </div>
+  </div>
   <!-- Accordion of histograms -->
-  <div id="histograms" class="m-5 bg-light rounded">
+  <div id="histograms" class="m-3 bg-light rounded">
     <?php
-      $histos = ['darktrace_pars',      // mean, width
+      $histos = [
+                 'gdconcentration',     //
+                 'peak_diff',           //
+                 'peak1_height',        //
+                 'peak2_height',        //
+                 'darktrace_pars',      // mean, width
                  'rawtrace_pars',       // min, max
                  'purefit_pars',        // x-scaling, y-scaling, x-shift, y-shift, linear component grad
-                 'simplefit_pars',     //
-                 'complexfit_pars',    //
-                 'peak1_height',
-                 'peak2_height',
-                 'peak_diff',
-                 'gdconcentration'      //
+                 'simplefit_pars',      //
+                 'complexfit_pars'      //
                  ];
-      $histonames = [ 'Dark Trace Parameters',
+      $histonames = [ 
+                      'Gd Concentration',
+                      'Peak Height Difference',
+                      'Peak 1 Height',
+                      'Peak 2 Height',
+                      'Dark Trace Parameters',
                       'Raw Trace Parameters',
                       'Pure Fit Parameters',
                       'Simple Fit Parameters',
-                      'Complex Fit Parameters',
-                      'Peak 1 Height',
-                      'Peak 2 Height',
-                      'Peak Height Difference',
-                      'Gd Concentration'
+                      'Complex Fit Parameters'
                     ];
       
 //	 + dark trace params - ("darktrace_params" = json: "mean", "width") [D]
@@ -388,9 +431,29 @@
     ?>
     
   </div> <!-- end of histogram accordion -->
-  
   <!-- script that'll populate those histograms -->
   <script src="../../update_histos.js?version=1" type="module"></script>
+  
+  <!-- transparency plots -->
+  <div id="transparency_heatmap_acc" class="m-5 bg-light rounded">
+    <div class="card">
+      <div class="card-header">
+        <a class="btn" data-bs-toggle="collapse" href="#transparencyhistory">Transparency History</a>
+      </div>
+      <div id="transparencyhistory" class="card-body collapse show active" data-bs-parent="#transparency_heatmap_acc">
+        <div id="transparency_samples" class="transparencyplot" style="width:100% height:500px"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <a class="btn" data-bs-toggle="collapse" href="#transparencyheatmap">Transparency Heatmap</a>
+      </div>
+      <div id="transparencyheatmap" class="card-body collapse" data-bs-parent="#transparency_heatmap_acc">
+        <div id="transparency_heatmap" class="transparencyplot" style="width:100% height:500px"></div>
+      </div>
+    </div>
+  </div>
+  <script src="../../update_heatmap.js?version=1" type="module"></script>
   
 <!--        <li class="list-group-item d-flex justify-content-between align-items-center"> start </li>-->
 <!--      <li class="list-group-item active d-flex justify-content-between align-items-center"> power </li>-->

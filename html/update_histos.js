@@ -161,6 +161,7 @@ const layout2=  {
 		// a different numeric value than before (e.g. call `layout.uirevision = Math.random();`)
 	},
 	yaxis: {
+		fixedrange: false,  // this is required to allow the y-axis to be zoomable when we have a rangeslider enabled.
 		autorange: true,
 		//rangemode: 'nonnegative',  // some parameter values may be negative...
 		uirevision: true,
@@ -222,68 +223,90 @@ const layout3=  {
 async function GetTraces(name){
 	//console.log("Plotting new data for trace ",name);
 	
+	let histlengthdiv = document.getElementById("historyLength");
+	let histlength = histlengthdiv.value;
+	
 	let urls = undefined;
 	
 	if(name=="darktrace_pars"){
 		// mean, width
-		urls = new Map([["mean", "http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=dark_mean"],
-		                ["width","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=dark_range"]]);
+		urls = new Map([["mean_LEDA", "http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=dark_mean&b=275_A&c="+histlength],
+		                ["width_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=dark_range&b=275_A&c="+histlength],
+		                ["mean_LEDB", "http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=dark_mean&b=275_B&c="+histlength],
+		                ["width_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=dark_range&b=275_B&c="+histlength]]);
 	}
 	
 	if(name=="rawtrace_pars"){
 		// min, max
-		urls = new Map([["min","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_min"],
-		                ["max","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_max"]]);
+		urls = new Map([["min_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_min&b=275_A&c="+histlength],
+		                ["max_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_max&b=275_A&c="+histlength],
+		                ["min_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_min&b=275_B&c="+histlength],
+		                ["max_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_max&b=275_B&c="+histlength]]);
 	}
 	
 	if(name=="purefit_pars"){
 		// tfitresultptr (pars, success, chi2)
-		urls = new Map([["chi2","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_chi2"],
-		                ["stretch_x","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_stretchx"],
-		                ["stretch_y","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_stretchy"],
-		                ["shift_x","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shiftx"],
-		                ["shift_y","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shifty"],
-		                ["linear_bg","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_linearcomp"],
-		                ["shoulder_width","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shoulderwid"],
-		                ["shoulder_amp","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shoulderamp"],
-		                ["shoulder_pos","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shoulderpos"]]);
+		urls = new Map([["chi2","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_chi2&c="+histlength],
+		                ["stretch_x","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_stretchx&c="+histlength],
+		                ["stretch_y","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_stretchy&c="+histlength],
+		                ["shift_x","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shiftx&c="+histlength],
+		                ["shift_y","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shifty&c="+histlength],
+		                ["linear_bg","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_linearcomp&c="+histlength],
+		                ["shoulder_width","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shoulderwid&c="+histlength],
+		                ["shoulder_amp","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shoulderamp&c="+histlength],
+		                ["shoulder_pos","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shoulderpos&c="+histlength]]);
 	}
 	
 	if(name=="simplefit_pars"){
 		// custom object (chi2, TODO fit pars?)
-		urls = new Map([["peak1_chi2","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak1_chi2"],
-		                ["peak2_chi2","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak2_chi2"]]);
+		urls = new Map([["peak1_chi2_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak1_chi2&b=275_A&c="+histlength],
+		                ["peak2_chi2_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak2_chi2&b=275_A&c="+histlength],
+		                ["peak1_chi2_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak1_chi2&b=275_B&c="+histlength],
+		                ["peak2_chi2_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak2_chi2&b=275_B&c="+histlength]]);
 	}
 	
 	if(name=="complexfit_pars"){
 		// custom object (chi2, TODO fit pars?)
-		urls = new Map([["chi2","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_chi2"]
+		urls = new Map([["chi2_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_chi2&b=275_A&c="+histlength],
+		                ["chi2_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_chi2&b=275_B&c="+histlength]
 		                ]);
 	}
 	
 	if(name=="peak1_height"){
-		urls = new Map([["rawfit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight1"],
-		                ["simplefit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight1"],
-		                ["complexfit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight1"]]);
+		urls = new Map([["rawfit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight1&b=275_A&c="+histlength],
+		                ["simplefit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight1&b=275_A&c="+histlength],
+		                ["complexfit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight1&b=275_A&c="+histlength],
+		                ["rawfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight1&b=275_B&c="+histlength],
+		                ["simplefit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight1&b=275_B&c="+histlength],
+		                ["complexfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight1&b=275_B&c="+histlength]]);
 	}
 	
 	if(name=="peak2_height"){
-		urls = new Map([["rawfit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight2"],
-		                ["simplefit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight2"],
-		                ["complexfit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight2"]]);
+		urls = new Map([["rawfit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight2&b=275_A&c="+histlength],
+		                ["simplefit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight2&b=275_A&c="+histlength],
+		                ["complexfit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight2&b=275_A&c="+histlength],
+		                ["rawfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight2&b=275_B&c="+histlength],
+		                ["simplefit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight2&b=275_B&c="+histlength],
+		                ["complexfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight2&b=275_B&c="+histlength]]);
 	}
 	
 	if(name=="peak_diff"){
-		urls = new Map([["rawfit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheightdiff"],
-		                ["simplefit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheightdiff"],
-		                ["complexfit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheightdiff"]]);
+		urls = new Map([["rawfit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheightdiff&b=275_A&c="+histlength],
+		                ["simplefit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheightdiff&b=275_A&c="+histlength],
+		                ["complexfit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheightdiff&b=275_A&c="+histlength],
+		                ["rawfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheightdiff&b=275_B&c="+histlength],
+		                ["simplefit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheightdiff&b=275_B&c="+histlength],
+		                ["complexfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheightdiff&b=275_B&c="+histlength]]);
 	}
 	
 	if(name=="gdconcentration"){
 		// custom object
-		urls = new Map([["raw_fit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_gdconc"],
-		                ["simple_fit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_gdconc"],
-		                ["complex_fit","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_gdconc"]]);
+		urls = new Map([["rawfit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_gdconc&b=275_A&c="+histlength],
+		                ["simple_fit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_gdconc&b=275_A&c="+histlength],
+		                ["complex_fit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_gdconc&b=275_A&c="+histlength],
+		                ["rawfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_gdconc&b=275_B&c="+histlength],
+		                ["simplefit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_gdconc&b=275_B&c="+histlength],
+		                ["complexfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_gdconc&b=275_B&c="+histlength]]);
 	}
 	
 	//console.log("GetTraces got ",urls.size," urls for name ",name);
@@ -309,6 +332,9 @@ async function GetTraces(name){
 	
 	//console.log("GetTraces got ",traces.length," traces for name ",name);
 	//console.log("GetTraces for ",name," returning: ",traces);
+	//const [firstkey] = urls.keys();
+	//const [firsturl] = urls.values();
+	//console.log("url 0 is ",firsturl);
 	
 	// TODO find a nicer way to do this
 	// for plots with 2 traces, put them on different axes
@@ -411,7 +437,7 @@ async function UpdateTimeSeries(name){
 	// set plot type for each trace to scatter
 	for(let i = 0; i < traces.length; i++) {
 		traces[i]['type'] = 'scatter';
-		traces[i]['mode'] = 'lines+markers';
+		traces[i]['mode'] = 'markers';
 	}
 	
 	//console.log("UpdateTimeSeries for name ",name," had ",traces.length," traces");
@@ -516,7 +542,7 @@ document.addEventListener("DOMContentLoaded", function(){
 		// add events for when a plot is shown from the accordian
 		parentdiv.addEventListener("shown.bs.collapse", function(){
 			//console.log("registering for periodic updates")
-			var handle = setInterval(function(){check_for_new_data2(plotdiv.id) }, 3000);  // FIXME reduce by 10
+			var handle = setInterval(function(){check_for_new_data2(plotdiv.id) }, 3000);
 			timerHandleMap[plotdiv.id] = handle;
 			
 			// invoke it the first time
@@ -552,7 +578,7 @@ document.addEventListener("DOMContentLoaded", function(){
 	}
 	
 	// finally add period updates to the initially open traces
-	var handle = setInterval(function(){ check_for_new_data2('darktrace_pars') }, 3000);  // FIXME reduce by 10
-	timerHandleMap['darktrace_pars'] = handle;
+	var handle = setInterval(function(){ check_for_new_data2('gdconcentration') }, 3000);
+	timerHandleMap['gdconcentration'] = handle;
 });
 
