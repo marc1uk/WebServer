@@ -336,17 +336,15 @@ async function GetTraces(name){
 	//const [firsturl] = urls.values();
 	//console.log("url 0 is ",firsturl);
 	
-	// TODO find a nicer way to do this
-	// for plots with 2 traces, put them on different axes
-	if(traces.length==2){
-		traces[1]['yaxis']='y2';
-	}
-	
 	return traces;
 	
 }
 
 async function UpdateHisto(name){
+	// dynamic binning on zoom is possible:
+	// https://www.statworx.com/en/content-hub/blog/fixing-the-most-common-problem-with-plotly-histograms/
+	// see also making clicking a single plot show only that trace, and adding spikelines here:
+	// https://dylancastillo.co/4-ways-to-improve-your-plotly-graphs/
 	
 	let tracepromise = GetTraces(name);
 	//console.log("trace promise for name ",name," is ",tracepromise);
@@ -368,14 +366,23 @@ async function UpdateHisto(name){
 		traces[i]['x'] = traces[i]['y'];
 		delete traces[i]['y'];
 		traces[i]['opacity'] = 0.5;
+		traces[i]['xaxis'] = 'x';
+		traces[i]['yaxis'] = 'y';
 	}
 	
 	
 	// for plots with 2 traces, put them on different x axes
-	if(traces.length==2){
+	if(traces.length==4){
 		traces[1]['xaxis']='x2';
 		traces[1]['yaxis']='y2';
+		traces[3]['xaxis']='x2';
+		traces[3]['yaxis']='y2';
 	}
+	
+	// strip off the '_LEDA' suffix to get the underlying plot name
+	let plname = traces[0]['name'].substr(0,traces[0]['name'].length-5);
+	let plname2 = "";
+	if(traces.length > 1) plname2 = traces[1]['name'].substr(0,traces[1]['name'].length-5);
 	
 	// XXX so it seems like this is acting as capturing a reference rather than making a copy,
 	// which means if we use 'mylayout = layout2' or even 'mylayoutX = layout2' in both
@@ -385,21 +392,22 @@ async function UpdateHisto(name){
 	let mylayout2 = layout3;
 	
 	// set x axis title
-	if(traces.length>2) mylayout2.yaxis['title'] = { text: 'Occurrences' };
-	else mylayout2.yaxis['title'] = { text: traces[0]['name'] + ' Occurrences' };
-	if(traces.length>2) mylayout2.xaxis['title'] = 'Value';
-	else mylayout2.xaxis['title'] = traces[0]['name'];
+	if(traces.length>4) mylayout2.yaxis['title'] = { text: 'Occurrences' };
+	else mylayout2.yaxis['title'] = { text: plname + ' Occurrences' };
+	if(traces.length>4) mylayout2.xaxis['title'] = 'Value';
+	else mylayout2.xaxis['title'] =  plname;
 	mylayout2['barmode'] = "overlay";
 	
-	// add another y axis if 2 traces
-	if(traces.length==2){
+	// add another y axis if 4 traces (2 variables, 2 LEDs)
+	if(traces.length==4){
 		mylayout2['yaxis2'] = { overlaying: 'y',
 		                       side: 'right',
-		                       title: traces[1]['name'] + ' Occurrences'
+		                       title: plname2 + ' Occurrences'
 		                      };
 		mylayout2['xaxis2'] = { overlaying: 'x',
 		                       side: 'top',
-		                       title: traces[1]['name'],
+		                       title: plname2,
+		                       position: 1,
 		                       type: '-',
 		                      };
 	}
@@ -414,8 +422,9 @@ async function UpdateHisto(name){
 	
 	// update the plot
 	Plotly.react(HTMLDIV, traces, mylayout2, config);
-	// trigger resizing to the containing div.
-	//Plotly.relayout(HTMLDIV, {autosize: true});
+	// trigger resizing to the containing div
+	// doesn't seem to work??
+	Plotly.relayout(HTMLDIV, {autosize: true});
 }
 
 async function UpdateTimeSeries(name){
@@ -448,20 +457,31 @@ async function UpdateTimeSeries(name){
 	//console.log("startTime is ",startTime);
 	//console.log("endTime is ",endTime);
 	
+	// strip off the '_LEDA' suffix to get the underlying plot name
+	let plname = traces[0]['name'].substr(0,traces[0]['name'].length-5);
+	let plname2 = ""
+	if(traces.length > 1) plname2 = traces[1]['name'].substr(0,traces[1]['name'].length-5);
+	
+	// for plots with 2 traces, put them on different y axes
+	if(traces.length==4){
+		traces[1]['yaxis']='y2';
+		traces[3]['yaxis']='y2';
+	}
+	
 	let mylayout = layout2;
 	
 	// add a rangeslider to the correct range
 	mylayout.xaxis['rangeslider'] = {range: [startTime, endTime] };
 	
 	// set x axis title
-	if(traces.length>2) mylayout.yaxis['title'] = { text: 'Value' };
-	else mylayout.yaxis['title'] = { text: traces[0]['name'] };
+	if(traces.length>4) mylayout.yaxis['title'] = { text: 'Value' };
+	else mylayout.yaxis['title'] = { text: plname };
 	
-	// add another y axis if 2 traces
-	if(traces.length==2){
+	// add another y axis if 4 traces (2 variables, 2 LEDs)
+	if(traces.length==4){
 		mylayout['yaxis2'] = { overlaying: 'y',
 		                       side: 'right',
-		                       title: traces[1]['name']
+		                       title: plname2
 		                      };
 	}
 	
