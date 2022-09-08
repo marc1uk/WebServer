@@ -53,5 +53,5 @@ else
 fi
 
 
-echo -n ${BASH_REMATCH[1]}
+#echo -n ${BASH_REMATCH[1]}
 

@@ -109,9 +109,9 @@ async function GetTraces(name){
 	
 	if(name=="transparency_samples"){
 		// mean, width
-		urls = new Map([["red", "http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency_red"],
-		                ["green","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency_green"],
-		                ["blue","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency_blue"]]);
+		urls = new Map([["red", "http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency&d=red"],
+		                ["green","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency&d=green"],
+		                ["blue","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency&d=blue"]]);
 	}
 	
 	if(name=="transparency_heatmap"){

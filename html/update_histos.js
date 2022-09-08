@@ -446,7 +446,7 @@ async function UpdateTimeSeries(name){
 	// set plot type for each trace to scatter
 	for(let i = 0; i < traces.length; i++) {
 		traces[i]['type'] = 'scatter';
-		traces[i]['mode'] = 'markers';
+		traces[i]['mode'] = 'markers+lines';
 	}
 	
 	//console.log("UpdateTimeSeries for name ",name," had ",traces.length," traces");

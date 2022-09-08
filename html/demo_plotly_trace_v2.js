@@ -130,9 +130,6 @@ function check_for_new_data() {
 	try {
 		let timestamp = GetDataFetchRequest("http://192.168.2.54/cgi-bin/marcus/get_last_trace_time.cgi");
 		let newdataavailable = checkReturnedTimeStamp('last_trace', timestamp);
-		let newdata = newdataavailable.then(
-			
-		);
 		// register callbacks for when the timestamp promise returns
 		newdataavailable.then(
 			/*

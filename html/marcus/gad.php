@@ -150,6 +150,8 @@
   <?php
        $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_run_info.cgi",0);
        $run_info = json_decode($data);  // by default it makes an object, access members with ->
+       //echo "decoded into json object:";
+       //var_dump($run_info);
    ?>
   <!-- MORE RUN INFO -->
   <!-- + pure reference trace filename ("purewater_filename" = json: "filename") [D]
@@ -158,6 +160,10 @@
   <?php
        $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_more_run_info.cgi",0);
        $more_run_info = json_decode($data, true);   // with 'true', it makes an associative array
+       //echo "decoded is: ";
+       //var_dump($more_run_info);
+       //echo "so run is: " , $run_info->runnum;
+       //echo "and file is " , $more_run_info['output_file'];
    ?>
   <div class="container-md bg-muted">  <!-- add mx-3 to class list to left-align it -->
     <div class="input-group mb-3">
@@ -178,14 +184,14 @@
       <span class="input-group-text">Stop Time</span>
       <input id="stoptime" type="text" readonly style="background-color: white" class="form-control" value="<?php echo $run_info->stop; ?>" >
     </div>
+    <!--
     <div class="input-group mb-3">
       <span class="input-group-text">Pure water reference file</span>
       <input id="reffile" type="text" readonly style="background-color: white" class="form-control" value="<?php echo $more_run_info['purewater_filename']; ?>" >
-<!--    </div>-->
-<!--    <div class="input-group mb-3">-->
       <span class="input-group-text">Calibration Curve Version</span>
       <input id="calibver" type="text" readonly style="background-color: white" class="form-control" value="<?php echo $more_run_info['calib_curve_ver']; ?>" >
     </div>
+    -->
     <div class="input-group mb-3">
       <span class="input-group-text">Run Notes</span>
       <!-- note: everything between <textarea> and </textarea> is text, so no newines or whitespace here! -->

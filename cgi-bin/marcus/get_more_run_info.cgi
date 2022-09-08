@@ -3,6 +3,8 @@
 # must have this or it complains 'malformed header'
 echo -e "Content-type:text/html\n"
 
+DUMMYVAL="{\"output_file\":\"unknown\"}";
+
 # first retrieve the run number for the current run from the webpage table
 RUN=$(psql -U postgres -d rundb -t -c "SELECT values FROM webpage WHERE name='run_number'")
 if [ $? -ne 0 ] || [ -z "${RUN}" ]; then
@@ -17,7 +19,7 @@ fi
 # get pure water reference spectrum file
 PUREREFFILE=$(psql -U postgres -d rundb -A -t -c "SELECT values::json->'filename' AS filename FROM data WHERE name='purewater_filename' AND run = ${RUN}")
 if [ $? -ne 0 ] || [ -z "${PUREREFFILE}" ] || [ "$PUREREFFILE" == '""' ]; then
-	PUREREFFILE="[error]"
+	PUREREFFILE="\"error\""
 fi
 
 CALIBCURVEVER=$(psql -U postgres -d rundb -A -t -c "SELECT values AS version FROM data WHERE name='calibration_version' AND run = ${RUN}")
@@ -27,7 +29,7 @@ fi
 
 OUTFILE=$(psql -U postgres -d rundb -A -t -c "SELECT values::json->'filename' AS filename FROM webpage WHERE name='output_filename'")
 if [ $? -ne 0 ] || [ -z "${OUTFILE}" ] || [ "$OUTFILE" == '""' ]; then
-	OUTFILE="[error]"
+	OUTFILE="\"error\""
 fi
 
 # convert to JSON for passing to php

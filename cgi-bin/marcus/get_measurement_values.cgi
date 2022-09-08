@@ -29,6 +29,8 @@ for ARG in "${ARGS[@]}"; do
 		LED="${VAL}"
 	elif [ "${KEY}" == "c" ]; then
 		MAXVALS="${VAL}"
+	elif [ "${KEY}" == "d" ]; then
+		MEASUREMENT="${MEASUREMENT}_${VAL}"
 	#else
 	#	echo "${DUMMYSTRING}"
 	#	exit 1
@@ -74,9 +76,9 @@ KNOWN_MEASUREMENTS_Y['raw_gdconc']="SELECT values->'conc_and_err'->0 FROM data W
 KNOWN_MEASUREMENTS_Y['simple_gdconc']="SELECT values->'conc_and_err'->0 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_Y['complex_gdconc']="SELECT values->'conc_and_err'->0 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
 
-KNOWN_MEASUREMENTS_Y['transparency_red']="SELECT values->'red' FROM data WHERE name='transparency' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['transparency_green']="SELECT values->'green' FROM data WHERE name='transparency' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['transparency_blue']="SELECT values->'blue' FROM data WHERE name='transparency' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['transparency_red']="SELECT values->'red'->'value' FROM data WHERE name='transparency_samples' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['transparency_green']="SELECT values->'green'->'value' FROM data WHERE name='transparency_samples' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['transparency_blue']="SELECT values->'blue'->'value' FROM data WHERE name='transparency_samples' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
 
 declare -A KNOWN_MEASUREMENTS_X
 KNOWN_MEASUREMENTS_X['dark_mean']="SELECT timestamp FROM data WHERE name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
@@ -108,9 +110,9 @@ KNOWN_MEASUREMENTS_X['raw_gdconc']="SELECT timestamp FROM data WHERE name='gdcon
 KNOWN_MEASUREMENTS_X['simple_gdconc']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_X['complex_gdconc']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
 
-KNOWN_MEASUREMENTS_X['transparency_red']="SELECT timestamp FROM data WHERE name='transparency' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['transparency_green']="SELECT timestamp FROM data WHERE name='transparency' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['transparency_blue']="SELECT timestamp FROM data WHERE name='transparency' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['transparency_red']="SELECT timestamp FROM data WHERE name='transparency_samples' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['transparency_green']="SELECT timestamp FROM data WHERE name='transparency_samples' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['transparency_blue']="SELECT timestamp FROM data WHERE name='transparency_samples' ORDER BY timestamp DESC"
 
 
 if [[ ! " ${!KNOWN_MEASUREMENTS_X[*]} " =~ " ${MEASUREMENT} " ]] || [[ ! " ${!KNOWN_MEASUREMENTS_Y[*]} " =~ " ${MEASUREMENT} " ]]; then
