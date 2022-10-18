@@ -174,6 +174,7 @@ const layout2=  {
 	margin: {
 		b: 80,
 		t: 0,
+		l: 80,
 		r: 5
 	},
 	/*modebar: {
@@ -209,6 +210,7 @@ const layout3=  {
 	margin: {
 		b: 80,
 		t: 0,
+		l: 80,
 		r: 5
 	},
 	/*modebar: {
@@ -524,10 +526,13 @@ function check_for_new_data2(name) {
 				// check if there was new data available
 				if(result == true){
 					// retrieve and plot new data
-					//console.log("new data for ",name);
+					console.log("new data for ",name);
 					UpdateTimeSeries(name);
 					UpdateHisto(name);
-				}  // else no need to update plot
+				}  else {
+					// else no need to update plot
+					console.log("no new data for ",name);
+				}
 			}
 			// no need to register a rejection handler; newdataavailable should always resolve
 		);
@@ -561,8 +566,8 @@ document.addEventListener("DOMContentLoaded", function(){
 		
 		// add events for when a plot is shown from the accordian
 		parentdiv.addEventListener("shown.bs.collapse", function(){
-			//console.log("registering for periodic updates")
-			var handle = setInterval(function(){check_for_new_data2(plotdiv.id) }, 3000);
+			console.log("registering ",plotdiv.id," for periodic updates");
+			var handle = setInterval(function(){check_for_new_data2(plotdiv.id) }, 20000);
 			timerHandleMap[plotdiv.id] = handle;
 			
 			// invoke it the first time
@@ -589,7 +594,7 @@ document.addEventListener("DOMContentLoaded", function(){
 		// add event to collapse to disable updates while the plot is not shown
 		parentdiv.addEventListener("hidden.bs.collapse", function(){
 			if(timerHandleMap[plotdiv.id] != null){
-				//console.log("clearing interval ",timerHandleMap[plotdiv.id]);
+				console.log("clearing interval for ",plotdiv.id);
 				clearInterval(timerHandleMap[plotdiv.id]);
 				timerHandleMap[plotdiv.id]=null;
 			}
@@ -598,7 +603,7 @@ document.addEventListener("DOMContentLoaded", function(){
 	}
 	
 	// finally add period updates to the initially open traces
-	var handle = setInterval(function(){ check_for_new_data2('gdconcentration') }, 3000);
+	var handle = setInterval(function(){ check_for_new_data2('gdconcentration') }, 20000);
 	timerHandleMap['gdconcentration'] = handle;
 });
 

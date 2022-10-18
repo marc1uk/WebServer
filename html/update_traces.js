@@ -68,6 +68,7 @@ const layout=  {
 	margin: {
 		b: 80,
 		t: 0,
+		l: 80,
 		r: 5
 	},
 	/*modebar: {
@@ -223,7 +224,7 @@ async function UpdatePlot(name){
 
 // retrieve new data and update the plot
 function check_for_new_data(name) {
-	
+	console.log("checking for new data for ",name);
 	let getTimeUrl = "http://192.168.2.54/cgi-bin/marcus/get_last_trace_time.cgi?a=" + name;
 	//console.log("checking for new data for ",name," at ",getTimeUrl);
 	
@@ -247,8 +248,12 @@ function check_for_new_data(name) {
 				// check if there was new data available
 				if(result == true){
 					// retrieve and plot new data
+					console.log("new data available for",name);
 					UpdatePlot(name);
-				}  // else no need to update plot
+				}  else {
+					// else no need to update plot
+					console.log("new data available for",name);
+				}
 			}
 			// no need to register a rejection handler; newdataavailable should always resolve
 		);
@@ -269,9 +274,9 @@ document.addEventListener("DOMContentLoaded", function(){
 	const plots = document.getElementsByClassName("dataplot");
 	
 	// do an initial retrieval of all plot data FIXME sensible? or slow?
-	for(let i = 0; i < plots.length; i++) {
-		check_for_new_data(plots[i].id);
-	}
+	//for(let i = 0; i < plots.length; i++) {
+	//	check_for_new_data(plots[i].id);
+	//}
 	
 	// register events
 	for(let i = 0; i < plots.length; i++) {
@@ -281,18 +286,22 @@ document.addEventListener("DOMContentLoaded", function(){
 		
 		// add events for when a plot is shown from the accordian
 		parentdiv.addEventListener("shown.bs.collapse", function(){
-			//console.log("registering for periodic updates")
-			var handle = setInterval(function(){ check_for_new_data(plotdiv.id) }, 3000);
+			if(timerHandleMap[plotdiv.id] != null) return;
+			console.log("registering ",plotdiv.id," for periodic updates");
+			var handle = setInterval(function(){ check_for_new_data(plotdiv.id) }, 20000);
 			timerHandleMap[plotdiv.id] = handle;
+
+			// trigger it for the first time
+			check_for_new_data(plotdiv.id);
 			
-//			if(plotdiv.id=="dark_subtracted_data" || plotdiv.id=="absorbance_trace"){
-//				// an initial zoom to region of interest
-//				layout.xaxis.autorange = false;
-//				layout.xaxis.range=[250, 310];
-//			} else {
+			if(plotdiv.id=="dark_subtracted_data" ){
+				// an initial zoom to region of interest
+				layout.xaxis.autorange = false;
+				layout.xaxis.range=[250, 310];
+			} else {
 				layout.xaxis.autorange = true;
-				layout.yaxis.autorange = true;
-//			}
+			}
+			layout.yaxis.autorange = true;
 			// tell plotly the ui has changed
 			layout.uirevision = Math.random();
 			
@@ -310,7 +319,7 @@ document.addEventListener("DOMContentLoaded", function(){
 		// add event to collapse to disable updates while the plot is not shown
 		parentdiv.addEventListener("hidden.bs.collapse", function(){
 			if(timerHandleMap[plotdiv.id] != null){
-				//console.log("clearing interval ",timerHandleMap[plotdiv.id]);
+				console.log("clearing interval for ",plotdiv.id);
 				clearInterval(timerHandleMap[plotdiv.id]);
 				timerHandleMap[plotdiv.id]=null;
 			}
@@ -319,7 +328,7 @@ document.addEventListener("DOMContentLoaded", function(){
 	}
 	
 	// finally add period updates to the initially open trace
-	var handle = setInterval(function(){ check_for_new_data('last_trace') }, 3000);
+	var handle = setInterval(function(){ check_for_new_data('last_trace') }, 20000);
 	timerHandleMap['last_trace'] = handle;
 });
 

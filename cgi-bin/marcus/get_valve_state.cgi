@@ -8,7 +8,7 @@ echo -e "Content-type:text/html\n"
 # for a POST request they're stored in POST_STRING
 
 # start with a dummy return
-DUMMYVALUE='class="btn btn-warning" value="UNKNOWN"'
+DUMMYVALUE="UNKNOWN"
 
 PATTERN='a=(.*)'
 [[ ${QUERY_STRING} =~ ${PATTERN} ]]
@@ -46,12 +46,4 @@ elif [ "${BASH_REMATCH[1]}" != '"OPEN"' ] && [ "${BASH_REMATCH[1]}" != '"CLOSED"
 	exit 1
 fi
 
-if [ "${BASH_REMATCH[1]}" == '"OPEN"' ]; then
-	echo -n 'class="btn btn-success" value="OPEN"'
-else
-	echo -n 'class="btn btn-danger active" value="CLOSED"'
-fi
-
-
-#echo -n ${BASH_REMATCH[1]}
-
+echo -n ${BASH_REMATCH[1]}

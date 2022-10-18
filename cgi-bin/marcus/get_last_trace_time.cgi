@@ -38,7 +38,10 @@ if [ $? -eq 0 ]; then
 else
 	#echo "postgres query failure"
 	#echo ${DUMMYVALUE}
-	RETURN=${DUMMYVALUE}
+	RETURN="${DUMMYVALUE}"
 fi
 
-echo "\"${RETURN}\""
+echo -n '"'
+echo -n $RETURN
+echo '"'
+#echo "\"${RETURN}\""   # for some reason this inserts a leading space??

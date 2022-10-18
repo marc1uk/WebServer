@@ -86,6 +86,7 @@ const layout4= {
 	},
 	yaxis: {
 		autorange: true,
+		fixedrange: false,
 		//rangemode: 'nonnegative',  // some parameter values may be negative...
 		uirevision: true,
 		title: {
@@ -97,6 +98,7 @@ const layout4= {
 	margin: {
 		b: 80,
 		t: 0,
+		l: 80,
 		r: 5
 	},
 }

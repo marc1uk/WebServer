@@ -77,31 +77,27 @@
         <!-- POWER STATE -->
         <div class="form-row d-flex justify-content-center">
         <label for="power" class="col col-form-label" style="text-align: right;">Power: </label>
-        <input name="Power" id="power" type="submit"
-               <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_power_state.cgi",0); echo $data; ?> >
+        <input name="Power" id="power" type="submit" class="btn btn-warning active" value="UNKNOWN" >
         <input type="text" class="btn" name="source_url" value="URL" style="display: none;">
         </div>
         
         <!-- PUMP STATE -->
         <div class="form-row d-flex justify-content-center">
         <label for="pump" class="col col-form-label" style="text-align: right;">Pump: </label>
-        <input name="Pump" id="pump" type="submit"
-               <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_pump_state.cgi",0); echo $data; ?> >
+        <input name="Pump" id="pump" type="submit" class="btn btn-warning active" value="UNKNOWN" >
         <input type="text" class="btn" name="source_url" value="URL" style="display: none;">
         </div>
         
         <!-- INLET VALVE -->
         <div class="form-row d-flex justify-content-center">
         <label for="invalve" class="col col-form-label" style="text-align: right;">Inlet Valve: </label>
-        <input name="Valve_inlet" id="invalve" type="submit"
-               <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_valve_state.cgi?a=inlet",0); echo $data; ?> >
+        <input name="Valve_inlet" id="invalve" type="submit" class="btn btn-warning" value="UNKNOWN" >
         </div>
          
         <!-- OUTLET VALVE -->
         <div class="form-row d-flex justify-content-center">
         <label for="outvalve" class="col col-form-label" style="text-align: right;">Outlet Valve: </label>
-        <input name="Valve_outlet" id="outvalve" type="submit"
-               <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_valve_state.cgi?a=outlet",0); echo $data; ?> >
+        <input name="Valve_outlet" id="outvalve" type="submit" class="btn btn-warning" value="UNKNOWN" >
         <input type="text" class="btn" name="source_url" value="URL" style="display: none;">
         </div>
         
@@ -109,18 +105,16 @@
         <div class="form-row d-flex justify-content-center">
         <label class="col col-form-label" style="text-align: right;">PWM board connected: </label>
         <input class="form-check-input align-middle" type="checkbox" id="pwmboard"
-               onclick="this.checked=!this.checked;" style="vertical-align: middle; margin: 12px auto;"
-               <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_pwmboard_state.cgi",0); echo $data; ?>
-               <!-- note; no closing '>' here! -->
+               onclick="this.checked=!this.checked;" style="vertical-align: middle; margin: 12px auto;" >
+        <script>var checkbox = document.getElementById("pwmboard"); checkbox.indeterminate = true; </script>
         </div>
         
         <!-- SPECTROMETER -->
         <div class="form-row d-flex justify-content-center">
         <label class="col col-form-label" style="text-align: right;">Spectrometer connected: </label>
         <input class="form-check-input align-middle" type="checkbox" id="spectrometer"
-               onclick="this.checked=!this.checked;" style="vertical-align: middle; margin: 12px auto;"
-               <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_spectrometer_state.cgi",0); echo $data; ?>
-               <!-- note; no closing '>' here! -->
+               onclick="this.checked=!this.checked;" style="vertical-align: middle; margin: 12px auto;" >
+        <script>var checkbox = document.getElementById("spectrometer"); checkbox.indeterminate = true; </script>
         </div>
         
       </form> <!-- end first form -->
@@ -134,77 +128,64 @@
 <!--        <div class="d-flex justify-content-center"> -->
           <!-- LED STATES -->
           <div class="form-check form-switch ">
-            <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_led_states.cgi",0); echo $data; ?>
+            <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_led_buttons.cgi",0); echo $data; ?>
           </div>
 <!--        </div> --> <!-- end vertical alignment div -->
       </form>
     </div>  <!-- end container of second column form -->
     
   </div>  <!-- end container of two form columns -->
+  <!-- script that will continually update the contents -->
+  <script src="../../update_hardware_status.js" type="module"></script>
   
   <div class="container-fluid"> <!-- RUN INFO CONTAINER -->
   
   <!-- get the run information all at once, since its one entry in the run table -->
   <!-- RUN INFO -->
   <!-- + run, start time, end time, runconfig, notes, git tag [R] -->
-  <?php
-       $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_run_info.cgi",0);
-       $run_info = json_decode($data);  // by default it makes an object, access members with ->
-       //echo "decoded into json object:";
-       //var_dump($run_info);
-   ?>
   <!-- MORE RUN INFO -->
   <!-- + pure reference trace filename ("purewater_filename" = json: "filename") [D]
        + calibration function paramter set version - ("calibration_version" = json: bare integer?) [D]
        + output file ("output_filename" = json: "filename" ) [W] -->
-  <?php
-       $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_more_run_info.cgi",0);
-       $more_run_info = json_decode($data, true);   // with 'true', it makes an associative array
-       //echo "decoded is: ";
-       //var_dump($more_run_info);
-       //echo "so run is: " , $run_info->runnum;
-       //echo "and file is " , $more_run_info['output_file'];
-   ?>
   <div class="container-md bg-muted">  <!-- add mx-3 to class list to left-align it -->
     <div class="input-group mb-3">
       <span class="input-group-text">Run</span>
-      <input id="run" type="text" readonly style="background-color: white" class="form-control" value="<?php echo $run_info->runnum; ?>" >
+      <input id="runnum" type="text" readonly style="background-color: white" class="form-control" value="-1" >
 <!--    </div>-->
 <!--    <div class="input-group mb-3">-->
       <span class="input-group-text">Run Config ID</span>
-      <input id="runconfig" type="text" readonly style="background-color: white" class="form-control" value="<?php echo $run_info->runconfig; ?>" >
+      <input id="runconfig" type="text" readonly style="background-color: white" class="form-control" value="-1" >
 <!--    </div>-->
 <!--    <div class="input-group mb-3">-->
       <span class="input-group-text">Git Tag</span>
-      <input id="gittag" type="text" readonly style="background-color: white" class="form-control" value="<?php echo $run_info->git_tag; ?>" >
+      <input id="git_tag" type="text" readonly style="background-color: white" class="form-control" value="-1" >
     </div>
     <div class="input-group mb-3">
       <span class="input-group-text">Start Time</span>
-      <input id="starttime" type="text" readonly style="background-color: white" class="form-control" value="<?php echo $run_info->start; ?>" >
+      <input id="start" type="text" readonly style="background-color: white" class="form-control" value="-1" >
       <span class="input-group-text">Stop Time</span>
-      <input id="stoptime" type="text" readonly style="background-color: white" class="form-control" value="<?php echo $run_info->stop; ?>" >
+      <input id="stop" type="text" readonly style="background-color: white" class="form-control" value="-1" >
     </div>
     <!--
     <div class="input-group mb-3">
       <span class="input-group-text">Pure water reference file</span>
-      <input id="reffile" type="text" readonly style="background-color: white" class="form-control" value="<?php echo $more_run_info['purewater_filename']; ?>" >
+      <input id="reffile" type="text" readonly style="background-color: white" class="form-control" value="<?php echo $run_info['purewater_filename']; ?>" >
       <span class="input-group-text">Calibration Curve Version</span>
-      <input id="calibver" type="text" readonly style="background-color: white" class="form-control" value="<?php echo $more_run_info['calib_curve_ver']; ?>" >
+      <input id="calibver" type="text" readonly style="background-color: white" class="form-control" value="<?php echo $run_info['calib_curve_ver']; ?>" >
     </div>
     -->
     <div class="input-group mb-3">
       <span class="input-group-text">Run Notes</span>
       <!-- note: everything between <textarea> and </textarea> is text, so no newines or whitespace here! -->
-      <?php $trimmed_notes = trim($run_info->notes);
-            $note_linecount = substr_count('\r',$trimmed_notes);
-       ?>
-      <textarea input id="runnotes" readonly style="background-color: white" class="form-control" rows=<?php echo $note_linecount?>><?php echo $trimmed_notes; ?></textarea>
+      <textarea input id="notes" readonly style="background-color: white" class="form-control"></textarea>
     </div>
     <div class="input-group mb-3">
       <span class="input-group-text">Output file</span>
-      <input id="outfile" type="text" readonly style="background-color: white" class="form-control" value="<?php echo $more_run_info['output_file']; ?>" >
+      <input id="output_file" type="text" readonly style="background-color: white" class="form-control" value="" >
     </div>
   </div>
+  <!-- script that will populate this table -->
+  <script src="../../update_run_info.js" type="module">  </script>
   
   </div> <!-- END RUN INFO CONTAINER -->
   
@@ -213,8 +194,7 @@
     <div class="table-responsive" style="max-height:300px;" id="scheduler_table">
       <table class="table table-striped table-hover">
         <tbody id="scheduler_commands">
-        <script src="../../get_scheduler_commands.js?version=1">  </script>
-            <!-- <?php $data = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_scheduler_commands.cgi",0); echo $data; ?> -->
+        <script src="../../get_scheduler_commands.js" type="module">  </script>
         </tbody>
       </table>
     </div>
@@ -285,29 +265,23 @@
   
   <!-- seems like javascript must be in the parent directory or it doesn't work? -->
   <!-- plotly javascript uses getElementById('...') to insert graph into a specified div -->
-  <script src="../../update_traces.js?version=1" type="module"></script>
-  
-  <?php
-    $fitstatusjson = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_fit_results.cgi",0);
-    #echo "fitstatusjson is ${fitstatusjson}";
-    #var_dump($fitstatusjson);
-    $fitstatus = json_decode($fitstatusjson, true);   // with 'true', it makes an associative array
-    #{"purefit":1, "fits":[ {"method":"raw", "absfit":1, "peakdiff":0.138002, "gdconc":0.057087 }, {"method":"simple", "absfit":1, "peakdiff":0.121950, "gdconc":0.057033 }, {"method":"complex", "absfit":1, "peakdiff":0.123711, "gdconc":0.056937 } ] }
-    #var_dump($fitstatus);
-    #var_dump($fitstatus['purefit']);
-  ?>
+  <script src="../../update_traces.js" type="module"></script>
   
   <div class="container-md bg-muted">  <!-- add mx-3 to class list to left-align it -->
     <div class="input-group mb-3">
       <span class="input-group-text">Pure Fit Status</span>
-      <input id="purefitstat" type="text" class="form-control 
-      <?php
-         if($fitstatus['purefit']==1) echo 'text-success" value="Success"';
-         else echo 'text-danger" value="Failed"';
-       ?> >
+      <input id="purefit" type="text" class="form-control">
     </div>
-
+    
     <?php
+      $fitstatusjson = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_fit_results.cgi",0);
+      #echo "fitstatusjson is ${fitstatusjson}";
+      #var_dump($fitstatusjson);
+      $fitstatus = json_decode($fitstatusjson, true);   // with 'true', it makes an associative array
+      #{"purefit":1, "fits":[ {"method":"raw", "absfit":1, "peakdiff":0.138002, "gdconc":0.057087 }, {"method":"simple", "absfit":1, "peakdiff":0.121950, "gdconc":0.057033 }, {"method":"complex", "absfit":1, "peakdiff":0.123711, "gdconc":0.056937 } ] }
+      #var_dump($fitstatus);
+      #var_dump($fitstatus['purefit']);
+      
       # loop over absorption fitting methods and add a row for each method's status
       $fits = $fitstatus['fits'];
       #var_dump($fits);
@@ -333,6 +307,7 @@
       }
     ?>
   </div>
+  <script src="../../update_fit_results.js" type="module"></script>
   
   <div class="container-fluid my-1 bg-primary text-white">
     <h1>Historic Data</h1>
@@ -438,7 +413,7 @@
     
   </div> <!-- end of histogram accordion -->
   <!-- script that'll populate those histograms -->
-  <script src="../../update_histos.js?version=1" type="module"></script>
+  <script src="../../update_histos.js" type="module"></script>
   
   <!-- transparency plots -->
   <div id="transparency_heatmap_acc" class="m-5 bg-light rounded">
@@ -455,11 +430,11 @@
         <a class="btn" data-bs-toggle="collapse" href="#transparencyheatmap">Transparency Heatmap</a>
       </div>
       <div id="transparencyheatmap" class="card-body collapse" data-bs-parent="#transparency_heatmap_acc">
-        <div id="transparency_heatmap" class="transparencyplot" style="width:100% height:500px"></div>
+        <div id="transparency_heatmap" class="transparencyplot" style="width:100% height:500px">Coming Soon...</div>
       </div>
     </div>
   </div>
-  <script src="../../update_heatmap.js?version=1" type="module"></script>
+  <script src="../../update_heatmap.js" type="module"></script>
   
 <!--        <li class="list-group-item d-flex justify-content-between align-items-center"> start </li>-->
 <!--      <li class="list-group-item active d-flex justify-content-between align-items-center"> power </li>-->
@@ -469,7 +444,6 @@
 <!--      </li>-->
 <!--      <li class="list-group-item d-flex justify-content-between align-items-center"> measure dark </li>-->
   
-<!--  <iframe src="http://192.168.2.54/marcus/main.html" width=100%></iframe>-->
   
     <!--
     * website table:

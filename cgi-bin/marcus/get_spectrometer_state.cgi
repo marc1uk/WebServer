@@ -27,11 +27,6 @@ else
 	STATE="${BASH_REMATCH[1]}"
 fi
 
-if [ "${BASH_REMATCH[1]}" == '"ONLINE"' ]; then
-	echo -n 'checked >'
-elif [ "${STATE}" == '"OFFLINE"' ]; then
-	echo -n '>'
-else
-	echo '> <script>var checkbox = document.getElementById("spectrometer"); checkbox.indeterminate = true; </script>'
-fi
+#STATE=$(echo "${STATE}" | tr -d '"')
 
+echo -n "${STATE}";

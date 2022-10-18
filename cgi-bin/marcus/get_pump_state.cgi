@@ -26,11 +26,4 @@ elif [ "${BASH_REMATCH[1]}" != '"ON"' ] && [ "${BASH_REMATCH[1]}" != '"OFF"' ]; 
 else
 	STATE="${BASH_REMATCH[1]}"
 fi
-
-if [ "${STATE}" == '"ON"' ]; then
-	echo -n 'class="btn btn-success" value="ON"'
-elif [ "${STATE}" == '"OFF"' ]; then
-	echo -n 'class="btn btn-danger active" value="OFF"'
-else
-	echo -n 'class="btn btn-warning active" value="UNKNOWN"'
-fi
+echo -n "${STATE}"

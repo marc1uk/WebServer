@@ -27,11 +27,4 @@ else
 	STATE="${BASH_REMATCH[1]}"
 fi
 
-if [ "${STATE}" == '"ONLINE"' ]; then
-	echo -n 'checked >'
-elif [ "${STATE}" == '"OFFLINE"' ]; then
-	echo -n '>'
-else
-	echo '> <script>var checkbox = document.getElementById("pwmboard"); checkbox.indeterminate = true; </script>'
-fi
-
+echo -n "${STATE}"

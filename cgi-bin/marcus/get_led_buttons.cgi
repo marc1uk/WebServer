@@ -9,7 +9,7 @@ echo -e "Content-type:text/html\n"
 DUMMYVALUE='{"LEDB": 2, "LEDG": 2, "LEDR": 2, "LEDW": 2, "LED385L": 2, "LED275J_A": 2, "LED275J_B": 2, "LEDRGBAnnode": 2}'
 
 # FIXME change 'ledStatuses' to 'ledStates'
-STATES=$(psql -U postgres -d rundb -t -c "SELECT values from webpage WHERE name='ledStates'")
+STATES=$(psql -U postgres -d rundb -t -c "SELECT values from webpage WHERE name='ledStatuses'")
 #echo "state is ${STATES}"
 if [ $? -ne 0 ] || [ -z "${STATES}" ]; then
 	# query failed. return dummy value
@@ -88,19 +88,23 @@ done
 
 # loop again over all LEDs again - having done the above we now know
 # that our array contains elements for all of and only our known LEDs
-JSONARRAY=''
 for LEDNAME in "${!MYMAP[@]}"; do
 	
 	LEDSTATE=${MYMAP[${LEDNAME}]}
 	#echo "LEDNAME is ${LEDNAME}, LEDSTATE is ${LEDSTATE}"
 	
-	# add to json array
-	if [ -z "${JSONARRAY}" ]; then
-		JSONARRAY="[";
+	# make the indicator
+	echo -n '<input class="form-check-input" type="checkbox" id="ledswitch_'${LEDNAME}'"'
+	if [ ${LEDSTATE} -eq 1 ]; then
+		echo 'checked>'
+	elif [ ${LEDSTATE} -ne 0 ]; then
+		# make the checkbox state indeterminate
+		echo '> <script>var checkbox = document.getElementById("ledswitch_'${LEDNAME}'"); checkbox.indeterminate = true; </script>'
 	else
-		JSONARRAY="${JSONARRAY},"
+		# default state is unchecked
+		echo '>'
 	fi
-	JSONARRAY="${JSONARRAY} {\"name\":\"ledswitch_${LEDNAME}\", \"state\":${LEDSTATE}}"
+	echo '<label class="form-check-label" for="ledswitch_'${LEDNAME}'">'${LEDNAME}'</label>'
+	echo '<br>'
+	
 done
-
-echo -n "${JSONARRAY}]"

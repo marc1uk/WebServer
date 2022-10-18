@@ -194,6 +194,7 @@ const layout=  {
 	margin: {
 		b: 80,
 		t: 0,
+		l: 80,
 		r: 5
 	},
 	/*modebar: {
