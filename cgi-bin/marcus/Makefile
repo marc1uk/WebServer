@@ -13,6 +13,14 @@ GDConcPath=/home/pi/GDConcMeasure
 DataModelInclude= -I $(GDConcPath)/include
 DataModelLib= -L $(GDConcPath)/lib -lStore
 
+all: makeGdConcHistory makeTranspHistory makeStatusFile
+
+
+makeTranspHistory: MakeTranspHistory.C JsonParser.cpp JsonParser.h
+	g++ $(CXXFLAGS) -o $@ MakeTranspHistory.C JsonParser.cpp Algorithms.cpp -I ./ $(DataModelInclude) $(BoostInclude) $(RootInclude) $(DataModelLib) $(RootLib) $(BoostLib)
 
 makeGdConcHistory: MakeGdConcHistory.C JsonParser.cpp JsonParser.h
-	g++ $(CXXFLAGS) MakeGdConcHistory.C JsonParser.cpp Algorithms.cpp -I ./ $(DataModelInclude) $(BoostInclude) $(RootInclude) $(DataModelLib) $(RootLib) $(BoostLib) -o $@
+	g++ $(CXXFLAGS) -o $@ MakeGdConcHistory.C JsonParser.cpp Algorithms.cpp -I ./ $(DataModelInclude) $(BoostInclude) $(RootInclude) $(DataModelLib) $(RootLib) $(BoostLib) -o $@
+
+makeStatusFile: MakeStatusCanvas.C
+	g++ $(CXXFLAGS) $^ $(RootInclude) $(RootLib) -o $@

@@ -15,6 +15,8 @@
 #include <chrono>
 #include "TSystem.h"
 #include "TCanvas.h"
+#include "TPaveText.h"
+#include "TStyle.h"
 
 const std::string CGIDIR="/home/pi/WebServer/cgi-bin/marcus";
 
@@ -31,8 +33,8 @@ int main(int argc, const char** argv){
 	std::map<std::string, EColor> colours2{{"raw",EColor(kOrange+1)},{"simple",EColor(kAzure+1)},{"complex",kViolet}};
 	std::vector<std::string> leds{"275_A","275_B"};
 	std::map<std::string,Style_t> styles{{"275_A",2},{"275_B",5}}; // also 4 and 28
-	TMultiGraph mg("mg_gdconc","mg_gdconc");
-	TCanvas c1("c1","c1");
+	TMultiGraph mg("mg_gdconc","Check plots do not enter the shaded area");
+	TCanvas c1("c1","c1",800,600);
 	for(auto&& amethod : methods){
 		for(auto&& aled : leds){
 			std::string args = "a="+amethod+"_gdconc"
@@ -85,27 +87,42 @@ int main(int argc, const char** argv){
 			//tmp->SetMarkerStyle(plotstyle);
 			mg.Add(tmp); // takes ownership and handles deletion of tmp
 		}
-		// may be required depending on ROOT version
-		mg.Draw("al");
-		gPad->Update();
-		// now we can set the axis type to timestamp
-		//mg.GetXaxis()->SetTitle("Time");
-		mg.GetYaxis()->SetTitle("Gd Concentration %");
-		mg.GetXaxis()->SetTimeDisplay(1);
-		mg.GetXaxis()->SetTimeFormat("#splitline{%H:%M}{%m-%d}");
-		mg.GetXaxis()->SetTimeOffset(0);  // very much not clear but seems this is what we want
-		//mg.GetXaxis()->SetLabelSize(0.02);
-		//mg.GetXaxis()->SetLabelOffset(0.072);
-		mg.GetXaxis()->SetLabelOffset(0.052);
-		gPad->Modified();
-		gPad->Update();
-		TLegend* leg = gPad->BuildLegend(0.65,0.40,0.95,0.65);
-		leg->SetBorderSize(0);
-		//leg->SetFillColor(0);
-		//leg->SetShadowColor(0);
-		leg->SetFillStyle(0);
-		gPad->SaveAs("gdconcs.png");
 	}
+	// may be required depending on ROOT version
+	mg.Draw("al");
+	gPad->Update();
+	// now we can set the axis type to timestamp
+	//mg.GetXaxis()->SetTitle("Time");
+	mg.GetYaxis()->SetTitle("Gd Concentration %");
+	mg.GetXaxis()->SetTimeDisplay(1);
+	mg.GetXaxis()->SetTimeFormat("#splitline{%H:%M}{%m-%d}");
+	mg.GetXaxis()->SetTimeOffset(0);  // very much not clear but seems this is what we want
+	mg.GetYaxis()->SetTitleSize(0.04);
+	//mg.GetXaxis()->SetTitleSize(0.04);
+	//mg.GetXaxis()->SetLabelSize(0.02);
+	//mg.GetXaxis()->SetLabelOffset(0.072);
+	mg.GetYaxis()->SetRangeUser(0.05,0.07);
+	mg.GetXaxis()->SetLabelOffset(0.04);
+	gStyle->SetTitleSize(0.4,"t");
+	TPaveText* pt = (TPaveText*)gPad->GetPrimitive("title");
+	pt->SetTextSize(0.04);
+	gStyle->SetTitleH(0.4);
+	gPad->Modified();
+	gPad->Update();
+	/*
+	TLegend* leg = gPad->BuildLegend(0.65,0.40,0.95,0.65);
+	leg->SetBorderSize(0);
+	//leg->SetFillColor(0);
+	//leg->SetShadowColor(0);
+	leg->SetFillStyle(0);
+	*/
+	gPad->SetCanvasSize(800, 600);
+	gPad->SetLeftMargin(0.1489971);
+	gPad->SetBottomMargin(0.1308017);
+	gPad->Modified();
+	gPad->Update();
+	gPad->SaveAs("gdconcs.png");
+	//gPad->SaveAs("gdconcs.C");
 	/*
 	while(gROOT->FindObject("c1")!=nullptr){
 		gSystem->ProcessEvents();

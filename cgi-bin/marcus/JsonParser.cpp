@@ -84,7 +84,7 @@ bool JSONP::Parse(std::string thejson, BoostStore& output){
 				break;
 			}
 			default:{
-				std::cerr<<"unhandled case from ScanJsonArray"<<std::endl;
+				std::cerr<<"unhandled case from ScanJsonArray: "<<int(res.type)<<std::endl;
 				return false;
 			}
 		}
@@ -326,7 +326,7 @@ bool JSONP::ScanJsonArray(std::string thejson, JsonParserResult& result){
 					break;
 				}
 				default:{
-					std::cerr<<"unhandled case from ScanJsonArray"<<std::endl;
+					std::cerr<<"unhandled case from ScanJsonArray: "<<int(res.type)<<std::endl;
 					return false;
 				}
 			}
@@ -702,8 +702,14 @@ bool JSONP::ScanJsonObject(std::string thejson, BoostStore& outstore){
 						outstore.Set(next_key,res.thestores);
 						break;
 					}
+					case JsonParserResultType::empty: {
+						if(verbose) std::cout<<"array was empty"<<std::endl;
+						std::vector<std::string> emptyvec{};
+						outstore.Set(next_key,emptyvec);
+						break;
+					}
 					default:{
-						std::cerr<<"unhandled case from ScanJsonArray"<<std::endl;
+						std::cerr<<"unhandled case from ScanJsonArray: "<<int(res.type)<<std::endl;
 						return false;
 					}
 				}
