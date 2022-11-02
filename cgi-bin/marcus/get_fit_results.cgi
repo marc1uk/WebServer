@@ -40,17 +40,6 @@ for METHOD in "${METHODS[@]}"; do
 		#echo "FITSTATUS is ${FITSTATUS}"
 	fi
 	
-	# likewise check that there were no errors in conversion to concentration
-	CONVSTATUS=$(psql -U postgres -d rundb -t -c "SELECT values->'absfit_success' FROM data WHERE name='gdconcmeasure' AND values->'method'='\"${METHOD}\"' ORDER BY timestamp DESC LIMIT 1")
-	if [ $? -ne 0 ] || [ -z "${CONVSTATUS}" ]; then
-		CONVSTATUS="0"
-	else
-		# bash threw a weird i think because of a preceding space that it only showed sometimes.
-		# so explicitly convert it to number
-		let CONVSTATUS=$(echo ${CONVSTATUS})
-		#echo "CONVSTATUS is ${CONVSTATUS}"
-	fi
-	
 	# if absorption fit was successful get the absorption peak height difference
 	PEAKHEIGHTDIFF=0  # default value
 	if [ ${FITSTATUS} -eq 1 ]; then
@@ -70,9 +59,20 @@ for METHOD in "${METHODS[@]}"; do
 		fi
 	fi
 	
+	# check that there were no errors in conversion to concentration
+	CONVSTATUS=$(psql -U postgres -d rundb -t -c "SELECT values->'concfit_success' FROM data WHERE name='gdconcmeasure' AND values->'method'='\"${METHOD}\"' ORDER BY timestamp DESC LIMIT 1")
+	if [ $? -ne 0 ] || [ -z "${CONVSTATUS}" ]; then
+		CONVSTATUS="0"
+	else
+		# bash threw a weird i think because of a preceding space that it only showed sometimes.
+		# so explicitly convert it to number
+		let CONVSTATUS=$(echo ${CONVSTATUS})
+		#echo "CONVSTATUS is ${CONVSTATUS}"
+	fi
+	
 	# finally get the calculated gd concentration
 	GDCONC=0  # default value
-	if [ ${FITSTATUS} -eq 1 ]; then
+	if [ ${CONVSTATUS} -eq 1 ]; then
 		GDCONCANDERR=$(psql -U postgres -d rundb -t -c "SELECT values->'conc_and_err' FROM data WHERE name='gdconcmeasure' AND values->'method'='\"${METHOD}\"' ORDER BY timestamp DESC LIMIT 1")
 		if [ $? -eq 0 ] && [ ! -z "${GDCONCANDERR}" ]; then
 			# returned result should be a json array of two values: ' [val1, val2]'
