@@ -283,7 +283,7 @@ cat << EOF > ${CGIDIR}/gadstatus.txt
 Checks Last Updated (JST):            #bf{#color[8]{${CURRENTTIME}}}
 
 #bf{#color[9]{Check ToolChain is running}}
-ToolChain Status: #bf{${STATUSSTRING}}
+ToolChain Status:                     #bf{${STATUSSTRING}}
 
 #bf{#color[9]{Check times since last measurement are less than 30 minutes}}
 Time Since Last Trace:                #bf{${LASTTRACETDIFF}}
@@ -291,7 +291,7 @@ Time Since Last Gd Concentration:     #bf{${OLDESTGDTDIFF}}
 Time Since Last Transparency:         #bf{${TRANSPTDIFF}}
 
 #bf{#color[9]{Check fits are OK}}
-Fit Status:                         ${BOTHFITSOK}
+Fit Status:                           ${BOTHFITSOK}
 EOF
 
 # i guess we don't need all the timestamps....
@@ -325,6 +325,9 @@ EOF
 
 # simple root application to build an image from this text
 # FIXME these applications output to pwd
+# FIXME also don't hard-code the setup path
+cd /home/pi/GDConcMeasure/
+. Setup.sh
 cd ${CGIDIR}
 ${CGIDIR}/makeStatusFile ${CGIDIR}/gadstatus.txt
 

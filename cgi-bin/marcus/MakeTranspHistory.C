@@ -112,6 +112,7 @@ int main(int argc, const char** argv){
 	gPad->Update();
 	gPad->SaveAs("transps.png");
 	//gPad->SaveAs("transps.C");
+	mg.SaveAs("transps.root");
 	/*
 	while(gROOT->FindObject("c1")!=nullptr){
 		gSystem->ProcessEvents();

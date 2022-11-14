@@ -122,7 +122,9 @@ int main(int argc, const char** argv){
 	gPad->Modified();
 	gPad->Update();
 	gPad->SaveAs("gdconcs.png");
-	//gPad->SaveAs("gdconcs.C");
+	//gPad->SaveAs("gdconcs.C");        // this does not reproduce the canvas at all
+	//gPad->SaveAs("gdconcscanv.root"); // this mostly reproduces the canvas, but the axes label offsets aren't right
+	mg.SaveAs("gdconcs.root");          // this gives the same as the above
 	/*
 	while(gROOT->FindObject("c1")!=nullptr){
 		gSystem->ProcessEvents();

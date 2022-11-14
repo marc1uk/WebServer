@@ -20,6 +20,7 @@ int main(int argc, const char** argv){
 	//gPad->SetCanvasSize(800, 600);
 	gPad->SetCanvasSize(800, 350);
 	c1.SaveAs("StatusCanvas.png");
-	//c1.SaveAs("StatusCanvas.C");
+	c1.SaveAs("StatusCanvas.C");  // this does reproduce the canvas for once
+	//pt.SaveAs("status.root");   // this doesn't seem to work, on the otherhand.
 	return 0;
 }
