@@ -1,3 +1,5 @@
+var running =false;
+
 async function GetDataFetchRequest(url, json_or_text="text"){
 	try {
 		let response = await fetch(url);
@@ -32,6 +34,8 @@ function ElementPosition(activeRow){
 // retrieve new data and update the table
 function updateSchedulerCommands() {
 	
+	if(running) return;
+	running=true;
 	// keep track of the last active command with a member variable
 	if(! ('lastActiveCommand' in updateSchedulerCommands)){
 		updateSchedulerCommands.lastActiveCommand="";
@@ -70,13 +74,16 @@ function updateSchedulerCommands() {
 						updateSchedulerCommands.lastActiveCommand = activeCommand;
 					}
 				}
+				running=false;
 			},
 			function(error){
 				console.log("error from promise of new current command:", error);
+				running=false;
 			}
 		);
 	} catch(error){
 		console.log("error geting new scheduler commands: ",error);
+		running=false;
 	}
 	
 }

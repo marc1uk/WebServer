@@ -237,7 +237,7 @@
           echo '      </div>' . PHP_EOL;
           // body must specify a height since contained plot is reactive and needs a size
           echo '      <div id="plot' . "{$i}" . '" class="card-body collapse';
-          if($i == 0) echo " show";
+          //if($i == 0) echo " show";
           echo '" data-bs-parent="#plots"  height:500px>' . PHP_EOL;
           //the plot itself must be within a nested div for margins to work, for some reason
           echo '        <div id="' . "{$traces[$i]}" . '" class="dataplot" style="width:100%"></div>' . "\n";
@@ -333,7 +333,9 @@
                  'rawtrace_pars',       // min, max
                  'purefit_pars',        // x-scaling, y-scaling, x-shift, y-shift, linear component grad
                  'simplefit_pars',      //
-                 'complexfit_pars'      //
+                 'complexfit_pars',     //
+                 'valve_state',         //
+                 'pi_mem',
                  ];
       $histonames = [ 
                       'Gd Concentration',
@@ -344,7 +346,9 @@
                       'Raw Trace Parameters',
                       'Pure Fit Parameters',
                       'Simple Fit Parameters',
-                      'Complex Fit Parameters'
+                      'Complex Fit Parameters',
+                      'Valve States',
+                      'RPi Resource Usage'
                     ];
       
 //	 + dark trace params - ("darktrace_params" = json: "mean", "width") [D]
@@ -370,7 +374,7 @@
           
           // the card body must specify a height since contained plot is reactive and needs a size
           echo '      <div id="card' . "{$i}" . '" class="card-body collapse';
-          if($i == 0) echo " show";
+          //if($i == 0) echo " show";
           //echo '" data-bs-parent="#histograms" height:500px>' . PHP_EOL;
           echo '"  height:500px>' . PHP_EOL;
           
@@ -421,7 +425,8 @@
       <div class="card-header">
         <a class="btn" data-bs-toggle="collapse" href="#transparencyhistory">Transparency History</a>
       </div>
-      <div id="transparencyhistory" class="card-body collapse show active" data-bs-parent="#transparency_heatmap_acc">
+      <div id="transparencyhistory" class="card-body collapse active" data-bs-parent="#transparency_heatmap_acc">
+        <!-- add show to list of classes above to expand by default -->
         <div id="transparency_samples" class="transparencyplot" style="width:100% height:500px"></div>
       </div>
     </div>
@@ -430,7 +435,8 @@
         <a class="btn" data-bs-toggle="collapse" href="#transparencyheatmap">Transparency Heatmap</a>
       </div>
       <div id="transparencyheatmap" class="card-body collapse" data-bs-parent="#transparency_heatmap_acc">
-        <div id="transparency_heatmap" class="transparencyplot" style="width:100% height:500px">Coming Soon...</div>
+        <div id="transparency_heatmap" style="width:100% height:500px">Coming Soon...</div>
+        <!-- class="transparencyplot" << add to above div to make it a plotly plot -->
       </div>
     </div>
   </div>

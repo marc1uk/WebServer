@@ -7,7 +7,7 @@ DUMMYVALUE='<tr><td>Failed to get scheduler commands from database</td></tr>'
 
 # retrieve the set of commands for the current run
 COMMANDS=$(psql -U postgres -d rundb -t -c "SELECT values from webpage WHERE name='scheduler_commands'")
-#echo "commands is ${COMMANDS}"
+#echo "commands is '${COMMANDS}'"
 if [ $? -ne 0 ] || [ -z "${COMMANDS}" ]; then
 	echo ${DUMMYVALUE}
 	exit 1;
@@ -19,16 +19,44 @@ COMMANDS=${COMMANDS%]}
 
 # remove all the enclosing quotations
 COMMANDS=$(tr -d '"' <<< ${COMMANDS})
+#echo "COMMANDS before array: '${COMMANDS}'"
 
 # convert it into a bash array, splitting by comma
 # XXX this is a lazy splitting method, which is only suitable because we know
 # there will be no commas (delimiters) within the entries themselves.
 # the -t prevents the delimiting comma being included as part of the array entries
-readarray -t -d ',' CMD_ARRAY <<< ${COMMANDS}
-#echo "COMMANDS: ${COMMANDS}"
+#readarray -t -d ',' CMD_ARRAY <<< ${COMMANDS}
+# the above use of a HERESTRING '<<<' adds a trailing newline to the last array element
+# https://unix.stackexchange.com/a/519917/143005
+readarray -t -d ',' CMD_ARRAY < <(printf '%s' "$COMMANDS")
+#echo "COMMANDS array: '${COMMANDS}'"
+
+let ACTIVE_COMMAND=$(psql -U postgres -d rundb -t -c "SELECT values->'current_command' FROM webpage WHERE name='scheduler_progress'" | xargs echo -n)
+
+TABLE=""
+let i=0
+#for i in `seq 1 "${#CMD_ARRAY[@]}"`; do
+for COMMAND in "${CMD_ARRAY[@]}"; do
+	#echo "$i is '${COMMAND}'"
+	if [ $i -eq ${ACTIVE_COMMAND} ]; then
+		#echo "  <tr class="table-primary text-light" id="activeCommand"><td>${CMD_ARRAY[$i]}</td></tr>"
+TABLE="${TABLE}"'
+  <tr class="table-primary text-light" id="activeCommand"><td>'"${CMD_ARRAY[$i]}"'</td></tr>'
+	else
+		#echo "  <tr><td>${CMD_ARRAY[$i]}</td></tr>"
+TABLE="${TABLE}
+  <tr><td>${CMD_ARRAY[$i]}</td></tr>"
+	fi
+	let i=$i+1
+done
+echo "${TABLE}"
+
+return 1 &> /dev/null
+exit
 
 # we'll also get the number of the current command, and the progress through any loops.
 PROGRESS_MAP=$(psql -U postgres -d rundb -t -c "SELECT values from webpage WHERE name='scheduler_progress'")
+echo "PROGRESS MAP '${PROGRESS_MAP}'"
 if [ $? -eq 0 ] && [ ! -z "${PROGRESS_MAP}" ]; then
 	# should be something like `{"loop_counts": [0], "command_step": 0, "current_command": 26}`
 	# we'll parse it with a bash regex. These are done by `[[ $string =~ $pattern ]]`
@@ -50,6 +78,7 @@ if [ $? -eq 0 ] && [ ! -z "${PROGRESS_MAP}" ]; then
 		#exit 1
 	fi
 fi # else failed to get current status. i guess skip highlighting in this case
+echo "CURRENT_COMMAND_NUM: '${CURRENT_COMMAND_NUM}'"
 
 # loop over array elements and echo them as html table rows
 

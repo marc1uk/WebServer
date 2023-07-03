@@ -2,13 +2,14 @@
 
 CGIDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# check hardware status; power on, spectrometer connected, etc.
 # invoke cgi script, using tail -n -2 to strip first two lines, which are for html only
 POWERSTATE=$(${CGIDIR}/get_power_state.cgi | tail -n -2 | tr -d '"' | xargs echo -n );
 PUMPSTATE=$(${CGIDIR}/get_pump_state.cgi | tail -n -2 | tr -d '"' | xargs echo -n );
 PWMBOARD=$(${CGIDIR}/get_pwmboard_state.cgi | tail -n -2 | tr -d '"' | xargs echo -n );
 SPECTROMETER=$(${CGIDIR}/get_spectrometer_state.cgi | tail -n -2 | tr -d '"' | xargs echo -n );
 
-
+# check ToolChain is running
 APPLICATION_NAME="GAD_ToolChain"
 if [ $(ps aux | grep $APPLICATION_NAME | grep -v sudo | grep -v gdb | grep -v grep | grep -v defunct | wc -l) -lt 1 ]; then
 	TOOLCHAINRUNNING=0
@@ -16,10 +17,39 @@ else
 	TOOLCHAINRUNNING=1
 fi
 
+# we'll also check that the valves are opening and closing regularly
+# for a simple boolean check we'll simply ask that they have been both
+# on for >0 and <15 minutes of the last 30.
+# We could potentially tighten this if we know our duty cycle well.
+INMINSOPEN=$(psql -d rundb -U postgres -At -c "SELECT SUM((values->'invalve')::integer) FROM webpage WHERE name='gpio_status' AND timestamp>(now() - '30 minutes'::interval)")
+OUTMINSOPEN=$(psql -d rundb -U postgres -At -c "SELECT SUM((values->'outvalve')::integer) FROM webpage WHERE name='gpio_status' AND timestamp>(now() - '30 minutes'::interval)")
+if [ ${INMINSOPEN:0} -gt 0  ] && [ ${INMINSOPEN:0} -lt 15 ]; then
+	INVALVEOK=1
+else
+	INVALVEOK=0
+fi
+if [ ${OUTMINSOPEN:0} -gt 0 ] && [ ${OUTMINSOPEN:0} -lt 15 ]; then
+	OUTVALVEOK=1
+else
+	OUTVALVEOK=0
+fi
+
 ALLOK=1
-if [ ${TOOLCHAINRUNNING} -ne 1 ] || [ "${POWERSTATE}" != "ON" ] || [ "${PUMPSTATE}" != "ON" ] || [ "${PWMBOARD}" != "ONLINE" ] || [ "${SPECTROMETER}" != "ONLINE" ]; then
+if [ ${TOOLCHAINRUNNING} -ne 1 ] || [ "${POWERSTATE}" != "ON" ] || [ "${PUMPSTATE}" != "ON" ] || [ "${PWMBOARD}" != "ONLINE" ] || [ "${SPECTROMETER}" != "ONLINE" ] || [ "${INVALVEOK}" != "1" ] || [ "${OUTVALVEOK}" != "1" ]; then
     ALLOK=0
 fi
+
+# let's check the age of the most recently generated data file
+MOST_RECENT_FILE=$(${CGIDIR}/find_most_recent.sh)
+if [ $? -ne 0 ] || [ -z "${MOST_RECENT_FILE}" ]; then
+	# error - use unix epoch time
+	FILETIME=$(date -u --date='@0' --iso-8601=seconds)
+else
+	# get the time of last modification
+	FILETIME=$(ls --full-time "${MOST_RECENT_FILE}" | awk '{print $6, $7}')
+fi
+# calculate age of this timestamp
+LASTFILEAGESECS=$(( `date +%s` - `date -d "${FILETIME}" +%s` ))
 
 #INVALVE=$(QUERY_STRING='a=inlet' ${CGIDIR}/get_valve_state.cgi | tail -n -2);
 #OUTVALVE=$(QUERY_STRING='a=outlet' ${CGIDIR}/get_valve_state.cgi | tail -n -2);
@@ -40,12 +70,16 @@ CURRENTTIME=$(date +%"Y-%m-%d %H:%M:%S")
 CURRENTTIMESECS=$(date +%s)
 
 # get time of last trace
-QUERY="SELECT timestamp from webpage WHERE name='last_trace' ORDER BY timestamp DESC LIMIT 1"
+# ah, but DB is set to London/Europe, so we need to make sure we query it in UTC
+# or we have two timezone offsets to worry about (BST->UTC->JST)!
+# ahh but the webpage field type is 'timesamp without time zone', so first cast it to type with time zone,
+# which will assume current timezone (which should be fine)
+QUERY="SELECT timestamp::timestamp with time zone AT time zone 'UTC' from webpage WHERE name='last_trace' ORDER BY timestamp DESC LIMIT 1"
 LASTTRACETIMEUTC=$(psql -U postgres -d rundb -t -c "${QUERY}" | xargs echo -n )
 LASTTRACETIMEUTCSECS=$(date --date="${LASTTRACETIMEUTC}" +%s)
 
 # this is the only timestamp which is not in JST - the timestamp is created by postgres' `NOW()`
-# and seems to be in UTC (perhaps we can/should fix this in the future).
+# and is in London/Europe time! (perhaps we can/should fix this in the future).
 #DATEJST=$(date --date="$(TZ=Asia/Tokyo date +%'Y-%m-%d %H:%M:%S')" +%s)
 #DATEBST=$(date --date="$(TZ=Europe/London date +%'Y-%m-%d %H:%M:%S')" +%s)
 #TZSHIFTSECS=$(( $D1 - $D2 ))
@@ -55,8 +89,21 @@ TZSHIFTHOURS=$(date +%:::z)   # e.g. +09
 #TZSHIFTHOURS=$(echo ${TZSHIFTHOURS} | tr "+-" "-+")
 #echo "TZSHIFTHOURS = ${TZSHIFTHOURS}" > /dev/tty
 
-LASTTRACETIME=$(date --date="${LASTTRACETIMEUTC} +${TZCODE} ${TZSHIFTHOURS} hours" +%"Y-%m-%d %H:%M:%S")
+#echo "current time: $CURRENTTIME $TZCODE"
+#CURRENTDBTIME=$(psql -At -c "SELECT NOW()")
+#DBTZ=$(psql -At -c "SELECT current_setting('TIMEZONE')")
+#echo "current DB time: ${CURRENTDBTIME} ${DBTZ}"
+#NOWUTCDB=$(psql -At -c "SELECT NOW()::timestamp with time zone at time zone 'UTC'")
+#NOWUTCSYS=$(date --utc +%"Y-%m-%d %H:%M:%S")
+#echo "current time UTC: ${NOWUTCDB}, or ${NOWUTCSYS}"
+#echo "LASTTRACETIMEUTC: ${LASTTRACETIMEUTC}"
+#echo "TZSHIFTHOURS: ${TZSHIFTHOURS}"
 
+# convert last trace time to JST
+LASTTRACETIME=$(date --date="${LASTTRACETIMEUTC} +${TZCODE} ${TZSHIFTHOURS} hours" +%"Y-%m-%d %H:%M:%S")
+#echo "last trace time in $TZCODE: ${LASTTRACETIME}"
+
+# calculate time since last trace
 LASTTRACETIMESECS=$(date --date="${LASTTRACETIME}" +%s)                           # convert to seconds
 LASTTRACETDIFF=$(($(echo "${CURRENTTIMESECS}")-$(echo "${LASTTRACETIMESECS}")))   # calculate seconds from now
 
@@ -132,7 +179,6 @@ QUERY="SELECT timestamp FROM data WHERE name='transparency_samples' ORDER BY tim
 TRANSPTIME=$(psql -U postgres -d rundb -t -c "${QUERY}" | xargs echo -n )
 TRANSPTIMESECS=$(date --date="${TRANSPTIME}" +%s)
 TRANSPTDIFF=$(($(echo "${CURRENTTIMESECS}")-$(echo "${TRANSPTIMESECS}")))
-
 
 ################
 
@@ -268,17 +314,44 @@ OLDESTGDTIME=$(formattime "${OLDESTGDTIME}")
 OLDESTGDTDIFF=$(formattdiff "${OLDESTGDTDIFF}")
 TRANSPTIME=$(formattime "${TRANSPTIME}")
 TRANSPTDIFF=$(formattdiff "${TRANSPTDIFF}")
+LASTFILETDIFF=$(formattdiff "${LASTFILEAGESECS}")
+
+########################################
+
+if [ -n $1 ] && [ "$1" == "dummy" ]; then
+	RANDMINS=$(seq 3 1 10 | shuf | head -n1)
+	RANDSECS=$(seq 0 1 60 | shuf | head -n1)
+	LASTTRACETDIFF=$(printf "#color[8]{00:%02d:%02d}" ${RANDMINS} ${RANDSECS})
+	RANDMINS=$(seq 13 1 17 | shuf | head -n1)
+	RANDSECS=$(seq 0 1 60 | shuf | head -n1)
+	OLDESTGDTDIFF=$(printf "#color[8]{00:%02d:%02d}" ${RANDMINS} ${RANDSECS})
+	let RANDSECS=${RANDSECS}+$(seq 0 1 60 | shuf | head -n1)
+	if [ ${RANDSECS} -gt 60 ]; then
+		let RANDSECS=${RANDSECS}-60;
+		let RANDMINS=${RANDMINS}+1;
+	fi
+	TRANSPTDIFF=$(printf "#color[8]{00:%02d:%02d}" ${RANDMINS} ${RANDSECS})
+	let RANDSECS=${RANDSECS}+$(seq 0 1 60 | shuf | head -n1)
+	if [ ${RANDSECS} -gt 60 ]; then
+		let RANDSECS=${RANDSECS}-60;
+		let RANDMINS=${RANDMINS}+1;
+	fi
+	LASTFILETDIFF=$(printf "#color[8]{00:%02d:%02d}" ${RANDMINS} ${RANDSECS})
+	STATUSSTRING="#color[8]{Running}"
+fi
 
 ########################################
 
 # ok, print the output string to text file
 
 # n.b. use #bf{mytext} to toggle bold - will set or invert depending on default
-# colour codes for greyed out text: black->16, blue->38, green->30, red->45
+# colour codes for greyed out text: black->16, blue->38, green->30, red->45, very red->2
 # XXX is it worth plotting all these timestamps? is it sufficient to have just
 # one timestamp per LED? entries are made even if the fitting fails right,
 # which would show up on the graph..
+#bf{#color[2]{GAD CURRENTLY UNDERGOING MAINTENANCE, ABNORMALITIES CAN BE SAFELY IGNORED}}
 cat << EOF > ${CGIDIR}/gadstatus.txt
+
 #bf{#color[9]{Check this timestamp is within 10 minutes of the current time}}
 Checks Last Updated (JST):            #bf{#color[8]{${CURRENTTIME}}}
 
@@ -289,6 +362,7 @@ ToolChain Status:                     #bf{${STATUSSTRING}}
 Time Since Last Trace:                #bf{${LASTTRACETDIFF}}
 Time Since Last Gd Concentration:     #bf{${OLDESTGDTDIFF}}
 Time Since Last Transparency:         #bf{${TRANSPTDIFF}}
+Time Since Last File:                 #bf{${LASTFILETDIFF}}
 
 #bf{#color[9]{Check fits are OK}}
 Fit Status:                           ${BOTHFITSOK}
@@ -332,11 +406,11 @@ cd ${CGIDIR}
 ${CGIDIR}/makeStatusFile ${CGIDIR}/gadstatus.txt
 
 # invoke the application to generate the gd history graph
-${CGIDIR}/makeGdConcHistory
+${CGIDIR}/makeGdConcHistory 200 $1
 # overlay a shaded region showing the acceptable area
 convert ${CGIDIR}/gdconcs.png ${CGIDIR}/gdconc_overlay.png -composite +antialias ${CGIDIR}/gdconc_history.png
 
 # make a transparency history plot
-${CGIDIR}/makeTranspHistory
+${CGIDIR}/makeTranspHistory 200 $1
 # overlay a shaded region
 convert ${CGIDIR}/transps.png ${CGIDIR}/transps_overlay.png -composite +antialias ${CGIDIR}/transparency_history.png

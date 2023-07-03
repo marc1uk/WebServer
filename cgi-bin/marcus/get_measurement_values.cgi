@@ -6,7 +6,7 @@ echo -e "Content-type:text/html\n"
 # return a dummy value on error
 DUMMYSTRING='{"xvals":[1,2,3],"yvals":[1,3,2],"xerrs":[],"yerrs":[]}'
 
-#echo "QUERY_STRING is ${QUERY_STRING}"
+echo "QUERY_STRING is '${QUERY_STRING}'" > ./debug.txt
 QUERY_STRING=${QUERY_STRING:-"a=raw_peakheight1"}
 #PATTERN='a=([^&]+)*[&b=]+?(.*)'
 #[[ ${QUERY_STRING} =~ ${PATTERN} ]]
@@ -40,6 +40,12 @@ done
 if [ -z "${LED}" ]; then
 	LED="%"
 fi
+if [ "${MEASUREMENT}" == "mem" ] || [ "${MEASUREMENT}" == "cpu" ]; then
+	DBNAME="gd"
+else
+	DBNAME="rundb"
+fi
+
 #echo "measurement type: '"${MEASUREMENT}"'"
 #echo "led type: '"${LED}"'"
 #echo "max vals: '${MAXVALS}'"
@@ -80,6 +86,16 @@ KNOWN_MEASUREMENTS_Y['transparency_red']="SELECT values->'red'->'value' FROM dat
 KNOWN_MEASUREMENTS_Y['transparency_green']="SELECT values->'green'->'value' FROM data WHERE name='transparency_samples' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_Y['transparency_blue']="SELECT values->'blue'->'value' FROM data WHERE name='transparency_samples' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
 
+KNOWN_MEASUREMENTS_Y['mem']="SELECT mem FROM stats ORDER BY time DESC"
+KNOWN_MEASUREMENTS_Y['cpu']="SELECT cpu FROM stats ORDER BY time DESC"
+KNOWN_MEASUREMENTS_Y['temp']="SELECT temp FROM stats ORDER BY time DESC"
+KNOWN_MEASUREMENTS_Y['hdd1']="SELECT hdd1 FROM stats ORDER BY time DESC"
+
+KNOWN_MEASUREMENTS_Y['invalve']="SELECT values->'invalve' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['outvalve']="SELECT values->'outvalve' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['pump']="SELECT values->'pump' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['power']="SELECT values->'power' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
+
 declare -A KNOWN_MEASUREMENTS_X
 KNOWN_MEASUREMENTS_X['dark_mean']="SELECT timestamp FROM data WHERE name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_X['dark_range']="SELECT timestamp FROM data WHERE name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
@@ -114,9 +130,18 @@ KNOWN_MEASUREMENTS_X['transparency_red']="SELECT timestamp FROM data WHERE name=
 KNOWN_MEASUREMENTS_X['transparency_green']="SELECT timestamp FROM data WHERE name='transparency_samples' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_X['transparency_blue']="SELECT timestamp FROM data WHERE name='transparency_samples' ORDER BY timestamp DESC"
 
+KNOWN_MEASUREMENTS_X['mem']="SELECT time FROM stats ORDER BY time DESC"
+KNOWN_MEASUREMENTS_X['cpu']="SELECT time FROM stats ORDER BY time DESC"
+KNOWN_MEASUREMENTS_X['temp']="SELECT time FROM stats ORDER BY time DESC"
+KNOWN_MEASUREMENTS_X['hdd1']="SELECT time FROM stats ORDER BY time DESC"
+
+KNOWN_MEASUREMENTS_X['invalve']="SELECT timestamp FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['outvalve']="SELECT timestamp FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['pump']="SELECT timestamp FROM webpage WHERE name='gpio_status' BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['power']="SELECT timestamp FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
 
 if [[ ! " ${!KNOWN_MEASUREMENTS_X[*]} " =~ " ${MEASUREMENT} " ]] || [[ ! " ${!KNOWN_MEASUREMENTS_Y[*]} " =~ " ${MEASUREMENT} " ]]; then
-	#echo "measuremenet '${MEASUREMENT}' not in array";
+	echo "measuremenet '${MEASUREMENT}' not in array" >> ./debug.txt
 	echo -n "${DUMMYSTRING}"
 	exit 1;
 fi
@@ -129,20 +154,23 @@ if [ ! -z "${MAXVALS}" ]; then
 	QUERY_X="${QUERY_X} LIMIT ${MAXVALS}";
 	QUERY_Y="${QUERY_Y} LIMIT ${MAXVALS}";
 fi
-#echo "query X is '${QUERY_X}'"
-#echo "query Y is '${QUERY_Y}'"
+echo "query X is '${QUERY_X}'" >> ./debug.txt
+echo "query Y is '${QUERY_Y}'" >> ./debug.txt
 
 # 'SELECT array ( SELECT * From * WHERE * )' formats the result of the first query as an array:
 # i.e. turns '8\n8\n8\n8\n8' into { 8,8,8,8 }.
 # note that SELECT array (...) only allows one column, so we have to run two queriest
-RESP_X=$(psql -U postgres -d rundb -t -c "SELECT array ( ${QUERY_X} ) " )
-RESP_Y=$(psql -U postgres -d rundb -t -c "SELECT array ( ${QUERY_Y} ) " )
+RESP_X=$(psql -U postgres -d "${DBNAME}" -t -c "SELECT array ( ${QUERY_X} ) " )
+RESP_Y=$(psql -U postgres -d "${DBNAME}" -t -c "SELECT array ( ${QUERY_Y} ) " )
+
+echo "RESP_X='${RESP_X}'" >> ./debug.txt
+echo "RESP_Y='${RESP_Y}'" >> ./debug.txt
 
 # check the X array looks like an array of timestamps
-PATTERN=' ?\{("[0-9]{4}\-[0-9]{2}\-[0-9]{2} [0-9]{2}\:[0-9]{2}\:[0-9]{2}",? ?)*\} ?'
+PATTERN=' ?\{("[0-9]{4}\-[0-9]{2}\-[0-9]{2}[T ][0-9]{2}\:[0-9]{2}\:[0-9]{2}\.?[0-9]*",? ?)*\} ?'
 [[ ${RESP_X} =~ ${PATTERN} ]]
 if [ $? -ne 0 ]; then
-#	echo "bad regex match '${RESP_X}'"
+	echo "bad regex match '${RESP_X}'" >> ./debug.txt
 	echo ${DUMMYSTRING}
 	exit 1
 fi
@@ -150,7 +178,7 @@ fi
 PATTERN=' ?\{([?0-9\.\-]+,? ?)*\} ?'
 [[ ${RESP_Y} =~ ${PATTERN} ]]
 if [ $? -ne 0 ]; then
-#	echo "bad regex match '${RESP_Y}'"
+	echo "bad regex match '${RESP_Y}'" >> ./debug.txt
 	echo ${DUMMYSTRING}
 	exit 1
 fi
