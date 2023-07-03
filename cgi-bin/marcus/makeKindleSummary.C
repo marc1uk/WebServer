@@ -32,5 +32,5 @@ mgc->Draw("AL");
 mgc->GetYaxis()->SetTitleOffset(1.4);
 gPad->Modified();
 c2.SetCanvasSize(800,600);
-c2.SaveAs("kindle_summary.png");
+c2.SaveAs("kindle_history.png");
 }
