@@ -18,13 +18,18 @@ export { parseTrace };
 async function getDataFetchRequest(url, json_or_text="text"){
 	//console.log("get_pure_trace::getDataFetchRequest(",url,")");
 	try {
+		console.log("getDataFetchRequest fetching ",url," and waiting on response");
 		let response = await fetch(url);
+		console.log("getDataFetchRequest received response for ",url);
 		let thetext = "";
 		if(json_or_text=="json"){
+			console.log("getDataFetchRequest awaiting on conversion to text for ",url);
 			thetext = await response.text();
 		} else {
+			console.log("getDataFetchRequest awaiting on conversion to json for ",url);
 			thetext = await response.json();
 		}
+		console.log("getDataFetchRequest returning ",url," conversion result"); //,thetext);
 		return thetext;
 	} catch (err) {
 		console.log("Failed to get data from "+url, err);
@@ -129,12 +134,15 @@ async function parseTrace(theData, theName){
 // it maintains a map of timestamps as members of the functor
 // so we can track the last update time of many traces
 function compareTimestamp(name, timestamp){
+	console.log("compareTimestamp checking timestamp for ",name);
+	console.log("new timestamp is ",timestamp);
 	// make an entry if there isn't one (cover case of first draw)
 	if (!('lastupdatetime' in compareTimestamp)){
 		compareTimestamp.lastupdatetime = [];
 	}
 	
 	if(compareTimestamp.lastupdatetime[name] != timestamp){
+		console.log("compareTimestamp got updated timestamp for ",name);
 		// time for an update
 		compareTimestamp.lastupdatetime[name] = timestamp;
 		//console.log("new timestamp for ",name,", new val: ",timestamp,
@@ -142,6 +150,7 @@ function compareTimestamp(name, timestamp){
 		return true;
 		
 	} else {
+		console.log("compareTimestamp no need to update ",name);
 		// don't bother updating the plot, no new data.
 		return false;
 	}
@@ -149,7 +158,7 @@ function compareTimestamp(name, timestamp){
 
 // function that takes the name of a plot and pulls the data and updates it.
 async function UpdatePlot(name){
-	//console.log("Plotting new data for trace ",name);
+	console.log("UpdatePlot called for plot ",name);
 	
 	let traces = [];
 	
@@ -162,21 +171,36 @@ async function UpdatePlot(name){
 		let pureTraceUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=dark_subtracted_pure";
 		let pureFittedUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=pure_scaled";
 		// fetch tha data for all traces in parallel
+		console.log("UpdatePlot submitting 4 fetch requests for dark sub traces.");
+		console.log(name," fetch 1");
 		let intracedata_promise = getDataFetchRequest(intraceUrl, "json");
+		console.log(name," fetch 2");
 		let outtracedata_promise = getDataFetchRequest(outtraceUrl, "json");
+		console.log(name," fetch 3");
 		let puretracedata_promise = getDataFetchRequest(pureTraceUrl, "json");
+		console.log(name," fetch 4");
 		let purefitteddata_promise = getDataFetchRequest(pureFittedUrl, "json");
 		
 		// parse the arrays and build traces
+		console.log("UpdatePlot calling parseTrace for 4 trace arrays.");
+		console.log(name," callparse 1");
 		let intrace_promise = parseTrace(intracedata_promise, 'dark_subtracted_data_in');
+		console.log(name," callparse 2");
 		let outtrace_promise = parseTrace(outtracedata_promise, 'dark_subtracted_data_out');
+		console.log(name," callparse 3");
 		let puretrace_promise = parseTrace(puretracedata_promise, 'pure_reference');
+		console.log(name," callparse 4");
 		let purefitted_promise = parseTrace(purefitteddata_promise, 'pure_fitted');
 		
 		// wait for the promises of data to be fulfilled
+		console.log("UpdatePlot waiting for 4 trace promises to be fulfilled for ",name);
+		console.log(name," await 1");
 		let intrace = await intrace_promise;
+		console.log(name," await 2");
 		let outtrace = await outtrace_promise;
+		console.log(name," await 3");
 		let puretrace = await puretrace_promise;
+		console.log(name," await 4");
 		let purescaledtrace = await purefitted_promise;
 //		console.log("outtrace is ",outtrace);
 //		console.log("outtrace.x is ",outtrace.x);
@@ -185,24 +209,29 @@ async function UpdatePlot(name){
 		// so that it doesn't draw a connecting line over the absorption region
 		// we can add an 'NA' value to the data arrays (ensure 'connect gaps' is off =default)
 		let insertindex=0;
+		console.log("cutting out absorption region for ",name);
 		for(let i=0; i<outtrace.x.length; ++i){
 			if(outtrace.x[i]>275){
 				insertindex=i;
 				break;
 			}
 		}
+		console.log("splicing ",name);
 		outtrace.x.splice(insertindex, 0, 275);
 		outtrace.y.splice(insertindex, 0, 'NA');
 		
 		traces = [ intrace, outtrace, puretrace, purescaledtrace ];
 	} else {
-		//console.log("getting plot data for trace ",name);
+		console.log("UpdatePlot submitting fetch request for trace data ",name);
 		let dataUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=" + name;
 		let newdata_promise = getDataFetchRequest(dataUrl, "json");
+		console.log("UpdatePlot awaiting parsetrace for ",name);
 		//console.log("building traces from data ",newdata);
 		traces = [ await parseTrace(newdata_promise, name) ];
+		console.log("UpdatePlot got traces for ",name);
 	}
 	
+	console.log("UpdateTraces setting trace properties for ",name);
 	for(let i=0; i<traces.length; i++){
 		traces[i]['type'] = 'scatter';
 		if(traces[i]['name'] == 'pure_fitted') traces[i]['mode'] = 'lines';
@@ -216,7 +245,9 @@ async function UpdatePlot(name){
 	let HTMLDIV = document.getElementById(name);
 	
 	// update the plot
+	console.log("UpdateTraces reacting plot ",name);
 	Plotly.react(HTMLDIV, traces, layout, config);
+	console.log("UpdateTraces finished ",name);
 	// trigger resizing to the containing div.
 	//Plotly.relayout(HTMLDIV, {autosize: true});
 	
@@ -224,35 +255,44 @@ async function UpdatePlot(name){
 
 // retrieve new data and update the plot
 function check_for_new_data(name) {
-	console.log("checking for new data for ",name);
-	let getTimeUrl = "http://192.168.2.54/cgi-bin/marcus/get_last_trace_time.cgi?a=" + name;
+	console.log("check_for_new_data called for ",name);
+	let getTimeUrl = "";
+	if(name=="dark_subtracted_data"){
+		getTimeUrl = "http://192.168.2.54/cgi-bin/marcus/get_last_trace_time.cgi?a=dark_subtracted_data_in";
+	} else {
+		getTimeUrl = "http://192.168.2.54/cgi-bin/marcus/get_last_trace_time.cgi?a=" + name;
+	}
 	//console.log("checking for new data for ",name," at ",getTimeUrl);
 	
 	try {
 		// get the timestamp of when the data was last updated
+		console.log("check_for_new_data submitting getDataFetchRequest for last updated timestamp for ",name);
 		let newdataavailable = getDataFetchRequest(getTimeUrl).then(
 			function(latest_timestamp){
-				//console.log("timeUrl returned ",latest_timestamp," seeing if it's new");
+				console.log("check_for_new_data returned last update timestamp ",latest_timestamp,
+				            " for ",name,", seeing if it's new");
 				return compareTimestamp(name, latest_timestamp);
 			},
 			function(error){
-				console.log("timeUrl returned an error: ",error);
+				console.log("check_for_new_data returned an error waiting on timestamp for ",name,
+				            ": ",error);
 				return false;
 			}
 		);
 		
 		// when that returns...
+		console.log("check_for_new_data waiting for timestamp comparison check for ",name);
 		newdataavailable.then(
 			function(result){
-				//console.log("compareTimestamp promise returned with result ",result);
+				console.log("check_for_new_data returned timestamp is new: ",result);
 				// check if there was new data available
 				if(result == true){
 					// retrieve and plot new data
-					console.log("new data available for",name);
+					console.log("check_for_new_data has new data available for",name,", updating plot");
 					UpdatePlot(name);
 				}  else {
 					// else no need to update plot
-					console.log("new data available for",name);
+					console.log("check_for_new_data no new data available for",name);
 				}
 			}
 			// no need to register a rejection handler; newdataavailable should always resolve
@@ -271,6 +311,7 @@ function check_for_new_data(name) {
 // on load, find all plots and register a timer that periodically updates it
 var timerHandleMap = {};
 document.addEventListener("DOMContentLoaded", function(){
+	console.log("update_traces initialising");
 	const plots = document.getElementsByClassName("dataplot");
 	
 	// do an initial retrieval of all plot data FIXME sensible? or slow?
@@ -284,13 +325,31 @@ document.addEventListener("DOMContentLoaded", function(){
 		let plotdiv = plots[i];
 		let parentdiv = plotdiv.parentNode;
 		
+		Plotly.newPlot(plotdiv, [], layout, config);
+		
 		// add events for when a plot is shown from the accordian
 		parentdiv.addEventListener("shown.bs.collapse", function(){
-			if(timerHandleMap[plotdiv.id] != null) return;
+			//if(timerHandleMap[plotdiv.id] != null) return;
 			console.log("registering ",plotdiv.id," for periodic updates");
-			var handle = setInterval(function(){ check_for_new_data(plotdiv.id) }, 20000);
-			timerHandleMap[plotdiv.id] = handle;
-
+			/*
+			console.log("current contents are: [");
+			for(var prop in timerHandleMap){
+				console.log("'",prop,"'->'",timerHandleMap[prop],"'", );
+			}
+			console.log("]");
+			*/
+			
+			//var handle = setInterval(function(){ check_for_new_data(plotdiv.id) }, 30000);
+			//timerHandleMap[plotdiv.id] = handle;
+			
+			/*
+			console.log("contents after insertion are: [");
+			for(var prop in timerHandleMap){
+				console.log("'",prop,"'->'",timerHandleMap[prop],"'", );
+			}
+			console.log("]");
+			*/
+			
 			// trigger it for the first time
 			check_for_new_data(plotdiv.id);
 			
@@ -318,17 +377,39 @@ document.addEventListener("DOMContentLoaded", function(){
 		
 		// add event to collapse to disable updates while the plot is not shown
 		parentdiv.addEventListener("hidden.bs.collapse", function(){
+			/*
+			console.log("contents before removal are: [");
+			for(var prop in timerHandleMap){
+				console.log("'",prop,"'->'",timerHandleMap[prop],"'", );
+			}
+			console.log("]");
+			*/
 			if(timerHandleMap[plotdiv.id] != null){
 				console.log("clearing interval for ",plotdiv.id);
 				clearInterval(timerHandleMap[plotdiv.id]);
 				timerHandleMap[plotdiv.id]=null;
 			}
+			/*
+			console.log("contents after removal are: [");
+			for(var prop in timerHandleMap){
+				console.log("'",prop,"'->'",timerHandleMap[prop],"'", );
+			}
+			console.log("]");
+			*/
 		});
 		
 	}
 	
-	// finally add period updates to the initially open trace
-	var handle = setInterval(function(){ check_for_new_data('last_trace') }, 20000);
-	timerHandleMap['last_trace'] = handle;
+	// finally add period updates to the initially open trace 
+	//var handle = setInterval(function(){ check_for_new_data('last_trace') }, 30000);
+	//timerHandleMap['last_trace'] = handle;
+	
+	/*
+	console.log("contents on initialisation are: [");
+	for(var prop in timerHandleMap){
+		console.log("'",prop,"'->'",timerHandleMap[prop],"'", );
+	}
+	console.log("]");
+	*/
 });
 

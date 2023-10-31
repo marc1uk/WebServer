@@ -95,6 +95,7 @@ KNOWN_MEASUREMENTS_Y['invalve']="SELECT values->'invalve' FROM webpage WHERE nam
 KNOWN_MEASUREMENTS_Y['outvalve']="SELECT values->'outvalve' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_Y['pump']="SELECT values->'pump' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_Y['power']="SELECT values->'power' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['valve_temp']="SELECT values FROM webpage WHERE name='valve_temp' ORDER BY timestamp DESC"
 
 declare -A KNOWN_MEASUREMENTS_X
 KNOWN_MEASUREMENTS_X['dark_mean']="SELECT timestamp FROM data WHERE name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
@@ -139,6 +140,7 @@ KNOWN_MEASUREMENTS_X['invalve']="SELECT timestamp FROM webpage WHERE name='gpio_
 KNOWN_MEASUREMENTS_X['outvalve']="SELECT timestamp FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_X['pump']="SELECT timestamp FROM webpage WHERE name='gpio_status' BY timestamp DESC"
 KNOWN_MEASUREMENTS_X['power']="SELECT timestamp FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['valve_temp']="SELECT timestamp FROM webpage WHERE name='valve_temp' ORDER BY timestamp DESC"
 
 if [[ ! " ${!KNOWN_MEASUREMENTS_X[*]} " =~ " ${MEASUREMENT} " ]] || [[ ! " ${!KNOWN_MEASUREMENTS_Y[*]} " =~ " ${MEASUREMENT} " ]]; then
 	echo "measuremenet '${MEASUREMENT}' not in array" >> ./debug.txt

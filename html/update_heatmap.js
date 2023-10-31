@@ -109,16 +109,19 @@ async function GetTraces(name){
 	
 	let urls = undefined;
 	
+	let histlengthdiv = document.getElementById("historyLength");
+	let histlength = histlengthdiv.value;
+	
 	if(name=="transparency_samples"){
 		// mean, width
-		urls = new Map([["red", "http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency&d=red"],
-		                ["green","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency&d=green"],
-		                ["blue","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency&d=blue"]]);
+		urls = new Map([["red", "http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency&d=red&c="+histlength],
+		                ["green","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency&d=green&c="+histlength],
+		                ["blue","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency&d=blue&c="+histlength]]);
 	}
 	
 	if(name=="transparency_heatmap"){
 		// mean, width
-		urls = new Map([["heatmap","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency_heatmap"]]);
+		urls = new Map([["heatmap","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency_heatmap&c="+histlength]]);
 	}
 	
 	//console.log("GetTraces got ",urls.size," urls for name ",name);
@@ -251,20 +254,24 @@ document.addEventListener("DOMContentLoaded", function(){
 		let plotdiv = plots[i];
 		let parentdiv = plotdiv.parentNode;
 		console.log("registering event for plot ",plotdiv.id," with parent ",parentdiv.id);
+		Plotly.newPlot(plotdiv, [], layout4, config);
 		
 		// add events for when a plot is shown from the accordian
 		parentdiv.addEventListener("shown.bs.collapse", function(){
-			//console.log("registering for periodic updates")
-			var handle = setInterval(function(){check_for_new_data3(plotdiv.id) }, 3000);
-			timerHandleMap[plotdiv.id] = handle;
-			//check_for_new_data3(plotdiv.id);
+			//if(timerHandleMap[plotdiv.id] != null) return;
+			console.log("registering ",plotdiv.id," for periodic updates");
+			//var handle = setInterval(function(){check_for_new_data3(plotdiv.id) }, 30000);
+			//timerHandleMap[plotdiv.id] = handle;
+			
+			check_for_new_data3(plotdiv.id);
+			
 			Plotly.relayout(plotdiv, {autosize: true});
 		});
 		
 		// add event to collapse to disable updates while the plot is not shown
 		parentdiv.addEventListener("hidden.bs.collapse", function(){
 			if(timerHandleMap[plotdiv.id] != null){
-				//console.log("clearing interval ",timerHandleMap[plotdiv.id]);
+				console.log("clearing interval for plot ",plotdiv.id," with parent ",parentdiv.id);
 				clearInterval(timerHandleMap[plotdiv.id]);
 				timerHandleMap[plotdiv.id]=null;
 			}
@@ -273,8 +280,8 @@ document.addEventListener("DOMContentLoaded", function(){
 	}
 	
 	// finally add period updates to the initially open traces
-	var handle = setInterval(function(){ check_for_new_data3('transparency_samples') }, 3000);
-	timerHandleMap['transparency_samples'] = handle;
+	//var handle = setInterval(function(){ check_for_new_data3('transparency_samples') }, 30000);
+	//timerHandleMap['transparency_samples'] = handle;
 	
 });
 

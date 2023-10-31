@@ -8,13 +8,13 @@ async function GetHardwareStatus(){
 	
 	let urls = undefined;
 	
-	urls = new Map([["power", "http://133.11.177.165/cgi-bin/marcus/get_power_state.cgi"],
-	                ["pump", "http://133.11.177.165/cgi-bin/marcus/get_pump_state.cgi"],
-	                ["invalve", "http://133.11.177.165/cgi-bin/marcus/get_valve_state.cgi?&a=inlet"],
-	                ["outvalve", "http://133.11.177.165/cgi-bin/marcus/get_valve_state.cgi?&a=outlet"],
-	                ["pwmboard", "http://133.11.177.165/cgi-bin/marcus/get_pwmboard_state.cgi"],
-	                ["spectrometer", "http://133.11.177.165/cgi-bin/marcus/get_spectrometer_state.cgi"],
-	                ["ledswitches", "http://133.11.177.165/cgi-bin/marcus/get_led_states.cgi"]]);
+	urls = new Map([["power", "http://192.168.2.54/cgi-bin/marcus/get_power_state.cgi"],
+	                ["pump", "http://192.168.2.54/cgi-bin/marcus/get_pump_state.cgi"],
+	                ["invalve", "http://192.168.2.54/cgi-bin/marcus/get_valve_state.cgi?&a=inlet"],
+	                ["outvalve", "http://192.168.2.54/cgi-bin/marcus/get_valve_state.cgi?&a=outlet"],
+	                ["pwmboard", "http://192.168.2.54/cgi-bin/marcus/get_pwmboard_state.cgi"],
+	                ["spectrometer", "http://192.168.2.54/cgi-bin/marcus/get_spectrometer_state.cgi"],
+	                ["ledswitches", "http://192.168.2.54/cgi-bin/marcus/get_led_states.cgi"]]);
 	
 	// spin off a bunch of fetch requests and build an array of promises to the data
 	let datapromises = new Map();
@@ -96,5 +96,5 @@ document.addEventListener("DOMContentLoaded", function(){
 	// an initial trigger
 	GetHardwareStatus();
 	// set a timer to update the data every second
-	var timerHandle = setInterval(GetHardwareStatus, 3000);
+	var timerHandle = setInterval(GetHardwareStatus, 30000);
 });

@@ -128,7 +128,7 @@ int main(int argc, const char** argv){
 	//mg.GetXaxis()->SetLabelSize(0.02);
 	//mg.GetXaxis()->SetLabelOffset(0.072);
 	//mg.GetYaxis()->SetRangeUser(0.25,0.45);
-	mg.GetYaxis()->SetRangeUser(1.8,3.0);
+	mg.GetYaxis()->SetRangeUser(1.0,4.0);
 	mg.GetXaxis()->SetLabelOffset(0.04);
 	/*
 	TLegend* leg = gPad->BuildLegend(0.65,0.40,0.95,0.65);

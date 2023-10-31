@@ -406,11 +406,12 @@ cd ${CGIDIR}
 ${CGIDIR}/makeStatusFile ${CGIDIR}/gadstatus.txt
 
 # invoke the application to generate the gd history graph
-${CGIDIR}/makeGdConcHistory 200 $1
+HISTLENGTH=21   # we get ~7 measurements every 2 hours, so for egads, 6 hours=21 measurements
+${CGIDIR}/makeGdConcHistory ${HISTLENGTH} $1
 # overlay a shaded region showing the acceptable area
 convert ${CGIDIR}/gdconcs.png ${CGIDIR}/gdconc_overlay.png -composite +antialias ${CGIDIR}/gdconc_history.png
 
 # make a transparency history plot
-${CGIDIR}/makeTranspHistory 200 $1
+${CGIDIR}/makeTranspHistory ${HISTLENGTH} $1
 # overlay a shaded region
 convert ${CGIDIR}/transps.png ${CGIDIR}/transps_overlay.png -composite +antialias ${CGIDIR}/transparency_history.png

@@ -6,7 +6,7 @@ import { getDataFetchRequest } from './update_traces.js';
 async function GetRunStatus(){
 	
 	// send off a fetch request for the data
-	let datapromise = getDataFetchRequest("http://133.11.177.165/cgi-bin/marcus/get_run_info.cgi", "text");
+	let datapromise = getDataFetchRequest("http://192.168.2.54/cgi-bin/marcus/get_run_info.cgi", "text");
 	
 	// register callback that will update the webpage based on the data once it arrives
 	datapromise.then(UpdateRunInfo);
@@ -46,5 +46,6 @@ document.addEventListener("DOMContentLoaded", function(){
 	// an initial trigger
 	GetRunStatus();
 	// set a timer to update the data every second
-	var timerHandle = setInterval(GetRunStatus, 3000);
+	//var timerHandle = setInterval(GetRunStatus, 3000);
+	// y'know run really doesn't change often, let's not even bother.
 });

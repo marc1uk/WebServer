@@ -336,6 +336,7 @@
                  'complexfit_pars',     //
                  'valve_state',         //
                  'pi_mem',
+                 'valve_temps',
                  ];
       $histonames = [ 
                       'Gd Concentration',
@@ -348,7 +349,8 @@
                       'Simple Fit Parameters',
                       'Complex Fit Parameters',
                       'Valve States',
-                      'RPi Resource Usage'
+                      'RPi Resource Usage',
+                      'Valve Temperature (Average)',
                     ];
       
 //	 + dark trace params - ("darktrace_params" = json: "mean", "width") [D]

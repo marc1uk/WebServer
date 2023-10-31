@@ -311,6 +311,25 @@ async function GetTraces(name){
 		                ["complexfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_gdconc&b=275_B&c="+histlength]]);
 	}
 	
+	if(name=="valve_state"){
+		// custom object
+		urls = new Map([["invalve","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=invalve"],
+		                ["outvalve","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=outvalve"]]);
+	}
+	
+	if(name=="pi_mem"){
+		// custom object
+		urls = new Map([["mem_usage","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=mem&c="+histlength],
+		                ["cpu_usage","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=cpu&c="+histlength]]);
+	}
+	
+	if(name=="valve_temps"){
+		// custom object
+		//urls = new Map([["valve1_temp","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=valve1_temp&c="+histlength],
+		//                ["valve2_temp","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=valve2_temp&c="+histlength]]);
+		urls = new Map([["valve_temp","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=valve_temp&c="+histlength]]);
+	}
+	
 	//console.log("GetTraces got ",urls.size," urls for name ",name);
 	
 	if(urls.size==0){
@@ -502,8 +521,14 @@ async function UpdateTimeSeries(name){
 
 // retrieve new data and update the plot
 function check_for_new_data2(name) {
-	
-	let getTimeUrl = "http://192.168.2.54/cgi-bin/marcus/get_last_trace_time.cgi";
+	console.log("checking for new data for ",name);
+	// we check a timestamp to see if the plot needs updating. But many plots have many traces,
+	// so which timestamp do we check? Well, they more or less all get updated when a gdconc
+	// measurement is made, with a whole slew of new db entries. So any one will do: raw_gdconc
+	let timecheckname = "raw_gdconc";
+	if(name=="valve_state") timecheckname = "valvestate_inlet";
+	if(name=="pi_mem") timecheckname = "mem";
+	let getTimeUrl = "http://192.168.2.54/cgi-bin/marcus/get_last_trace_time.cgi?a="+timecheckname;
 	//console.log("checking for new data for ",name," at ",getTimeUrl);
 	
 	try {
@@ -562,13 +587,22 @@ document.addEventListener("DOMContentLoaded", function(){
 		
 		let plotdiv = plots[i];
 		let parentdiv = plotdiv.parentNode;
-		console.log("registering event for plot ",plotdiv.id," with parent ",parentdiv.id);
+		//console.log("registering event for plot ",plotdiv.id," with parent ",parentdiv.id);
+		
+		let TSname = 'timeseries_' + plotdiv.id;
+		let HSname = 'histo_' + plotdiv.id;
+		console.log("update_histos registering plot ",TSname," and ",HSname);
+		let TSdiv = document.getElementById(TSname);
+		let HSdiv = document.getElementById(HSname);
+		Plotly.newPlot(TSdiv, [], layout2, config);
+		Plotly.newPlot(HSdiv, [], layout3, config);
 		
 		// add events for when a plot is shown from the accordian
 		parentdiv.addEventListener("shown.bs.collapse", function(){
+			//if(timerHandleMap[plotdiv.id] != null) return;
 			console.log("registering ",plotdiv.id," for periodic updates");
-			var handle = setInterval(function(){check_for_new_data2(plotdiv.id) }, 20000);
-			timerHandleMap[plotdiv.id] = handle;
+			//var handle = setInterval(function(){check_for_new_data2(plotdiv.id) }, 30000);
+			//timerHandleMap[plotdiv.id] = handle;
 			
 			// invoke it the first time
 			check_for_new_data2(plotdiv.id);
@@ -586,8 +620,9 @@ document.addEventListener("DOMContentLoaded", function(){
 			// as the plot is generated asynchronously once data comes back,
 			// and Plotly will fall over entirely if the plot doesn't yet exist.
 			// so instead we trigger a resize on each data update (in plotData)
-			//console.log("updating layout for div ",plotdiv);
-			Plotly.relayout(plotdiv, {autosize: true});
+			console.log("updating layout for div ",plotdiv.id);
+			Plotly.relayout(TSdiv, {autosize: true});
+			Plotly.relayout(HSdiv, {autosize: true});
 			
 		});
 		
@@ -597,13 +632,15 @@ document.addEventListener("DOMContentLoaded", function(){
 				console.log("clearing interval for ",plotdiv.id);
 				clearInterval(timerHandleMap[plotdiv.id]);
 				timerHandleMap[plotdiv.id]=null;
+			} else {
+				console.log("no timer handle for this plot");
 			}
 		});
 		
 	}
 	
 	// finally add period updates to the initially open traces
-	var handle = setInterval(function(){ check_for_new_data2('gdconcentration') }, 20000);
-	timerHandleMap['gdconcentration'] = handle;
+	//var handle = setInterval(function(){ check_for_new_data2('gdconcentration') }, 30000);
+	//timerHandleMap['gdconcentration'] = handle;
 });
 
