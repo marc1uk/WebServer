@@ -10,7 +10,8 @@
     <!-- specify the location of bootstrap css -->
     
     <!-- Bootstrap core CSS -->
-    <link href="./bootstrap-5.1.3-dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- <link href="./bootstrap-5.1.3-dist/css/bootstrap.min.css" rel="stylesheet"> -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <!-- pull in any custom overrides for styles -->
     <link href="scss/gad.scss" rel="stylesheet">
@@ -18,11 +19,15 @@
     <title>GAD Control and Monitoring Website</title>
     
     <!-- bootstrap javascript source bundle must be included, typically at the end of the head/body section -->
-    <script src="./bootstrap-5.1.3-dist/js/bootstrap.bundle.min.js"></script>
+    <!-- <script src="./bootstrap-5.1.3-dist/js/bootstrap.bundle.min.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- plotly javascript source bundle -->
-    <script src="./plotly-2.3.0/plotly-2.3.0.min.js"></script>
-    <script src="./d3/d3.min.js"></script>
+    <!-- <script src="./plotly-2.3.0/plotly-2.3.0.min.js"></script> -->
+    <script src="https://cdn.plot.ly/plotly-2.3.0.min.js" charset="utf-8"></script>
+    
+    <!-- <script src="./d3/d3.min.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
     
   </head>
   

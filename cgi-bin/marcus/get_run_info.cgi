@@ -28,7 +28,7 @@ if [ $? -ne 0 ] || [ -z "${CONFIGS}" ]; then
 fi
 
 # run batch regex match to ensure the returned response matches our expectation
-PATTERN='\{"runnum":[0-9]+,"start":"[0-9]{4}\-[0-9]{2}\-[0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}\.?[0-9]*","stop":("[0-9]{4}\-[0-9]{2}\-[0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}\.?[0-9]*")*[null]*,"runconfig":[0-9]+,"notes":"[^"]+","git_tag":"[^"]+"\}'
+PATTERN='\{"runnum":[0-9]+,"start":"[0-9]{4}\-[0-9]{2}\-[0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}\.?[0-9]*","stop":("[0-9]{4}\-[0-9]{2}\-[0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}\.?[0-9]*"|null),"runconfig":[0-9]+,"notes":"[^"]*","git_tag":"[^"]*"\}'
 [[ ${CONFIGS} =~ ${PATTERN} ]]
 if [ $? -ne 0 ]; then
 	#echo "return '${CONFIGS}' did not match pattern '${PATTERN}'"
