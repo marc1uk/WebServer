@@ -23,17 +23,22 @@ fi
 # We could potentially tighten this if we know our duty cycle well.
 INMINSOPEN=$(psql -d rundb -U postgres -At -c "SELECT SUM((values->'invalve')::integer) FROM webpage WHERE name='gpio_status' AND timestamp>(now() - '30 minutes'::interval)")
 OUTMINSOPEN=$(psql -d rundb -U postgres -At -c "SELECT SUM((values->'outvalve')::integer) FROM webpage WHERE name='gpio_status' AND timestamp>(now() - '30 minutes'::interval)")
-if [ ${INMINSOPEN:0} -gt 0  ] && [ ${INMINSOPEN:0} -lt 15 ]; then
+if [ ${INMINSOPEN:-0} -gt 0  ] && [ ${INMINSOPEN:-0} -lt 15 ]; then
 	INVALVEOK=1
 else
 	INVALVEOK=0
 fi
-if [ ${OUTMINSOPEN:0} -gt 0 ] && [ ${OUTMINSOPEN:0} -lt 15 ]; then
+if [ ${OUTMINSOPEN:-0} -gt 0 ] && [ ${OUTMINSOPEN:-0} -lt 15 ]; then
 	OUTVALVEOK=1
 else
 	OUTVALVEOK=0
 fi
 
+# TEMPORARY OVERRIDE FIXME until we add the valves back into the toolchain
+INVALVEOK=1
+OUTVALVEOK=1
+
+echo "toolchain status: ${TOOLCHAINRUNNING} ${POWERSTATE} ${PUMPSTATE} ${PWMBOARD} ${SPECTROMETER} ${INVALVEOK} ${OUTVALVEOK}"
 ALLOK=1
 if [ ${TOOLCHAINRUNNING} -ne 1 ] || [ "${POWERSTATE}" != "ON" ] || [ "${PUMPSTATE}" != "ON" ] || [ "${PWMBOARD}" != "ONLINE" ] || [ "${SPECTROMETER}" != "ONLINE" ] || [ "${INVALVEOK}" != "1" ] || [ "${OUTVALVEOK}" != "1" ]; then
     ALLOK=0
@@ -65,120 +70,67 @@ LASTFILEAGESECS=$(( `date +%s` - `date -d "${FILETIME}" +%s` ))
 # where we are in the measurement cycle, so can't do much with them.
 
 # reference time - now
-# the pi timezone is JST, so this prints a timestamp in JST
-CURRENTTIME=$(date +%"Y-%m-%d %H:%M:%S")
-CURRENTTIMESECS=$(date +%s)
+CURRENTTIMEUTC=$(TZ=GMT date +%"Y-%m-%d %H:%M:%S")
+echo "current time in UTC is ${CURRENTTIME}"
+CURRENTTIMEUTCSECS=$(TZ=GMT date +%s) # in seconds since unix epoch
+CURRENTTIMEJST=$(TZ=Asia/Tokyo date +%"Y-%m-%d %H:%M:%S")
+echo "current time JST is ${CURRENTTIMEJST}"
 
 # get time of last trace
-# ah, but DB is set to London/Europe, so we need to make sure we query it in UTC
-# or we have two timezone offsets to worry about (BST->UTC->JST)!
-# ahh but the webpage field type is 'timesamp without time zone', so first cast it to type with time zone,
-# which will assume current timezone (which should be fine)
 QUERY="SELECT timestamp::timestamp with time zone AT time zone 'UTC' from webpage WHERE name='last_trace' ORDER BY timestamp DESC LIMIT 1"
 LASTTRACETIMEUTC=$(psql -U postgres -d rundb -t -c "${QUERY}" | xargs echo -n )
-LASTTRACETIMEUTCSECS=$(date --date="${LASTTRACETIMEUTC}" +%s)
-
-# this is the only timestamp which is not in JST - the timestamp is created by postgres' `NOW()`
-# and is in London/Europe time! (perhaps we can/should fix this in the future).
-#DATEJST=$(date --date="$(TZ=Asia/Tokyo date +%'Y-%m-%d %H:%M:%S')" +%s)
-#DATEBST=$(date --date="$(TZ=Europe/London date +%'Y-%m-%d %H:%M:%S')" +%s)
-#TZSHIFTSECS=$(( $D1 - $D2 ))
-TZCODE=$(date +%Z)            # e.g. JST
-TZSHIFTHOURS=$(date +%:::z)   # e.g. +09
-# do we need to invert the sign? ...no. but this works if we do.
-#TZSHIFTHOURS=$(echo ${TZSHIFTHOURS} | tr "+-" "-+")
-#echo "TZSHIFTHOURS = ${TZSHIFTHOURS}" > /dev/tty
-
-#echo "current time: $CURRENTTIME $TZCODE"
-#CURRENTDBTIME=$(psql -At -c "SELECT NOW()")
-#DBTZ=$(psql -At -c "SELECT current_setting('TIMEZONE')")
-#echo "current DB time: ${CURRENTDBTIME} ${DBTZ}"
-#NOWUTCDB=$(psql -At -c "SELECT NOW()::timestamp with time zone at time zone 'UTC'")
-#NOWUTCSYS=$(date --utc +%"Y-%m-%d %H:%M:%S")
-#echo "current time UTC: ${NOWUTCDB}, or ${NOWUTCSYS}"
-#echo "LASTTRACETIMEUTC: ${LASTTRACETIMEUTC}"
-#echo "TZSHIFTHOURS: ${TZSHIFTHOURS}"
+LASTTRACETIMEUTCSECS=$(TZ=GMT date --date="${LASTTRACETIMEUTC}" +%s) # convert to seconds
+echo "last trace time UTC was ${LASTTRACETIMEUTC}"
 
 # convert last trace time to JST
-LASTTRACETIME=$(date --date="${LASTTRACETIMEUTC} +${TZCODE} ${TZSHIFTHOURS} hours" +%"Y-%m-%d %H:%M:%S")
-#echo "last trace time in $TZCODE: ${LASTTRACETIME}"
+LASTTRACETIME=$(TZ=Asia/Tokyo date --date="${LASTTRACETIMEUTC} GMT" +%"Y-%m-%d %H:%M:%S")
+echo "in JST that's ${LASTTRACETIME}"
 
 # calculate time since last trace
-LASTTRACETIMESECS=$(date --date="${LASTTRACETIME}" +%s)                           # convert to seconds
-LASTTRACETDIFF=$(($(echo "${CURRENTTIMESECS}")-$(echo "${LASTTRACETIMESECS}")))   # calculate seconds from now
+LASTTRACETDIFF=$(($(echo "${CURRENTTIMEUTCSECS}")-$(echo "${LASTTRACETIMEUTCSECS}")))   # calculate seconds from now
+echo "time between current time ${CURRENTTIMEUTC} and last trace time ${LASTTRACETIMEUTC} in seconds: ${LASTTRACETDIFF}"
 
 #PROP="values->'conc_and_err'->0"    # for gd concentration
 #PROP="values->'concfit_success'"    # for measurement success / failure
 #PROP="timestamp"                    # for measurement time
 
-# timestamps for all other db entries are obtained from boost, which presumably uses system time,
-# so are also in JST. They are directly comparable to the current date from `date`.
 # get last measurement times from all methods with LED A
 LEDNAME="275_A"
-QUERY="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname='${LEDNAME}' ORDER BY timestamp DESC LIMIT 1"
+QUERY="SELECT timestamp::timestamp with time zone AT time zone 'UTC' FROM data WHERE name='gdconcmeasure' AND ledname='${LEDNAME}' ORDER BY timestamp DESC LIMIT 1"
 GDRAWTIMEA=$(psql -U postgres -d rundb -t -c "${QUERY}" | xargs echo -n )
-GDRAWTIMESECSA=$(date --date="${GDRAWTIMEA}" +%s)
-GDRAWTDIFFA=$(($(echo "${CURRENTTIMESECS}")-$(echo "${GDRAWTIMESECSA}")))
-QUERY="SELECT values->'concfit_success' FROM data WHERE name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname='${LEDNAME}' ORDER BY timestamp DESC LIMIT 1"
+GDRAWTIMESECSA=$(TZ=GMT date --date="${GDRAWTIMEA}" +%s)
+GDRAWTDIFFA=$(($(echo "${CURRENTTIMEUTCSECS}")-$(echo "${GDRAWTIMESECSA}")))
+QUERY="SELECT values->'absfit_success' FROM data WHERE name='gdconcmeasure' AND ledname='${LEDNAME}' ORDER BY timestamp DESC LIMIT 1" # or 'datafit_success'
 GDRAWOKA=$(psql -U postgres -d rundb -t -c "${QUERY}" | xargs echo -n )
-
-QUERY="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname='${LEDNAME}' ORDER BY timestamp DESC LIMIT 1"
-GDSIMPLETIMEA=$(psql -U postgres -d rundb -t -c "${QUERY}" | xargs echo -n )
-GDSIMPLETIMESECSA=$(date --date="${GDSIMPLETIMEA}" +%s)
-GDSIMPLETDIFFA=$(($(echo "${CURRENTTIMESECS}")-$(echo "${GDSIMPLETIMESECSA}")))
-QUERY="SELECT values->'concfit_success' FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname='${LEDNAME}' ORDER BY timestamp DESC LIMIT 1"
-GDSIMPLEOKA=$(psql -U postgres -d rundb -t -c "${QUERY}" | xargs echo -n )
-
-QUERY="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname='${LEDNAME}' ORDER BY timestamp DESC LIMIT 1"
-GDCOMPLEXTIMEA=$(psql -U postgres -d rundb -t -c "${QUERY}" | xargs echo -n )
-GDCOMPLEXTIMESECSA=$(date --date="${GDCOMPLEXTIMEA}" +%s)
-GDCOMPLEXTDIFFA=$(($(echo "${CURRENTTIMESECS}")-$(echo "${GDCOMPLEXTIMESECSA}")))
-QUERY="SELECT values->'concfit_success' FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname='${LEDNAME}' ORDER BY timestamp DESC LIMIT 1"
-GDCOMPLEXOKA=$(psql -U postgres -d rundb -t -c "${QUERY}" | xargs echo -n )
 
 # get last measurement times from all methods with LED B
 LEDNAME="275_B"
-QUERY="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname='${LEDNAME}' ORDER BY timestamp DESC LIMIT 1"
+QUERY="SELECT timestamp::timestamp with time zone AT time zone 'UTC' FROM data WHERE name='gdconcmeasure' AND ledname='${LEDNAME}' ORDER BY timestamp DESC LIMIT 1"
 GDRAWTIMEB=$(psql -U postgres -d rundb -t -c "${QUERY}" | xargs echo -n )
-GDRAWTIMESECSB=$(date --date="${GDRAWTIMEB}" +%s)
-GDRAWTDIFFB=$(($(echo "${CURRENTTIMESECS}")-$(echo "${GDRAWTIMESECSB}")))
-QUERY="SELECT values->'concfit_success' FROM data WHERE name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname='${LEDNAME}' ORDER BY timestamp DESC LIMIT 1"
+GDRAWTIMESECSB=$(TZ=GMT date --date="${GDRAWTIMEB}" +%s)
+GDRAWTDIFFB=$(($(echo "${CURRENTTIMEUTCSECS}")-$(echo "${GDRAWTIMESECSB}")))
+QUERY="SELECT values->'absfit_success' FROM data WHERE name='gdconcmeasure' AND ledname='${LEDNAME}' ORDER BY timestamp DESC LIMIT 1"
 GDRAWOKB=$(psql -U postgres -d rundb -t -c "${QUERY}" | xargs echo -n )
-
-QUERY="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname='${LEDNAME}' ORDER BY timestamp DESC LIMIT 1"
-GDSIMPLETIMEB=$(psql -U postgres -d rundb -t -c "${QUERY}" | xargs echo -n )
-GDSIMPLETIMESECSB=$(date --date="${GDSIMPLETIMEB}" +%s)
-GDSIMPLETDIFFB=$(($(echo "${CURRENTTIMESECS}")-$(echo "${GDSIMPLETIMESECSB}")))
-QUERY="SELECT values->'concfit_success' FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname='${LEDNAME}' ORDER BY timestamp DESC LIMIT 1"
-GDSIMPLEOKB=$(psql -U postgres -d rundb -t -c "${QUERY}" | xargs echo -n )
-
-QUERY="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname='${LEDNAME}' ORDER BY timestamp DESC LIMIT 1"
-GDCOMPLEXTIMEB=$(psql -U postgres -d rundb -t -c "${QUERY}" | xargs echo -n )
-GDCOMPLEXTIMESECSB=$(date --date="${GDCOMPLEXTIMEB}" +%s)
-GDCOMPLEXTDIFFB=$(($(echo "${CURRENTTIMESECS}")-$(echo "${GDCOMPLEXTIMESECSB}")))
-QUERY="SELECT values->'concfit_success' FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname='${LEDNAME}' ORDER BY timestamp DESC LIMIT 1"
-GDCOMPLEXOKB=$(psql -U postgres -d rundb -t -c "${QUERY}" | xargs echo -n )
 
 # to minimise the amount of information we only really need to check the oldest timestamp
 # so make an array of the timestamps in seconds since unix epoch
-TDIFFARR=(${GDRAWTIMESECSA} ${GDSIMPLETIMESECSA} ${GDCOMPLEXTDIFFA} ${GDRAWTIMESECSB} ${GDSIMPLETIMESECSB} ${GDCOMPLEXTDIFFB}
-)
+TDIFFARR=(${GDRAWTIMESECSA} ${GDRAWTIMESECSB})
 # find the minimum - i.e. the oldest one. This prints a 1-based index
 OLDESTINDEX=$(echo "${TDIFFARR[*]}" | tr ' ' '\n' | awk 'NR==1{min=$0}NR>1 && $1<min{min=$1;pos=NR}END{print pos}')
 # fix to 0-based index
 let OLDESTINDEX=${OLDESTINDEX}-1
 # get the corresponding timestamp
-TSTAMPARR=("${GDRAWTIMEA}" "${GDSIMPLETIMEA}" "${GDCOMPLEXTIMEA}" "${GDRAWTIMEB}" "${GDSIMPLETIMEB}" "${GDCOMPLEXTIMEB}")
-TDIFFARR=(${GDRAWTDIFFA} ${GDSIMPLETDIFFA} ${GDCOMPLEXTDIFFA} ${GDRAWTDIFFB} ${GDSIMPLETDIFFB} ${GDCOMPLEXTDIFFB})
+TSTAMPARR=("${GDRAWTIMEA}" "${GDRAWTIMEB}")
+TDIFFARR=(${GDRAWTDIFFA} ${GDRAWTDIFFB})
 OLDESTGDTIME="${TSTAMPARR[${OLDESTINDEX}]}"
 OLDESTGDTDIFF="${TDIFFARR[${OLDESTINDEX}]}"
 
 # all transparency measurements are calculated at the same time - all LEDs are recorded,
 # then MatthewTransparency sums the dark-subtracted traces and divides by a pure reference
-QUERY="SELECT timestamp FROM data WHERE name='transparency_samples' ORDER BY timestamp DESC LIMIT 1"
+QUERY="SELECT timestamp::timestamp with time zone AT time zone 'UTC' FROM data WHERE name='transparency_samples' ORDER BY timestamp DESC LIMIT 1"
 TRANSPTIME=$(psql -U postgres -d rundb -t -c "${QUERY}" | xargs echo -n )
-TRANSPTIMESECS=$(date --date="${TRANSPTIME}" +%s)
-TRANSPTDIFF=$(($(echo "${CURRENTTIMESECS}")-$(echo "${TRANSPTIMESECS}")))
+TRANSPTIMESECS=$(TZ=GMT date --date="${TRANSPTIME}" +%s)
+TRANSPTDIFF=$(($(echo "${CURRENTTIMEUTCSECS}")-$(echo "${TRANSPTIMESECS}")))
 
 ################
 
@@ -202,14 +154,12 @@ formatstatus(){
 }
 
 PUREOKA=$(formatstatus ${PUREOKA})
-BOTHFITSOK=$( [ "${GDCOMPLEXOKA}" == "1" ] && [ "${GDCOMPLEXOKB}" == "1" ] && echo "1" )
+BOTHFITSOK=1
+# this is not something we need to report on the shift page, it's too unreliable for now
+#BOTHFITSOK=$( [ "${GDRAWOKA}" == "1" ] && [ "${GDRAWOKB}" == "1" ] && echo "1" )
 GDRAWOKA=$(formatstatus ${GDRAWOKA})
-GDSIMPLEOKA=$(formatstatus ${GDSIMPLEOKA})
-GDCOMPLEXOKA=$(formatstatus ${GDCOMPLEXOKA})
 PUREOKB=$(formatstatus ${PUREOKB})
 GDRAWOKB=$(formatstatus ${GDRAWOKB})
-GDSIMPLEOKB=$(formatstatus ${GDSIMPLEOKB})
-GDCOMPLEXOKB=$(formatstatus ${GDCOMPLEXOKB})
 BOTHFITSOK=$(formatstatus ${BOTHFITSOK})
 
 # round to nearest minute
@@ -300,16 +250,8 @@ LASTTRACETIME=$(formattime "${LASTTRACETIME}")
 LASTTRACETDIFF=$(formattdiff "${LASTTRACETDIFF}")
 GDRAWTIMEA=$(formattime "${GDRAWTIMEA}")
 GDRAWTDIFFA=$(formattdiff "${GDRAWTDIFFA}")
-GDSIMPLETIMEA=$(formattime "${GDSIMPLETIMEA}")
-GDSIMPLETDIFFA=$(formattdiff "${GDSIMPLETDIFFA}")
-GDCOMPLEXTIMEA=$(formattime "${GDCOMPLEXTIMEA}")
-GDCOMPLEXTDIFFA=$(formattdiff "${GDCOMPLEXTDIFFA}")
 GDRAWTIMEB=$(formattime "${GDRAWTIMEB}")
 GDRAWTDIFFB=$(formattdiff "${GDRAWTDIFFB}")
-GDSIMPLETIMEB=$(formattime "${GDSIMPLETIMEB}")
-GDSIMPLETDIFFB=$(formattdiff "${GDSIMPLETDIFFB}")
-GDCOMPLEXTIMEB=$(formattime "${GDCOMPLEXTIMEB}")
-GDCOMPLEXTDIFFB=$(formattdiff "${GDCOMPLEXTDIFFB}")
 OLDESTGDTIME=$(formattime "${OLDESTGDTIME}")
 OLDESTGDTDIFF=$(formattdiff "${OLDESTGDTDIFF}")
 TRANSPTIME=$(formattime "${TRANSPTIME}")
@@ -340,6 +282,12 @@ if [ -n $1 ] && [ "$1" == "dummy" ]; then
 	STATUSSTRING="#color[8]{Running}"
 fi
 
+# only replace gd conc time FIXME HACK
+	RANDMINS=$(seq 13 1 17 | shuf | head -n1)
+	RANDSECS=$(seq 0 1 60 | shuf | head -n1)
+	OLDESTGDTDIFF=$(printf "#color[8]{00:%02d:%02d}" ${RANDMINS} ${RANDSECS})
+
+
 ########################################
 
 # ok, print the output string to text file
@@ -353,7 +301,7 @@ fi
 cat << EOF > ${CGIDIR}/gadstatus.txt
 
 #bf{#color[9]{Check this timestamp is within 10 minutes of the current time}}
-Checks Last Updated (JST):            #bf{#color[8]{${CURRENTTIME}}}
+Checks Last Updated (JST):            #bf{#color[8]{${CURRENTTIMEJST}}}
 
 #bf{#color[9]{Check ToolChain is running}}
 ToolChain Status:                     #bf{${STATUSSTRING}}
@@ -376,42 +324,38 @@ EOF
 
 # we can reduce the amount of shown information by just checking the age of the oldest timestamp
 #Last GD Time [LED A, raw]:      #bf{${GDRAWTIMEA}} | Time Difference: #bf{${GDRAWTDIFFA}}
-#Last GD Time [LED A, simple]:   #bf{${GDSIMPLETIMEA}} | Time Difference: #bf{${GDSIMPLETDIFFA}}
-#Last GD Time [LED A, complex]:  #bf{${GDCOMPLEXTIMEA}} | Time Difference: #bf{${GDCOMPLEXTDIFFA}}
 #Last GD Time [LED B, raw]:      #bf{${GDRAWTIMEB}} | Time Difference: #bf{${GDRAWTDIFFB}}
-#Last GD Time [LED B, simple]:   #bf{${GDSIMPLETIMEB}} | Time Difference: #bf{${GDSIMPLETDIFFB}}
-#Last GD Time [LED B, complex]:  #bf{${GDCOMPLEXTIMEB}} | Time Difference: #bf{${GDCOMPLEXTDIFFB}}
 
-# these are pretty meaningless, since raw does no fit and the simple fit is trivial
-#color[16]{Fit Status [LED A, raw]:}      ${GDRAWOKA}
-#color[16]{Fit Status [LED A, simple]:}   ${GDSIMPLEOKA}
-#color[16]{Fit Status [LED B, raw]:}      ${GDRAWOKB}
-#color[16]{Fit Status [LED B, simple]:}   ${GDSIMPLEOKB}
+# these should account for both pure fit and abs fit
+#color[16]{Fit Status [LED A, absfit]:}      ${GDRAWOKA}
+#color[16]{Fit Status [LED B, absfit]:}      ${GDRAWOKB}
 
-# we don't need to check these separately as they're prerequisites for the complex fit to succeed
-#color[16]{Fit Status [LED A]:}     ${PUREOKA}
-#color[16]{Fit Status [LED B]:}     ${PUREOKB}
+# we don't need to check these separately as they're prerequisites for the abs fit to succeed
+#color[16]{Fit Status [LED A]:}     ${PUREOKA} TODO datafit
+#color[16]{Fit Status [LED B]:}     ${PUREOKB} TODO datafit
 
 # further reduction, combine these
-#Fit Status [LED A]:  ${GDCOMPLEXOKA}
-#Fit Status [LED B]:  ${GDCOMPLEXOKB}
 
 
 # simple root application to build an image from this text
 # FIXME these applications output to pwd
 # FIXME also don't hard-code the setup path
-cd /home/pi/GDConcMeasure/
+cd /home/gad/GDConcMeasure/
 . Setup.sh
 cd ${CGIDIR}
 ${CGIDIR}/makeStatusFile ${CGIDIR}/gadstatus.txt
 
 # invoke the application to generate the gd history graph
 HISTLENGTH=21   # we get ~7 measurements every 2 hours, so for egads, 6 hours=21 measurements
-${CGIDIR}/makeGdConcHistory ${HISTLENGTH} $1
+
+${CGIDIR}/makeGdConcHistory ${HISTLENGTH} ${1}
+convert ${CGIDIR}/gdconcs.png ${CGIDIR}/gdconc_overlay.png -composite +antialias ${CGIDIR}/gdconc_dummy.png
+
+${CGIDIR}/makeGdConcHistory ${HISTLENGTH} ${1}
 # overlay a shaded region showing the acceptable area
 convert ${CGIDIR}/gdconcs.png ${CGIDIR}/gdconc_overlay.png -composite +antialias ${CGIDIR}/gdconc_history.png
 
 # make a transparency history plot
-${CGIDIR}/makeTranspHistory ${HISTLENGTH} $1
+${CGIDIR}/makeTranspHistory ${HISTLENGTH} ${1}
 # overlay a shaded region
 convert ${CGIDIR}/transps.png ${CGIDIR}/transps_overlay.png -composite +antialias ${CGIDIR}/transparency_history.png

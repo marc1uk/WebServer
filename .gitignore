@@ -1,0 +1,15 @@
+cgi-bin/marcus/StatusCanvas.C
+cgi-bin/marcus/StatusCanvas.png
+cgi-bin/marcus/gadstatus.txt
+cgi-bin/marcus/gdconc_dummy.png
+cgi-bin/marcus/gdconc_history.png
+cgi-bin/marcus/gdconcs.png
+cgi-bin/marcus/kindle_history.png
+cgi-bin/marcus/kindle_summary.png
+cgi-bin/marcus/makeGdConcHistory
+cgi-bin/marcus/makeStatusFile
+cgi-bin/marcus/makeTranspHistory
+cgi-bin/marcus/transparency_history.png
+cgi-bin/marcus/transps.png
+html/images/cam.jpg
+html/kindle_summary.png

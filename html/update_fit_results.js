@@ -29,6 +29,66 @@ async function UpdateFitInfo(response){
 		if(fitobject.hasOwnProperty(akey)==false) continue;
 		let aval = fitobject[akey];
 		
+		// // MarcusAnalysis
+		// if(akey=="purefit"){
+		// 	let HTMLDIV = document.getElementById(akey);
+		// 	if(aval==1){
+		// 		HTMLDIV.value="Success";
+		// 		HTMLDIV.classList.remove('text-danger');
+		// 		HTMLDIV.classList.remove('text-warning');
+		// 		HTMLDIV.classList.add('text-success');
+		// 	} else if(aval==0){
+		// 		HTMLDIV.value="Failed";
+		// 		HTMLDIV.classList.add('text-danger');
+		// 		HTMLDIV.classList.remove('text-success');
+		// 		HTMLDIV.classList.remove('text-warning');
+		// 	} else {
+		// 		HTMLDIV.value="Unknown";
+		// 		HTMLDIV.classList.remove('text-danger');
+		// 		HTMLDIV.classList.remove('text-success');
+		// 		HTMLDIV.classList.add('text-warning');
+		// 	}
+		// } else if(akey=="fits"){
+		// 	// aval is an array of json objects, one per fit method
+		// 	for(let i=0; i<aval.length; ++i){
+		// 		let afit = aval[i];
+		// 		// each method is a json object with properties; 'method', 'absfit', 'peakdiff' and 'gdconc'
+		// 		let themethod = afit.method;
+		// 		let theabsfitstatus = afit.absfit;
+		// 		let thepeakdiff = afit.peakdiff;
+		// 		let thegdconc = afit.gdconc;
+		// 		
+		// 		// update the respective page elements
+		// 		
+		// 		// absorption fit status
+		// 		let HTMLDIV = document.getElementById('absfitstat_' + themethod);  // MarcusAnalysis
+		// 		if(theabsfitstatus==1){
+		// 			HTMLDIV.value="Success";
+		// 			HTMLDIV.classList.remove('text-danger');
+		// 			HTMLDIV.classList.remove('text-warning');
+		// 			HTMLDIV.classList.add('text-success');
+		// 		} else if(theabsfitstatus==0){
+		// 			HTMLDIV.value="Failed";
+		// 			HTMLDIV.classList.add('text-danger');
+		// 			HTMLDIV.classList.remove('text-success');
+		// 			HTMLDIV.classList.remove('text-warning');
+		// 		} else {
+		// 			HTMLDIV.value="Unknown";
+		// 			HTMLDIV.classList.remove('text-danger');
+		// 			HTMLDIV.classList.remove('text-success');
+		// 			HTMLDIV.classList.add('text-warning');
+		// 		}
+		// 		
+		// 		// peak difference
+		// 		HTMLDIV = document.getElementById('peakdiff_' + themethod);
+		// 		HTMLDIV.value = thepeakdiff;
+		// 		
+		// 		// gd conc
+		// 		HTMLDIV = document.getElementById('gdconc_' + themethod);
+		// 		HTMLDIV.value = thegdconc;
+		// 	}
+			
+		// MatthewAnalysisStrikesBack
 		if(akey=="purefit"){
 			let HTMLDIV = document.getElementById(akey);
 			if(aval==1){
@@ -47,44 +107,23 @@ async function UpdateFitInfo(response){
 				HTMLDIV.classList.remove('text-success');
 				HTMLDIV.classList.add('text-warning');
 			}
-		} else if(akey=="fits"){
-			// aval is an array of json objects, one per fit method
-			for(let i=0; i<aval.length; ++i){
-				let afit = aval[i];
-				// each method is a json object with properties; 'method', 'absfit', 'peakdiff' and 'gdconc'
-				let themethod = afit.method;
-				let theabsfitstatus = afit.absfit;
-				let thepeakdiff = afit.peakdiff;
-				let thegdconc = afit.gdconc;
-				
-				// update the respective page elements
-				
-				// absorption fit status
-				let HTMLDIV = document.getElementById('absfitstat_' + themethod);
-				if(theabsfitstatus==1){
-					HTMLDIV.value="Success";
-					HTMLDIV.classList.remove('text-danger');
-					HTMLDIV.classList.remove('text-warning');
-					HTMLDIV.classList.add('text-success');
-				} else if(theabsfitstatus==0){
-					HTMLDIV.value="Failed";
-					HTMLDIV.classList.add('text-danger');
-					HTMLDIV.classList.remove('text-success');
-					HTMLDIV.classList.remove('text-warning');
-				} else {
-					HTMLDIV.value="Unknown";
-					HTMLDIV.classList.remove('text-danger');
-					HTMLDIV.classList.remove('text-success');
-					HTMLDIV.classList.add('text-warning');
-				}
-				
-				// peak difference
-				HTMLDIV = document.getElementById('peakdiff_' + themethod);
-				HTMLDIV.value = thepeakdiff;
-				
-				// gd conc
-				HTMLDIV = document.getElementById('gdconc_' + themethod);
-				HTMLDIV.value = thegdconc;
+		} else if(akey=="absfit"){
+			let HTMLDIV = document.getElementById(akey);
+			if(aval==1){
+				HTMLDIV.value="Success";
+				HTMLDIV.classList.remove('text-danger');
+				HTMLDIV.classList.remove('text-warning');
+				HTMLDIV.classList.add('text-success');
+			} else if(aval==0){
+				HTMLDIV.value="Failed";
+				HTMLDIV.classList.add('text-danger');
+				HTMLDIV.classList.remove('text-success');
+				HTMLDIV.classList.remove('text-warning');
+			} else {
+				HTMLDIV.value="Unknown";
+				HTMLDIV.classList.remove('text-danger');
+				HTMLDIV.classList.remove('text-success');
+				HTMLDIV.classList.add('text-warning');
 			}
 		} else {
 			console.log("Uknown property in UpdateFitInfo: ",akey);

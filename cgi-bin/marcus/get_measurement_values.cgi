@@ -1,4 +1,5 @@
 #!/bin/bash
+#set -x
 
 # must have this or it complains 'malformed header'
 echo -e "Content-type:text/html\n"
@@ -19,6 +20,7 @@ QUERY_STRING=${QUERY_STRING:-"a=raw_peakheight1"}
 #LED=${BASH_REMATCH[2]}
 
 IFS='&' read -r -a ARGS <<< "${QUERY_STRING}"
+DEBUG="false"
 for ARG in "${ARGS[@]}"; do
 	#echo "next arg: '${VAL}' <br>"
 	KEY=$(echo ${ARG} | cut -d '=' -f 1)
@@ -31,6 +33,8 @@ for ARG in "${ARGS[@]}"; do
 		MAXVALS="${VAL}"
 	elif [ "${KEY}" == "d" ]; then
 		MEASUREMENT="${MEASUREMENT}_${VAL}"
+	elif [ "${KEY}" == "e" ]; then
+		DEBUG="${VAL}"
 	#else
 	#	echo "${DUMMYSTRING}"
 	#	exit 1
@@ -40,11 +44,20 @@ done
 if [ -z "${LED}" ]; then
 	LED="%"
 fi
-if [ "${MEASUREMENT}" == "mem" ] || [ "${MEASUREMENT}" == "cpu" ]; then
+if [ "${MEASUREMENT}" == "mem" ] || [ "${MEASUREMENT}" == "cpu" ] || [ "${MEASUREMENT}" == "hdd1" ] || [ "${MEASUREMENT}" == "temp" ]; then
 	DBNAME="gd"
 else
 	DBNAME="rundb"
 fi
+
+DEBUGCRIT='run>10000 AND'
+#DEBUGCRIT="run>10000 AND timestamp > '2023-12-26'::timestamptz AND timestamp < '2024-02-01'::timestamptz AND"
+if [ "${DEBUG}" == "false" ]; then
+	DEBUGCRIT="run<10000 AND"
+fi
+
+TOOL='MatthewAnalysisStrikesBack'
+#TOOL='MarcusAnalysis'
 
 #echo "measurement type: '"${MEASUREMENT}"'"
 #echo "led type: '"${LED}"'"
@@ -53,38 +66,61 @@ fi
 # set of possible measurements we support.
 # use an associative array to map to the corresponding SQL qeury
 declare -A KNOWN_MEASUREMENTS_Y
-KNOWN_MEASUREMENTS_Y['dark_mean']="SELECT values->'mean' FROM data WHERE name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['dark_range']="SELECT values->'width' FROM data WHERE name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['raw_min']="SELECT values->'min' FROM data WHERE name='rawtrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['raw_max']="SELECT values->'max' FROM data WHERE name='rawtrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['pure_chi2']="SELECT values->'fitChi2' FROM data WHERE name='pure_fit_status' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['pure_stretchx']="SELECT values->'values'->1 FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['pure_stretchy']="SELECT values->'values'->0 FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['pure_shiftx']="SELECT values->'values'->2 FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['pure_shifty']="SELECT values->'values'->3 FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['pure_linearcomp']="SELECT values->'values'->4 FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['pure_shoulderwid']="SELECT values->'values'->7 FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['pure_shoulderamp']="SELECT values->'values'->5 FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['pure_shoulderpos']="SELECT values->'values'->6 FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['raw_peakheight1']="SELECT values->'peak_heights'->0 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['raw_peakheight2']="SELECT values->'peak_heights'->1 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['raw_peakheightdiff']="SELECT (values->'peak_heights'->0)::float - (values->'peak_heights'->1)::float AS peakdiff FROM data WHERE name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['simple_peak1_chi2']="SELECT values->'absorption_fits'->0->'fitstatus'->'fitChi2' FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['simple_peak2_chi2']="SELECT values->'absorption_fits'->1->'fitstatus'->'fitChi2' FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['simple_peakheight1']="SELECT values->'peak_heights'->0 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['simple_peakheight2']="SELECT values->'peak_heights'->1 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['simple_peakheightdiff']="SELECT (values->'peak_heights'->0)::float - (values->'peak_heights'->1)::float AS peakdiff FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['complex_chi2']="SELECT values->'absorption_fits'->0->'fitstatus'->'fitChi2' FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['complex_peakheight1']="SELECT values->'peak_heights'->0 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['complex_peakheight2']="SELECT values->'peak_heights'->1 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['complex_peakheightdiff']="SELECT (values->'peak_heights'->0)::float - (values->'peak_heights'->1)::float AS peakdiff FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['raw_gdconc']="SELECT values->'conc_and_err'->0 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['simple_gdconc']="SELECT values->'conc_and_err'->0 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['complex_gdconc']="SELECT values->'conc_and_err'->0 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['dark_mean']="SELECT values->'mean' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['dark_range']="SELECT values->'width' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['raw_min']="SELECT values->'min' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='rawtrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['raw_max']="SELECT values->'max' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='rawtrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['pure_chi2']="SELECT values->'fitChi2' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_status' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['pure_stretchx']="SELECT values->'values'->1 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['pure_stretchy']="SELECT values->'values'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['pure_shiftx']="SELECT values->'values'->2 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['pure_shifty']="SELECT values->'values'->3 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['pure_linearcomp']="SELECT values->'values'->4 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['pure_shoulderwid']="SELECT values->'values'->7 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['pure_shoulderamp']="SELECT values->'values'->5 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['pure_shoulderpos']="SELECT values->'values'->6 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['raw_peakheight1']="SELECT values->'peak_heights'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['raw_peakheight2']="SELECT values->'peak_heights'->1 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['raw_peakheightdiff']="SELECT (values->'peak_heights'->0)::float - (values->'peak_heights'->1)::float AS peakdiff FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['simple_peak1_chi2']="SELECT values->'absorption_fits'->0->'fitstatus'->'fitChi2' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['simple_peak2_chi2']="SELECT values->'absorption_fits'->1->'fitstatus'->'fitChi2' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['simple_peakheight1']="SELECT values->'peak_heights'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['simple_peakheight2']="SELECT values->'peak_heights'->1 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['simple_peakheightdiff']="SELECT (values->'peak_heights'->0)::float - (values->'peak_heights'->1)::float AS peakdiff FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['complex_chi2']="SELECT values->'absorption_fits'->0->'fitstatus'->'fitChi2' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['complex_peakheight1']="SELECT values->'peak_heights'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['complex_peakheight2']="SELECT values->'peak_heights'->1 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['complex_peakheightdiff']="SELECT (values->'peak_heights'->0)::float - (values->'peak_heights'->1)::float AS peakdiff FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['raw_gdconc']="SELECT values->'conc_and_err'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['simple_gdconc']="SELECT values->'conc_and_err'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['complex_gdconc']="SELECT values->'conc_and_err'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
 
-KNOWN_MEASUREMENTS_Y['transparency_red']="SELECT values->'red'->'value' FROM data WHERE name='transparency_samples' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['transparency_green']="SELECT values->'green'->'value' FROM data WHERE name='transparency_samples' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['transparency_blue']="SELECT values->'blue'->'value' FROM data WHERE name='transparency_samples' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['pure_scaling']="SELECT values->'values'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='data_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['pure_translation']="SELECT values->'values'->1 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='data_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['pure_stretch']="SELECT values->'values'->2 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='data_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['gd_scaling']="SELECT values->'values'->3 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='data_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['second_order_background']="SELECT values->'values'->4 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='data_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['first_order_background']="SELECT values->'values'->5 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='data_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['zeroth_order_background']="SELECT values->'values'->6 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='data_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+
+KNOWN_MEASUREMENTS_Y['abs_fitpar0']="SELECT values->'values'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='abs_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['abs_fitpar1']="SELECT values->'values'->1 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='abs_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['abs_fitpar2']="SELECT values->'values'->2 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='abs_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['abs_fitpar3']="SELECT values->'values'->3 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='abs_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['abs_fitpar4']="SELECT values->'values'->4 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='abs_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['abs_fitpar5']="SELECT values->'values'->5 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='abs_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+
+#KNOWN_MEASUREMENTS_Y['led_intensity']="SELECT jsonb_array_elements(values->'yvals') AS value FROM webpage WHERE name='pure_scaled' AND ledname LIKE '${LED}' AND timestamp = ( SELECT MAX(timestamp) FROM webpage WHERE name='pure_scaled') ORDER BY value DESC LIMIT 1"
+KNOWN_MEASUREMENTS_Y['led_intensity']="SELECT values FROM data WHERE ${DEBUGCRIT} name='led_intensity' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+
+KNOWN_MEASUREMENTS_Y['gdconc']="SELECT values->'conc_and_err'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['metric']="SELECT values->'metric_and_err'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['purefit_chi2']="SELECT values->'fitChi2' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='data_fit_status' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['absfit_chi2']="SELECT values->'fitChi2' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='abs_fit_status' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+
+KNOWN_MEASUREMENTS_Y['transparency_red']="SELECT values->'red'->'value' FROM data WHERE ${DEBUGCRIT} name='transparency_samples' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['transparency_green']="SELECT values->'green'->'value' FROM data WHERE ${DEBUGCRIT} name='transparency_samples' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['transparency_blue']="SELECT values->'blue'->'value' FROM data WHERE ${DEBUGCRIT} name='transparency_samples' ORDER BY timestamp DESC"
 
 KNOWN_MEASUREMENTS_Y['mem']="SELECT mem FROM stats ORDER BY time DESC"
 KNOWN_MEASUREMENTS_Y['cpu']="SELECT cpu FROM stats ORDER BY time DESC"
@@ -98,49 +134,71 @@ KNOWN_MEASUREMENTS_Y['power']="SELECT values->'power' FROM webpage WHERE name='g
 KNOWN_MEASUREMENTS_Y['valve_temp']="SELECT values FROM webpage WHERE name='valve_temp' ORDER BY timestamp DESC"
 
 declare -A KNOWN_MEASUREMENTS_X
-KNOWN_MEASUREMENTS_X['dark_mean']="SELECT timestamp FROM data WHERE name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['dark_range']="SELECT timestamp FROM data WHERE name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['raw_min']="SELECT timestamp FROM data WHERE name='rawtrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['raw_max']="SELECT timestamp FROM data WHERE name='rawtrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['pure_chi2']="SELECT timestamp FROM data WHERE name='pure_fit_status' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['pure_stretchx']="SELECT timestamp FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['pure_stretchy']="SELECT timestamp FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['pure_shiftx']="SELECT timestamp FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['pure_shifty']="SELECT timestamp FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['pure_linearcomp']="SELECT timestamp FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['pure_shoulderwid']="SELECT timestamp FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['pure_shoulderamp']="SELECT timestamp FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['pure_shoulderpos']="SELECT timestamp FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['raw_peakheight1']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['raw_peakheight2']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['raw_peakheightdiff']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['simple_peak1_chi2']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['simple_peak2_chi2']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['simple_peakheight1']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['simple_peakheight2']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['simple_peakheightdiff']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['complex_chi2']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['complex_peakheight1']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['complex_peakheight2']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['complex_peakheightdiff']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['raw_gdconc']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['simple_gdconc']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['complex_gdconc']="SELECT timestamp FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['dark_mean']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['dark_range']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['raw_min']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='rawtrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['raw_max']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='rawtrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['pure_chi2']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_status' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['pure_stretchx']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['pure_stretchy']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['pure_shiftx']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['pure_shifty']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['pure_linearcomp']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['pure_shoulderwid']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['pure_shoulderamp']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['pure_shoulderpos']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['raw_peakheight1']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['raw_peakheight2']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['raw_peakheightdiff']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['simple_peak1_chi2']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['simple_peak2_chi2']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['simple_peakheight1']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['simple_peakheight2']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['simple_peakheightdiff']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['complex_chi2']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['complex_peakheight1']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['complex_peakheight2']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['complex_peakheightdiff']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['raw_gdconc']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['simple_gdconc']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['complex_gdconc']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
 
-KNOWN_MEASUREMENTS_X['transparency_red']="SELECT timestamp FROM data WHERE name='transparency_samples' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['transparency_green']="SELECT timestamp FROM data WHERE name='transparency_samples' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['transparency_blue']="SELECT timestamp FROM data WHERE name='transparency_samples' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['led_intensity']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} name='led_intensity' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['metric']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['purefit_chi2']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='data_fit_status' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['absfit_chi2']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='abs_fit_status' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+
+KNOWN_MEASUREMENTS_X['pure_scaling']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='data_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['pure_translation']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='data_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['pure_stretch']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='data_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['gd_scaling']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='data_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['second_order_background']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='data_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['first_order_background']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='data_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['zeroth_order_background']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='data_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+
+KNOWN_MEASUREMENTS_X['abs_fitpar0']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='abs_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['abs_fitpar1']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='abs_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['abs_fitpar2']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='abs_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['abs_fitpar3']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='abs_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['abs_fitpar4']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='abs_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['abs_fitpar5']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='abs_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+
+KNOWN_MEASUREMENTS_X['gdconc']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+
+KNOWN_MEASUREMENTS_X['transparency_red']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} name='transparency_samples' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['transparency_green']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} name='transparency_samples' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['transparency_blue']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} name='transparency_samples' ORDER BY timestamp DESC"
 
 KNOWN_MEASUREMENTS_X['mem']="SELECT time FROM stats ORDER BY time DESC"
 KNOWN_MEASUREMENTS_X['cpu']="SELECT time FROM stats ORDER BY time DESC"
 KNOWN_MEASUREMENTS_X['temp']="SELECT time FROM stats ORDER BY time DESC"
 KNOWN_MEASUREMENTS_X['hdd1']="SELECT time FROM stats ORDER BY time DESC"
 
-KNOWN_MEASUREMENTS_X['invalve']="SELECT timestamp FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['outvalve']="SELECT timestamp FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['pump']="SELECT timestamp FROM webpage WHERE name='gpio_status' BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['power']="SELECT timestamp FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['valve_temp']="SELECT timestamp FROM webpage WHERE name='valve_temp' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['invalve']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['outvalve']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['pump']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE AND name='gpio_status' BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['power']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['valve_temp']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE name='valve_temp' ORDER BY timestamp DESC"
 
 if [[ ! " ${!KNOWN_MEASUREMENTS_X[*]} " =~ " ${MEASUREMENT} " ]] || [[ ! " ${!KNOWN_MEASUREMENTS_Y[*]} " =~ " ${MEASUREMENT} " ]]; then
 	echo "measuremenet '${MEASUREMENT}' not in array" >> ./debug.txt
@@ -159,7 +217,7 @@ fi
 echo "query X is '${QUERY_X}'" >> ./debug.txt
 echo "query Y is '${QUERY_Y}'" >> ./debug.txt
 
-# 'SELECT array ( SELECT * From * WHERE * )' formats the result of the first query as an array:
+# 'SELECT array ( SELECT * From * WHERE ${DEBUGCRIT} * )' formats the result of the first query as an array:
 # i.e. turns '8\n8\n8\n8\n8' into { 8,8,8,8 }.
 # note that SELECT array (...) only allows one column, so we have to run two queriest
 RESP_X=$(psql -U postgres -d "${DBNAME}" -t -c "SELECT array ( ${QUERY_X} ) " )
@@ -199,35 +257,35 @@ exit 1
 ## set of possible measurements we support.
 ## use an associative array to map to the corresponding SQL qeury
 #declare -A KNOWN_MEASUREMENTS
-#KNOWN_MEASUREMENTS['dark_mean']="SELECT timestamp, values->'mean' FROM data WHERE name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['dark_range']="SELECT timestamp, values->'width' FROM data WHERE name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['raw_min']="SELECT timestamp, values->'min' FROM data WHERE name='rawtrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['raw_max']="SELECT timestamp, values->'max' FROM data WHERE name='rawtrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['pure_chi2']="SELECT timestamp, values->'fitChi2' FROM data WHERE name='pure_fit_status' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['pure_stretchx']="SELECT timestamp, values->'values'->1 FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['pure_stretchy']="SELECT timestamp, values->'values'->0 FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['pure_shiftx']="SELECT timestamp, values->'values'->2 FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['pure_shifty']="SELECT timestamp, values->'values'->3 FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['pure_linearcomp']="SELECT timestamp, values->'values'->4 FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['pure_shoulderwid']="SELECT timestamp, values->'values'->7 FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['pure_shoulderamp']="SELECT timestamp, values->'values'->5 FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['pure_shoulderpos']="SELECT timestamp, values->'values'->6 FROM data WHERE name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['raw_peakheight1']="SELECT timestamp, values->'peak_heights'->0 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['raw_peakheight2']="SELECT timestamp, values->'peak_heights'->1 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['raw_peakheightdiff']="SELECT timestamp, (values->'peak_heights'->0)::float - (values->'peak_heights'->1)::float AS peakdiff FROM data WHERE name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['simple_peak1_chi2']="SELECT timestamp, values->'absorption_fits'->0->'function' FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND (values->'absorption_fits'->0->'function')::text LIKE '\"f_gaus1_%\"' LIMIT 1"  # not required to match as order of array elements in absorption fit array is preserved
-#KNOWN_MEASUREMENTS['simple_peak1_chi2']="SELECT timestamp, values->'absorption_fits'->0->'fitstatus'->'fitChi2' FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['simple_peak2_chi2']="SELECT timestamp, values->'absorption_fits'->1->'fitstatus'->'fitChi2' FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['simple_peakheight1']="SELECT timestamp, values->'peak_heights'->0 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['simple_peakheight2']="SELECT timestamp, values->'peak_heights'->1 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['simple_peakheightdiff']="SELECT timestamp, (values->'peak_heights'->0)::float - (values->'peak_heights'->1)::float AS peakdiff FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['complex_chi2']="SELECT timestamp, values->'absorption_fits'->0->'fitstatus'->'fitChi2' FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['complex_peakheight1']="SELECT timestamp, values->'peak_heights'->0 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['complex_peakheight2']="SELECT timestamp, values->'peak_heights'->1 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['complex_peakheightdiff']="SELECT timestamp, (values->'peak_heights'->0)::float - (values->'peak_heights'->1)::float AS peakdiff FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['raw_gdconc']="SELECT timestamp, values->'conc_and_err'->0 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['simple_gdconc']="SELECT timestamp, values->'conc_and_err'->0 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
-#KNOWN_MEASUREMENTS['complex_gdconc']="SELECT timestamp, values->'conc_and_err'->0 FROM data WHERE name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['dark_mean']="SELECT timestamp, values->'mean' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['dark_range']="SELECT timestamp, values->'width' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['raw_min']="SELECT timestamp, values->'min' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='rawtrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['raw_max']="SELECT timestamp, values->'max' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='rawtrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['pure_chi2']="SELECT timestamp, values->'fitChi2' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_status' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['pure_stretchx']="SELECT timestamp, values->'values'->1 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['pure_stretchy']="SELECT timestamp, values->'values'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['pure_shiftx']="SELECT timestamp, values->'values'->2 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['pure_shifty']="SELECT timestamp, values->'values'->3 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['pure_linearcomp']="SELECT timestamp, values->'values'->4 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['pure_shoulderwid']="SELECT timestamp, values->'values'->7 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['pure_shoulderamp']="SELECT timestamp, values->'values'->5 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['pure_shoulderpos']="SELECT timestamp, values->'values'->6 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='pure_fit_pars' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['raw_peakheight1']="SELECT timestamp, values->'peak_heights'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['raw_peakheight2']="SELECT timestamp, values->'peak_heights'->1 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['raw_peakheightdiff']="SELECT timestamp, (values->'peak_heights'->0)::float - (values->'peak_heights'->1)::float AS peakdiff FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['simple_peak1_chi2']="SELECT timestamp, values->'absorption_fits'->0->'function' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND (values->'absorption_fits'->0->'function')::text LIKE '\"f_gaus1_%\"' LIMIT 1"  # not required to match as order of array elements in absorption fit array is preserved
+#KNOWN_MEASUREMENTS['simple_peak1_chi2']="SELECT timestamp, values->'absorption_fits'->0->'fitstatus'->'fitChi2' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['simple_peak2_chi2']="SELECT timestamp, values->'absorption_fits'->1->'fitstatus'->'fitChi2' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['simple_peakheight1']="SELECT timestamp, values->'peak_heights'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['simple_peakheight2']="SELECT timestamp, values->'peak_heights'->1 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['simple_peakheightdiff']="SELECT timestamp, (values->'peak_heights'->0)::float - (values->'peak_heights'->1)::float AS peakdiff FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['complex_chi2']="SELECT timestamp, values->'absorption_fits'->0->'fitstatus'->'fitChi2' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['complex_peakheight1']="SELECT timestamp, values->'peak_heights'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['complex_peakheight2']="SELECT timestamp, values->'peak_heights'->1 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['complex_peakheightdiff']="SELECT timestamp, (values->'peak_heights'->0)::float - (values->'peak_heights'->1)::float AS peakdiff FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['raw_gdconc']="SELECT timestamp, values->'conc_and_err'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"raw\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['simple_gdconc']="SELECT timestamp, values->'conc_and_err'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"simple\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS['complex_gdconc']="SELECT timestamp, values->'conc_and_err'->0 FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='gdconcmeasure' AND values->'method'='\"complex\"' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
 
 # we can see if our requested measurement is in the array of known measurements
 # by trying to perform a regex match

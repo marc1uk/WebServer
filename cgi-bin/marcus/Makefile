@@ -1,7 +1,7 @@
 # C++ compiler flags - XXX config.gmk sets this already, so APPEND ONLY XXX
 CXXFLAGS += -g -O3 -std=c++11 -Wno-psabi -fdiagnostics-color=always
 
-ToolDAQPath=/home/pi/GDConcMeasure/ToolDAQ
+ToolDAQPath=/home/gad/GDConcMeasure/ToolDAQ
 
 BoostLib= -L $(ToolDAQPath)/boost_1_66_0/install/lib -lboost_serialization -lboost_iostreams -lboost_regex
 BoostInclude= -I $(ToolDAQPath)/boost_1_66_0/install/include
@@ -9,7 +9,7 @@ BoostInclude= -I $(ToolDAQPath)/boost_1_66_0/install/include
 RootInclude= `root-config --cflags`
 RootLib= `root-config --libs`
 
-GDConcPath=/home/pi/GDConcMeasure
+GDConcPath=/home/gad/GDConcMeasure
 DataModelInclude= -I $(GDConcPath)/include
 DataModelLib= -L $(GDConcPath)/lib -lStore
 

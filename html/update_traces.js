@@ -221,6 +221,35 @@ async function UpdatePlot(name){
 		outtrace.y.splice(insertindex, 0, 'NA');
 		
 		traces = [ intrace, outtrace, puretrace, purescaledtrace ];
+	} else if(name=="absorbance_trace"){
+	
+		// overlay data and fit
+		let dataUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=absorbance_trace";
+		let fitUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=absfit";
+		// fetch tha data for the two traces in parallel
+		console.log("UpdatePlot submitting 2 fetch requests for absorbance traces.");
+		console.log(name," fetch 1");
+		let rawdata_promise = getDataFetchRequest(dataUrl, "json");
+		console.log(name," fetch 2");
+		let fitdata_promise = getDataFetchRequest(fitUrl, "json");
+		
+		// parse the arrays and build traces
+		console.log("UpdatePlot calling parseTrace for 2 trace arrays.");
+		console.log(name," callparse 1");
+		let raw_promise = parseTrace(rawdata_promise, 'absorbance_data');
+		console.log(name," callparse 2");
+		let fit_promise = parseTrace(fitdata_promise, 'absorbance_fit');
+		
+		// wait for the promises of data to be fulfilled
+		console.log("UpdatePlot waiting for 2 trace promises to be fulfilled for ",name);
+		console.log(name," await 1");
+		let datatrace = await raw_promise;
+		console.log(name," await 2");
+		let fittrace = await fit_promise;
+		
+		// plot thw two traces
+		traces = [ datatrace, fittrace ];
+		
 	} else {
 		console.log("UpdatePlot submitting fetch request for trace data ",name);
 		let dataUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=" + name;
@@ -235,6 +264,8 @@ async function UpdatePlot(name){
 	for(let i=0; i<traces.length; i++){
 		traces[i]['type'] = 'scatter';
 		if(traces[i]['name'] == 'pure_fitted') traces[i]['mode'] = 'lines';
+		else if (traces[i]['name'] == 'pure_reference') traces[i]['visible'] = 'legendonly';
+		else if (traces[i]['name'] == 'absorbance_fit') traces[i]['mode'] = 'lines';
 		else traces[i]['mode'] = 'lines+markers';
 	}
 	
@@ -329,7 +360,6 @@ document.addEventListener("DOMContentLoaded", function(){
 		
 		// add events for when a plot is shown from the accordian
 		parentdiv.addEventListener("shown.bs.collapse", function(){
-			//if(timerHandleMap[plotdiv.id] != null) return;
 			console.log("registering ",plotdiv.id," for periodic updates");
 			/*
 			console.log("current contents are: [");
@@ -339,8 +369,9 @@ document.addEventListener("DOMContentLoaded", function(){
 			console.log("]");
 			*/
 			
-			//var handle = setInterval(function(){ check_for_new_data(plotdiv.id) }, 30000);
-			//timerHandleMap[plotdiv.id] = handle;
+			if(timerHandleMap[plotdiv.id] != null) return;
+			var handle = setInterval(function(){ check_for_new_data(plotdiv.id) }, 300); //30000
+			timerHandleMap[plotdiv.id] = handle;
 			
 			/*
 			console.log("contents after insertion are: [");
@@ -400,7 +431,7 @@ document.addEventListener("DOMContentLoaded", function(){
 		
 	}
 	
-	// finally add period updates to the initially open trace 
+	// finally add period updates to the initially open trace
 	//var handle = setInterval(function(){ check_for_new_data('last_trace') }, 30000);
 	//timerHandleMap['last_trace'] = handle;
 	

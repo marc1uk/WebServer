@@ -2,7 +2,7 @@
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 date > ${SCRIPTDIR}/last_run_time
 
-CGIDIR=/home/pi/WebServer/cgi-bin/marcus
+CGIDIR=/home/gad/WebServer/cgi-bin/marcus
 
 #cd ${CGIDIR}
 

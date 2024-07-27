@@ -3,7 +3,7 @@
 if [ $# -gt 1 ]; then
 	DIR="$1"
 else
-	DIR=/home/pi/GDConcMeasure/data
+	DIR=/mnt/data
 fi
 
 find $DIR -type f -printf "%T@ %p\n" | 

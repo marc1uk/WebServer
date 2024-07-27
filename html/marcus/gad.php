@@ -56,7 +56,7 @@
             <a class="nav-link active" aria-current="page" href="#">Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Link</a>
+            <a class="nav-link" href="../cam.html">Camera</a>
           </li>
           <!-- TODO: allow arbitrary queries from the database -->
           <li class="nav-item">
@@ -276,42 +276,10 @@
     <div class="input-group mb-3">
       <span class="input-group-text">Pure Fit Status</span>
       <input id="purefit" type="text" class="form-control">
+      <span class="input-group-text">Absorption Fit Status</span>
+      <input id="absfit" type="text" class="form-control">
     </div>
     
-    <?php
-      $fitstatusjson = file_get_contents("http://192.168.2.54/cgi-bin/marcus/get_fit_results.cgi",0);
-      #echo "fitstatusjson is ${fitstatusjson}";
-      #var_dump($fitstatusjson);
-      $fitstatus = json_decode($fitstatusjson, true);   // with 'true', it makes an associative array
-      #{"purefit":1, "fits":[ {"method":"raw", "absfit":1, "peakdiff":0.138002, "gdconc":0.057087 }, {"method":"simple", "absfit":1, "peakdiff":0.121950, "gdconc":0.057033 }, {"method":"complex", "absfit":1, "peakdiff":0.123711, "gdconc":0.056937 } ] }
-      #var_dump($fitstatus);
-      #var_dump($fitstatus['purefit']);
-      
-      # loop over absorption fitting methods and add a row for each method's status
-      $fits = $fitstatus['fits'];
-      #var_dump($fits);
-      foreach($fits as $afit) {
-        #var_dump($afit);
-        $methodname = $afit['method'];
-        $fitsuccess = $afit['absfit'];
-        $peakdiff = $afit['peakdiff'];
-        $conc = $afit['gdconc'];
-        echo '    <div class="input-group mb-3">' . "\n";
-        echo '      <span class="input-group-text">Absorbance Fit Method</span>' . "\n";
-        echo '      <input id="method_' . "{$methodname}" . '" type="text" class="form-control" value="' . "{$methodname}" . '" >' . "\n";
-        echo '      <span class="input-group-text">Fit Status</span>' . "\n";
-        echo '      <input id="absfitstat_' . "{$methodname}" . '" type="text" class="form-control ';
-        if($fitsuccess==1) echo 'text-success" value="Success"';
-                      else echo 'text-danger" value="Failed"';
-        echo ' >' . "\n";
-        echo '      <span class="input-group-text">Peak Height Difference</span>' . "\n";
-        echo '      <input id="peakdiff_' . "{$methodname}" . '" type="text" inputmode="numeric" class="form-control" value="' . "{$peakdiff}" . '" >' . "\n";
-        echo '      <span class="input-group-text">Gd Concentration</span>' . "\n";
-        echo '      <input id="gdconc_' . "{$methodname}" . '" type="text" class="form-control" value="' . "{$conc}" . '" >' . "\n";
-        echo '    </div>' . "\n";
-      }
-    ?>
-  </div>
   <script src="../../update_fit_results.js" type="module"></script>
   
   <div class="container-fluid my-1 bg-primary text-white">
@@ -323,39 +291,60 @@
       <div class="input-group">
         <span class="input-group-text">History Length</span>
         <input id="historyLength" type="number" style="background-color: white" class="form-control" value='200' >
+        <span class="input-group-text">Debug Mode</span>
+        <div class="input-group-text"> <input class="form-check-input" id="debugToggle" type="checkbox" value=""> </div>
       </div>
     </div>
   </div>
+  
   <!-- Accordion of histograms -->
   <div id="histograms" class="m-3 bg-light rounded">
     <?php
       $histos = [
                  'gdconcentration',     //
-                 'peak_diff',           //
-                 'peak1_height',        //
-                 'peak2_height',        //
+                 'metric',
+                 'led_intensity',       // peak value, extracted from pure fit
+                 'rawtrace_pars',       // min, max within absorbance region
                  'darktrace_pars',      // mean, width
-                 'rawtrace_pars',       // min, max
-                 'purefit_pars',        // x-scaling, y-scaling, x-shift, y-shift, linear component grad
-                 'simplefit_pars',      //
-                 'complexfit_pars',     //
-                 'valve_state',         //
+                 
+                 // parameters for MarcusAnalysis
+                 //'purefit_pars',        // x-scaling, y-scaling, x-shift, y-shift, linear component grad
+                 //'peak_diff',           // difference in peak heights is metric for MarcusAnalysis
+                 //'peak1_height',        // height of gd peak 1
+                 //'peak2_height',        // height of gd peak 2
+                 //'rawfit_pars'          // N/A - raw method has not fitting parameters
+                 //'simplefit_pars',      // 2-gaussian method, gaussian fit pars
+                 //'complexfit_pars',     // 4-gaussian method, fit parameters
+                 
+                 // fit parameters for MatthewAnalysisStrikesBack
+                 'purefit_pars',          // parameters of fit of the pure reference to the data
+                 'purefit_chi2',
+                 'absfit_pars',           // parameters of fit of the reference absorbance to the extracted one
+                 'absfit_chi2',
+                 
+                 // general system state monitoring
+                 'valve_state',
                  'pi_mem',
-                 'valve_temps',
+                 'valve_temps'
                  ];
       $histonames = [ 
                       'Gd Concentration',
-                      'Peak Height Difference',
-                      'Peak 1 Height',
-                      'Peak 2 Height',
-                      'Dark Trace Parameters',
+                      'Metric',
+                      'LED intensity',
                       'Raw Trace Parameters',
+                      'Dark Trace Parameters',
                       'Pure Fit Parameters',
-                      'Simple Fit Parameters',
-                      'Complex Fit Parameters',
+                      'Pure Fit Chi2',
+                      //'Peak Height Difference',
+                      //'Peak 1 Height',
+                      //'Peak 2 Height',
+                      //'Simple Fit Parameters',
+                      //'Complex Fit Parameters',
+                      'Absorbance Fit Parameters',
+                      'Absorbance Fit Chi2',
                       'Valve States',
                       'RPi Resource Usage',
-                      'Valve Temperature (Average)',
+                      'Valve Temperature (Average)'
                     ];
       
 //	 + dark trace params - ("darktrace_params" = json: "mean", "width") [D]

@@ -19,7 +19,7 @@
 #include "TStyle.h"
 #include "TRandom3.h"
 
-const std::string CGIDIR="/home/pi/WebServer/cgi-bin/marcus";
+const std::string CGIDIR="/home/gad/WebServer/cgi-bin/marcus";
 
 int main(int argc, const char** argv){
 	int histlength = 200;
@@ -36,8 +36,8 @@ int main(int argc, const char** argv){
 	
 	// used in generating dummy data
 	TRandom3 rnd;
-	double transp_centre = 2.5;
-	double led_delta = 0.2;
+	double transp_centre = 1.5;
+	double led_delta = 0.1;
 	double measurement_delta = 0.025;
 	
 	for(auto&& aled : leds){
@@ -62,7 +62,7 @@ int main(int argc, const char** argv){
 			
 		} else {
 			
-			std::string args = "a=transparency&d="+aled
+			std::string args = "a=transparency_"+aled
 			                  +"&c="+std::to_string(histlength);
 			std::string argstring="QUERY_STRING=\""+args+"\" ";
 			std::string cmd=argstring+CGIDIR+"/get_measurement_values.cgi | tail -n -2";
@@ -128,7 +128,7 @@ int main(int argc, const char** argv){
 	//mg.GetXaxis()->SetLabelSize(0.02);
 	//mg.GetXaxis()->SetLabelOffset(0.072);
 	//mg.GetYaxis()->SetRangeUser(0.25,0.45);
-	mg.GetYaxis()->SetRangeUser(1.0,4.0);
+	mg.GetYaxis()->SetRangeUser(0.0,3.0);
 	mg.GetXaxis()->SetLabelOffset(0.04);
 	/*
 	TLegend* leg = gPad->BuildLegend(0.65,0.40,0.95,0.65);
