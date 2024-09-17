@@ -9,6 +9,7 @@ int main(int argc, const char** argv){
 	//TCanvas c1("c1", "c1",800,600);
 	TCanvas c1("c1", "c1",800,350);
 	TPaveText pt(0.0,0.00,0.5,0.95,"NB");  // 0, 0.05, 0.5, 0.95
+	pt.SetTextFont(102);  // monospace font
 	pt.SetMargin(0.03);
 	pt.SetFillColor(0);
 	pt.SetTextFont(82);  //82=non bold https://root.cern.ch/doc/master/classTAttText.html#ATTTEXT5

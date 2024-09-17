@@ -11,7 +11,7 @@ SPECTROMETER=$(${CGIDIR}/get_spectrometer_state.cgi | tail -n -2 | tr -d '"' | x
 
 # check ToolChain is running
 APPLICATION_NAME="GAD_ToolChain"
-if [ $(ps aux | grep $APPLICATION_NAME | grep -v sudo | grep -v gdb | grep -v grep | grep -v defunct | wc -l) -lt 1 ]; then
+if [ $(ssh pi ps aux | grep $APPLICATION_NAME | grep -v sudo | grep -v gdb | grep -v grep | grep -v defunct | wc -l) -lt 1 ]; then
 	TOOLCHAINRUNNING=0
 else
 	TOOLCHAINRUNNING=1
@@ -194,7 +194,12 @@ formattime(){
     echo "${TIME:0:16}"
 }
 
+
+# 30" in seconds. bad status if no measurement in 30 minutes.
+# maybe we should be more generous as this isn't really even twice
+# the time between measurements, so if one measurement fails thats it...
 TDIFFLIMIT=1800
+
 # convert seconds into hours, minutes, seconds
 # and formats colour based on being more or less than TDIFFLIMIT
 formattdiff(){
@@ -237,30 +242,50 @@ formattdiff(){
     fi
 }
 
-# 30" in seconds. bad status if no measurement in 30 minutes.
-# maybe we should be more generous as this isn't really even twice
-# the time between measurements, so if one measurement fails thats it...
+formattdiffmins(){
+    # accepts tdiff in seconds, converts to mins with colouring
+    DUMMYVALUE="-1:-1"
+    TDIFF=$1
+    TDIFFOK=$(( ${TDIFF} < ${TDIFFLIMIT} ))
+    MINS=$( echo "scale=0; ${TDIFF}/60" | bc );     # integer minutes
+    if [ ${TDIFFOK} -eq 1 ]; then
+      printf "#color[8]{%d}" ${MINS}
+    else
+      printf "#color[2]{%d}" ${MINS}
+    fi
+}
 
 # now fixed earlier in a hopefully better way
 #LASTTRACETIME=$(formattime "${LASTTRACETIME}" '+8')
 #LASTTRACETDIFF=$(formattdiff "${LASTTRACETDIFF}" "-8")
 
+echo "formatting times"
 CURRENTTIME=$(formattime "${CURRENTTIME}")
 LASTTRACETIME=$(formattime "${LASTTRACETIME}")
+LASTTRACETDIFFMINS=$(formattdiffmins "${LASTTRACETDIFF}")
+echo "LASTTRACETDIFF is ${LASTTRACETDIFF} secs or ${LASTTRACETDIFFMINS} mins"
 LASTTRACETDIFF=$(formattdiff "${LASTTRACETDIFF}")
 GDRAWTIMEA=$(formattime "${GDRAWTIMEA}")
 GDRAWTDIFFA=$(formattdiff "${GDRAWTDIFFA}")
 GDRAWTIMEB=$(formattime "${GDRAWTIMEB}")
 GDRAWTDIFFB=$(formattdiff "${GDRAWTDIFFB}")
 OLDESTGDTIME=$(formattime "${OLDESTGDTIME}")
+OLDESTGDTDIFFMINS=$(formattdiffmins "${OLDESTGDTDIFF}")
+echo "OLDESTGDTDIFF is ${OLDESTGDTDIFF} secs or ${OLDESTGDTDIFFMINS} mins"
 OLDESTGDTDIFF=$(formattdiff "${OLDESTGDTDIFF}")
 TRANSPTIME=$(formattime "${TRANSPTIME}")
+TRANSPTDIFFMINS=$(formattdiffmins "${TRANSPTDIFF}")
+echo "TRANSPTDIFF is ${TRANSPTDIFF} secs or ${TRANSPTDIFFMINS} mins"
 TRANSPTDIFF=$(formattdiff "${TRANSPTDIFF}")
+LASTFILETDIFFMINS=$(formattdiffmins "${LASTFILEAGESECS}")
+echo "LASTFILETDIFF is ${LASTFILEAGESECS} secs or ${LASTFILETDIFFMINS} mins"
 LASTFILETDIFF=$(formattdiff "${LASTFILEAGESECS}")
+echo "formatting done"
 
 ########################################
 
-if [ -n $1 ] && [ "$1" == "dummy" ]; then
+DUMMYGDONLY=0
+if [ ${DUMMYGDONLY} -eq 0 ] && [ -n $1 ] && [ "$1" == "dummy" ]; then
 	RANDMINS=$(seq 3 1 10 | shuf | head -n1)
 	RANDSECS=$(seq 0 1 60 | shuf | head -n1)
 	LASTTRACETDIFF=$(printf "#color[8]{00:%02d:%02d}" ${RANDMINS} ${RANDSECS})
@@ -280,13 +305,11 @@ if [ -n $1 ] && [ "$1" == "dummy" ]; then
 	fi
 	LASTFILETDIFF=$(printf "#color[8]{00:%02d:%02d}" ${RANDMINS} ${RANDSECS})
 	STATUSSTRING="#color[8]{Running}"
-fi
-
-# only replace gd conc time FIXME HACK
+elif [ ${DUMMYGDONLY} -eq 1 ] && [ -n $1 ] && [ "$1" == "dummy" ]; then
 	RANDMINS=$(seq 13 1 17 | shuf | head -n1)
 	RANDSECS=$(seq 0 1 60 | shuf | head -n1)
 	OLDESTGDTDIFF=$(printf "#color[8]{00:%02d:%02d}" ${RANDMINS} ${RANDSECS})
-
+fi
 
 ########################################
 
@@ -307,10 +330,10 @@ Checks Last Updated (JST):            #bf{#color[8]{${CURRENTTIMEJST}}}
 ToolChain Status:                     #bf{${STATUSSTRING}}
 
 #bf{#color[9]{Check times since last measurement are less than 30 minutes}}
-Time Since Last Trace:                #bf{${LASTTRACETDIFF}}
-Time Since Last Gd Concentration:     #bf{${OLDESTGDTDIFF}}
-Time Since Last Transparency:         #bf{${TRANSPTDIFF}}
-Time Since Last File:                 #bf{${LASTFILETDIFF}}
+Minutes Since Last Trace:                #bf{${LASTTRACETDIFFMINS}}
+Minutes Since Last Gd Concentration:     #bf{${OLDESTGDTDIFFMINS}}
+Minutes Since Last Transparency:         #bf{${TRANSPTDIFFMINS}}
+Minutes Since Last File:                 #bf{${LASTFILETDIFFMINS}}
 
 #bf{#color[9]{Check fits are OK}}
 Fit Status:                           ${BOTHFITSOK}
