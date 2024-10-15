@@ -6,7 +6,16 @@ var updateinterval = setInterval(CheckAlarms, 5000);
 var alarminterval = "";
 var checking_alarm_footer = false;
 
-CheckAlarms();
+if (document.readyState !== 'loading'){
+        Init();
+} else {
+        document.addEventListener("DOMContentLoaded", () => { Init(); });
+}
+
+function Init(){
+	document.getElementById("btnTestAlarm").addEventListener("click", TestAlarm);
+	CheckAlarms();
+}
 
 function sleep (ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));

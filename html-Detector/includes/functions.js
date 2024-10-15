@@ -10,7 +10,13 @@
 //   GetPSQL(command, user, database, async=false) - query sql database, response returned as json object
 //   MakePlotDataFromPSQL(command, user, databse, output_data_array=null, async=false) - makes data for a plotly plot based on sql table
 //   MakePlot(div, data, layout, update=false) - makes or updates a plot div
+//   DrawRootPlot(div, obj) - draw a jsroot plot from jsroot plot object
+//   DrawRootPlotJSON(div, root_json) - draw a jsroot plot from jsroot compatible JSON string
+//   DrawRootPlotDB(div, plotname, plotver=-1) - draw a jsroot plot from database
 "use strict";
+
+//import { httpRequest, parse, draw, redraw, resize, toJSON, cleanup } from 'https://root.cern/js/latest/modules/main.mjs';
+import * as JSROOT from 'https://root.cern/js/latest/modules/main.mjs';
 
 /*
 function ResolveVariable(variable){
@@ -92,7 +98,8 @@ async function getDataFetchRequest(url, json_or_text="text"){
 	}
 }
 
-function GetSDTable(filter=null, async=false) { 
+
+export function GetSDTable(filter=null, async=false) { 
   //  filter= ResolveVariable(filter); 
    
     function ProcessTable(csvData){
@@ -104,16 +111,16 @@ function GetSDTable(filter=null, async=false) {
 	    var cells = row.split(",");
 	    
 	    if(cells.length == 5){
-		
-		var newrow = table.insertRow(table.rows.length);
-		var cell1 = "<td>[" + cells[0] + "]</td>";
-		var cell2 = "<td>" + cells[1] + "</td>";
-		var cell3 = "<td>" + cells[2] + "</td>";
-		var cell4 = "<td>" + cells[3] + "</td>";
-		var cell5 = "<td>" + cells[4] + "</td>";
-		if(filter=="")  newrow.innerHTML = cell1 + cell2 + cell3 + cell4 + cell5;
-		else if(cells[3]==filter) newrow.innerHTML = cell1 + cell2 + cell3 + cell4 + cell5;
-		
+			
+			if(cells[3]==filter){
+				var newrow = table.insertRow(table.rows.length);
+				var cell1 = "<td>[" + cells[0] + "]</td>";
+				var cell2 = "<td>" + cells[1] + "</td>";
+				var cell3 = "<td>" + cells[2] + "</td>";
+				var cell4 = "<td>" + cells[3] + "</td>";
+				var cell5 = "<td>" + cells[4] + "</td>";
+				newrow.innerHTML = cell1 + cell2 + cell3 + cell4 + cell5;
+			}
 	    }
 	});
 	
@@ -134,19 +141,41 @@ function GetSDTable(filter=null, async=false) {
     }
     
     else return ProcessTable(HTTPRequest("GET", "/cgi-bin/tablecontent5.cgi", false));
-    
-    
-    
+        
 }
 
+
+/*
+function GetSDTable(filter = null, async = false) {
+  function ProcessTable(csv) {
+    let table = document.createElement('table');
+    table.id = 'SDTable';
+
+    for (let row of csv.split('\n')) {
+      let cells = row.split(',');
+      if (cells.length != 5
+          || (filter !== null && filter != '' && filter != cells[3]))
+        continue;
+      let newrow = table.insertRow();
+      for (let cell of cells) newrow.insertCell().innerText = cell;
+    };
+
+    return table;
+  };
+
+  let request = HTTPRequest('GET', '/cgi-bin/tablecontent5.cgi', async);
+  if (async) return request.then(ProcessTable);
+  return ProcessTable(request);
+};
+*/
 
 export function GetIP(service_name, async=false){
   //service_name= ResolveVariable(service_name);    
 
     if(async){
 	return new Promise(function(resolve, reject){
-	    
-	    GetSDTable(service_name, true).then(function(result){
+		
+		GetSDTable(service_name, true).then(function(result){
 			if(result.rows === 'undefined' || !result.rows.length || 
 			   result.rows[0].cells === 'undefined' || !result.rows[0].cells.length){
 				reject("GetIP no matching services found!")
@@ -188,7 +217,7 @@ export function GetPort(service_name, async=false){
 	    GetSDTable(service_name, true).then(function(result){
 		if(result.rows === 'undefined' || !result.rows.length || 
 		   result.rows[0].cells === 'undefined' || !result.rows[0].cells.length){
-			reject("GetPort no matching services found!")
+			reject("GetPort no matching services found!");
 			return 0;
 		}
 		resolve(result.rows[0].cells[2].innerText);
@@ -477,4 +506,89 @@ function MakePlot(div, data, layout, update=false){
 	else Plotly.redraw(div,data, layout);
     }
 }
-   
+
+// draw JSROOT plot from database
+export async function DrawRootPlotDB(div, plotname, plotver=-1){
+	
+	// postgres match doesn't like any extraneous spaces
+	plotname = plotname.trim();
+	//console.log("trimmed plot name: '",plotname,"'");
+	
+	let verselect = "";
+	if(typeof(plotver) != 'undefined' && plotver>0){
+		verselect = `AND version=${plotver}`;
+	}
+	
+	var command = "select data, draw_options from rootplots where name='"
+	           + plotname + "' " + verselect + " order by time desc limit 1";
+	
+	GetPSQLTable(command, "daq", async).then(function(result){
+		
+		var tmp_tab = document.createElement("table");
+		tmp_tab.innerHTML = result;
+		//console.log("tmp_tab is ",tmp_tab,", inner html is ",tmp_tab.innerHTML);
+		//console.log("tmp_tab rows is ",tmp_tab.rows);
+		
+		var data = tmp_tab.rows[1].cells[0].innerText;
+		var drawoptions = tmp_tab.rows[1].cells[1].innerText;
+		
+		//console.log("data was '",data,"'");
+		//console.log("draw_options was '",drawoptions,"'");
+		let obj = JSROOT.parse(data);
+		//console.log("obj is ",obj);
+		
+		return DrawRoootPlot(div, obj, drawoptions);
+		
+	}).catch(() => {
+		div.innerHTML = `"<h3>Can not get ${plotname} from the server</h3>`;
+	});
+	
+	return;
+};
+
+// Draw JSROOT plot directly from json
+export async function DrawRootPlotJSON(div, root_json, drawoptions=""){
+	
+	console.log("DrawRootPlotJSON called with json ");
+	console.log(root_json);
+	try {
+		const obj = JSROOT.parse(root_json);
+		console.log("parsed jsroot object is:");
+		console.log(obj);
+		
+		if(typeof(obj) == 'undefined'){
+			throw new Error(`JSROOT error parsing json ${root_json}'`);
+		}
+		return DrawRootPlot(div, obj, drawoptions);
+		
+	} catch(err){
+		console.error(err);
+		return;
+	}
+}
+
+// Draw JSROOT plot from jsroot object
+export async function DrawRootPlot(div, obj, drawoptions="", width=700, height=400){
+	
+	console.log("DrawRootPlot called");
+	try {
+		// FIXME better way to set the size, dynamically determined
+		// can we set the div size here? e.g. 
+		//div.style=`\"height=${height}, width=${width}\"`;
+		
+		// remove any existing plots - with calling this, plots will overlay (kinda like 'same')
+		JSROOT.cleanup(div.id);
+		
+		console.log("going to await draw of obj ");
+		console.log(obj);
+		console.log(`onto div ${div.id}`);
+		await JSROOT.draw(div.id, obj, drawoptions);
+		console.log("drawn");
+		
+	} catch(err){
+		console.error(err);
+		return;
+	}
+	
+	return;
+}
