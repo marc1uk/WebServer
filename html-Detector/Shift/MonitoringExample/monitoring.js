@@ -3,9 +3,11 @@ var updateinterval;
 var output = document.getElementById("output");
 var tableselect = document.getElementById("tableselect");
 var data =[];
+var drawnDevices = new Map();
 var select = document.querySelector('select');
 var graphDiv = document.getElementById("graph"); 
 var updating=false;
+var abandonupdate=false;
 
 //update dropdown called on startup
 updatedropdown();
@@ -98,7 +100,6 @@ select.addEventListener('change', function(){
 	makeplot();
 	
 	if(document.getElementById("autoUpdate").checked){
-		
 		let refreshrate = document.getElementById("refreshRate").value;
 		if(refreshrate<1) refreshrate=1;
 		updateinterval = setInterval(updateplot, refreshrate*1000);
@@ -132,101 +133,156 @@ document.getElementById("refreshRate").addEventListener("change", (event) => {
 	if(document.getElementById("autoUpdate").checked){
 		let refreshrate = document.getElementById("refreshRate").value;
 		if(refreshrate<1) refreshrate=1;
+		clearInterval(updateinterval);
 		updateinterval = setInterval(updateplot, refreshrate*1000);
 		// since this doesn't fire immediately, call it now
 		updateplot();
 	}
-	else {
-		clearInterval(updateinterval);
+	
+});
+
+// action to take when history length is changed
+document.getElementById("historyLength").addEventListener("change", (event) => {
+	
+	if(tableselect.selectedIndex==-1) return;
+	
+	// if history length has reduced, we just need to drop points,
+	// which can be done by calling trimplot
+	// but if history length has been increased, we need to fetch older data,
+	// which our regular calls to 'updateplot' will not do.
+	// simplest is just to re-run makeplot.
+	const numrows = document.getElementById("historyLength").value;
+	if( data.length == 0 || data[0].x.length < numrows ){
+		makeplot();
+	} else {
+		trimplot();
 	}
 	
 });
 
-function makeplot(){ //function to generate plotly plot
+//function to generate plotly plot
+function makeplot(){
 	
-	clearInterval(updateinterval);
-	
-	
-	// Get the selected option
-	if (select.options.length >0){
-	var selectedOption = select.options[select.selectedIndex];
-	
-	// TODO add alternative limit based on time range rather than number of rows?
-	let numrows = document.getElementById("historyLength").value;
-	if(numrows <= 0) numrows = 200;
-	var command = `select * from monitoring where device='${selectedOption.value}' order by time desc LIMIT ${numrows}`;
-	
-	gettable(command).then(function(result){
+	try {
 		
-		output.innerHTML=result;
-		var table = document.getElementById("table");
-		table.style.display = "none";
-		var xdata= new Map();
-		var ydata= new Map();
+		// Get the selected option
+		if (select.options.length <= 0){
+			return;
+		}
 		
-		// SQL query returns time descending (most recent first, seems sensible as that's the most relevant data)
-		// but to append new data on update calls, we want to be able to push (append to back), so data arrays
-		// needs to be ordered with earliest data first. So parse the sql response from last to first
-		//for( var i=1; i< table.rows.length; i++){
-		for( var i=table.rows.length-1; i>0 ; i--){
+		var selectedOption = select.options[select.selectedIndex];
+		
+		// check if the selected option is already drawn
+		if(drawnDevices.has(selectedOption.value)){
+			// maybe the user has un-checked the 'draw on same plot' option and wants to clear other traces
+			if(document.getElementById("same").checked || (graphDiv.data != undefined && graphDiv.data.length ==1)){
+				console.log(`skipping already drawn option ${selectedOption.value}`);
+				return;
+			}
+		}
+		
+		// unregister the plot for updating while we alter it
+		clearInterval(updateinterval);
+		
+		// check if the plot is actively undergoing an update
+		if(updating){
+			abandonupdate=true; // tell it not to bother
+			// (prevents an existing async callback overwriting our graph div)
+		}
+		
+		// TODO add alternative limit based on time range rather than number of rows?
+		let numrows = document.getElementById("historyLength").value;
+		if(numrows <= 0) numrows = 200;
+		var command = `select * from monitoring where device='${selectedOption.value}' order by time desc LIMIT ${numrows}`;
+		
+		console.log("makeplot submitting query");
+		gettable(command).then(function(result){
+			console.log("makeplot got query result");
 			
-			//let jsonstring = table.rows[i].cells[2].innerText;
-			var jsondata = JSON.parse(table.rows[i].cells[2].innerText);
-			let xval = table.rows[i].cells[0].innerText.slice(0,-3);
+			output.innerHTML=result;
+			var table = document.getElementById("table");
+			table.style.display = "none";
+			var xdata= new Map();
+			var ydata= new Map();
 			
-			for (let key in jsondata) {
+			// SQL query returns time descending (most recent first, seems sensible as that's the most relevant data)
+			// but to append new data on update calls, we want to be able to push (append to back), so data arrays
+			// needs to be ordered with earliest data first. So parse the sql response from last to first
+			//for( var i=1; i< table.rows.length; i++){
+			for( var i=table.rows.length-1; i>0 ; i--){
 				
-				//if( i == 1 ){
-				if(!xdata.has(key)){
+				//let jsonstring = table.rows[i].cells[2].innerText;
+				var jsondata = JSON.parse(table.rows[i].cells[2].innerText);
+				let xval = table.rows[i].cells[0].innerText.slice(0,-3);
+				
+				for (let key in jsondata) {
 					
-					xdata.set(key,[xval]);
-					ydata.set(key,[jsondata[key]]);
-					
-				} else {
-					xdata.get(key).push(xval);
-					ydata.get(key).push(jsondata[key]);
-					
+					//if( i == 1 ){
+					if(!xdata.has(key)){
+						
+						xdata.set(key,[xval]);
+						ydata.set(key,[jsondata[key]]);
+						
+					} else {
+						xdata.get(key).push(xval);
+						ydata.get(key).push(jsondata[key]);
+						
+					}
 				}
 			}
-		}
-		
-		data = [];
-		for(let [key, value] of xdata){
 			
-			data.push({
-				name: selectedOption.value + ":" +key,
-				//mode: 'lines',        // 'mode' aka 'type'
-				mode: 'markers',
-				//mode:'lines+markers', //  aka 'scatter'
-				x: value,
-				y: ydata.get(key)
-			});
-			
-		}
-		
-		var layout = {
-			title: 'Monitor Time series with range slider and selectors',          
-			xaxis: {
-				rangeselector: selectorOptions,
-				//rangeslider: {}  -- this limits zooming to x-axis only
-			},
-			yaxis: {
-				fixedrange: false,
-				autorange: true,
-				//rangemode: 'nonnegative',
+			data = [];
+			for(let [key, value] of xdata){
+				
+				data.push({
+					name: selectedOption.value + ":" +key,
+					//mode: 'lines',        // 'mode' aka 'type'
+					mode: 'markers',
+					//mode:'lines+markers', //  aka 'scatter'
+					x: value,
+					y: ydata.get(key)
+				});
+				
 			}
-		};
+			
+			/*
+			// remove any existing plot to prevent memory leaks
+			while(!document.getElementById("same").checked && graphDiv.data != undefined && graphDiv.data.length >0){
+				Plotly.deleteTraces(graphDiv, 0);
+				//   Plotly.deleteTraces(graphDiv, [0]);
+			}
+			//Plotly.deleteTraces('graph', 0);
+			*/
+			
+			if(!document.getElementById("same").checked){
+				//console.log("purge it");
+				Plotly.purge(graphDiv);
+				drawnDevices.clear();
+			}
+			
+			drawnDevices.set(selectedOption.value, 1);
+			
+			// react does not seem to work, seems like 'react' does not make new traces, just updates existing ones?
+			if(true || drawnDevices.size==1){
+				//console.log("new plot time");
+				Plotly.purge(graphDiv);
+				Plotly.plot(graphDiv, data, layout);
+			} else {
+				//console.log("updated plot time");
+				layout.datarevision = Math.random();
+				Plotly.react(graphDiv, data, layout);
+			}
+			
+			// only set this back to false at the end of the thenable,
+			// when our callback has finished (or on error)
+			console.log("done making plot");
+			
+		});
 		
-		while(!document.getElementById("same").checked && graphDiv.data != undefined && graphDiv.data.length >0)
-		{
-		Plotly.deleteTraces(graphDiv, 0);
-		//   Plotly.deleteTraces(graphDiv, [0]);
-		}
-		//Plotly.deleteTraces('graph', 0);
-		Plotly.plot(graphDiv, data, layout);
-		
-	});
+	} catch(err){
+		console.error(err);
 	}
+	
 };
 
 
@@ -254,7 +310,16 @@ function updateplot(){
 		//var command = `select * from monitoring where device='${selectedOption.value}' and time>'${last.valueOf()}' order by time desc LIMIT ${numrows};`;
 		var command = `select * from monitoring where device='${selectedOption.value}' and time>'${last.valueOf()}' order by time desc LIMIT ${numrows};`;
 		
+		console.log("updateplot submitting query");
 		gettable(command).then(function(result){
+			if(abandonupdate){
+				abandonupdate=false;
+				console.log("abandoning update");
+				updating=false;
+				return;
+			}
+			
+			console.log("updateplot processing result");
 			
 			output.innerHTML=result;
 			var table = document.getElementById("table");
@@ -299,37 +364,69 @@ function updateplot(){
 				}
 			}
 			
-			var layout = {
-				title: 'Monitor Time series with range slider and selectors',          
-				xaxis: {
-					rangeselector: selectorOptions,
-					//rangeslider: {} - this limits zooming to x-axis only
-				},
-				yaxis: {
-					fixedrange: false,
-					autorange: true,
-					//rangemode: 'nonnegative',
-				}
-			};
-			
 			/*
 			while(!document.getElementById("same").checked && graphDiv.data != undefined && graphDiv.data.length >0){
 				Plotly.deleteTraces(graphDiv, 0);
 				  Plotly.deleteTraces(graphDiv, [0]);
 			}
 			*/
-			Plotly.redraw(graphDiv,data, layout);
+			
+			// tell plotly the data has changed
+			layout.datarevision = Math.random();
+			
 			//Plotly.plot(graphDiv, data, layout);
+			//Plotly.redraw(graphDiv,data, layout); -- deprecated in ~2017? can't find it in the docs
+			Plotly.react(graphDiv,data,layout); // -- believe this may be the more efficient current way
+			
+			// reset updating at end of callback
 			updating=false;
+			
+			console.log("done updating plot");
+			
 		});
 		
-	} catch(error){
-		// always reset this
+	} catch(err){
+		console.error(err);
+		// reset this on error
 		updating=false;
 	}
 	
 };
 
+// function to drop older values when history length is reduced
+function trimplot(){
+	
+	const numrows = document.getElementById("historyLength").value;
+	
+	// update trace data arrays
+	for( var i=0; i< data.length; i++){
+		data[i].x = data[i].x.slice(-numrows);
+		data[i].y = data[i].y.slice(-numrows);
+	}
+	
+	// tell plotly the data has changed
+	layout.datarevision = Math.random();
+	
+	// trigger redraw
+	Plotly.react(graphDiv,data,layout);
+	
+}
+
+var layout = {
+	title: 'Monitor Time series with range slider and selectors',
+	xaxis: {
+		rangeselector: selectorOptions,
+		//rangeslider: {} - this limits zooming to x-axis only
+		uirevision: true,
+	},
+	yaxis: {
+		fixedrange: false,
+		autorange: true,
+		//rangemode: 'nonnegative',
+		uirevision: true,
+	},
+	//dragmode: 'zoom', perhaps this could allow a rangeslider without restricting zoom to x-axis only?
+};
 
 //plot options definitions
 // TODO tie these up with history length
