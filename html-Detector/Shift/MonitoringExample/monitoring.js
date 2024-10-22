@@ -195,9 +195,9 @@ function makeplot(){
 		if(numrows <= 0) numrows = 200;
 		var command = `select * from monitoring where device='${selectedOption.value}' order by time desc LIMIT ${numrows}`;
 		
-		console.log("makeplot submitting query");
+		//console.log("makeplot submitting query");
 		gettable(command).then(function(result){
-			console.log("makeplot got query result");
+			//console.log("makeplot got query result");
 			
 			output.innerHTML=result;
 			var table = document.getElementById("table");
@@ -266,7 +266,7 @@ function makeplot(){
 			if(true || drawnDevices.size==1){
 				//console.log("new plot time");
 				Plotly.purge(graphDiv);
-				Plotly.plot(graphDiv, data, layout);
+				Plotly.newPlot(graphDiv, data, layout); // Plotly.plot ...?
 			} else {
 				//console.log("updated plot time");
 				layout.datarevision = Math.random();
@@ -275,7 +275,7 @@ function makeplot(){
 			
 			// only set this back to false at the end of the thenable,
 			// when our callback has finished (or on error)
-			console.log("done making plot");
+			//console.log("done making plot");
 			
 		});
 		
@@ -310,16 +310,16 @@ function updateplot(){
 		//var command = `select * from monitoring where device='${selectedOption.value}' and time>'${last.valueOf()}' order by time desc LIMIT ${numrows};`;
 		var command = `select * from monitoring where device='${selectedOption.value}' and time>'${last.valueOf()}' order by time desc LIMIT ${numrows};`;
 		
-		console.log("updateplot submitting query");
+		//console.log("updateplot submitting query");
 		gettable(command).then(function(result){
 			if(abandonupdate){
 				abandonupdate=false;
-				console.log("abandoning update");
+				//console.log("abandoning update");
 				updating=false;
 				return;
 			}
 			
-			console.log("updateplot processing result");
+			//console.log("updateplot processing result");
 			
 			output.innerHTML=result;
 			var table = document.getElementById("table");
@@ -381,7 +381,7 @@ function updateplot(){
 			// reset updating at end of callback
 			updating=false;
 			
-			console.log("done updating plot");
+			//console.log("done updating plot");
 			
 		});
 		
@@ -412,24 +412,8 @@ function trimplot(){
 	
 }
 
-var layout = {
-	title: 'Monitor Time series with range slider and selectors',
-	xaxis: {
-		rangeselector: selectorOptions,
-		//rangeslider: {} - this limits zooming to x-axis only
-		uirevision: true,
-	},
-	yaxis: {
-		fixedrange: false,
-		autorange: true,
-		//rangemode: 'nonnegative',
-		uirevision: true,
-	},
-	//dragmode: 'zoom', perhaps this could allow a rangeslider without restricting zoom to x-axis only?
-};
-
-//plot options definitions
 // TODO tie these up with history length
+// XXX must be defined before 'layout' as layout references this in rangeselector
 var selectorOptions = {
 	buttons: [ {
 		step: 'hour',
@@ -494,4 +478,49 @@ var selectorOptions = {
 	}, {
 		step: 'all'
 	}],
+};
+
+//plot options
+var layout = {
+	title: 'Monitor Time series with range slider and selectors',
+	hovermode: 'closest',
+	xaxis: {
+		rangeselector: selectorOptions,
+		rangeslider: {}, // add a scrubber on the bottom
+		uirevision: true,
+	},
+	yaxis: {
+		fixedrange: false,
+		autorange: true,
+		//rangemode: 'nonnegative',
+		uirevision: true,
+	},
+	/*
+	// demo: add a horizontal cursor
+	shapes: [
+		{
+			type: 'line',
+			xref: 'paper',
+			x0: 0,
+			x1: 1,
+			y0: 2500000,
+			y1: 2500000,
+			opacity: 0.2,
+			line: {
+				color: 'rgb(255, 0, 0)',
+				//width: 4,
+				//dash: 'dashdot'
+			},
+			// N.B. shape labels stopped working since 2.32.0 ¬_¬
+			label: {
+				text: 'Alarm Threshold',
+				xanchor: 'right',
+				textposition: 'end', // or 'start' or 'middle'
+				font: { size: 10, color: 'red' },
+				//yanchor: 'bottom',
+			},
+		},
+	],
+	*/
+	dragmode: 'zoom', // required with a rangeslider to stop it restricting zoom to x-axis only
 };
