@@ -17,39 +17,54 @@ function Init(){
 	alarm_table = document.getElementById("alarm_output");
 	document.getElementById("btnSilenceAll").addEventListener('click', SilenceByDeviceName);
 	document.getElementById("loadMore").addEventListener('click', () => { GetAlarms(true); });
+	document.getElementById("deviceNameFilter").addEventListener('change', () => { alarm_table.innerHTML = ""; GetAlarms(); } );
 	GetAlarms();
 	alarmsinterval = setInterval(GetAlarms, 5000);
 }
 
 
-function GetAlarms(append=false){
+function GetAlarms(arg=false){
+	// note that arg may be an event if function is attached as callback
+	// so just because we specify a default boolean false, if its called as a callback with no args, it'll not match (!arg)
+	let append = false;
+	if(typeof(arg) == 'boolean'){
+		append = arg;
+	}
 	
 	if(checking_alarm_table) return;
 	checking_alarm_table=true;
 	
+	//console.log(`GetAlarms called with append ${append}`);
+	
 	try {
+		
+		const devName = document.getElementById("deviceNameFilter").value;
+		let nameFilter1 = "";
+		let nameFilter2 = "";
+		if(devName!=""){
+			nameFilter1 = `WHERE device='${devName}'`;
+			nameFilter2 = `AND device='${devName}'`;
+		}
 		
 		const nrows = document.getElementById("numrows").value;
 		let tablesize = alarm_table.getElementsByTagName("tr").length;
 		if(tablesize>0) tablesize--; // skip header row
-		if(tablesize==0) append=false; // can't append if it's empty
+		if(tablesize==0 || typeof(oldest) == 'undefined') append=false; // can't append if it's empty
 		
 		let query;
-		if(append === false || typeof(oldest) == 'undefined'){
-			// update status of all alarms shown
-			const rowstoget = (tablesize==0) ? nrows : tablesize;
-			query = `select * from alarms order by time desc limit ${rowstoget}`;
+		// update status of all alarms shown
+		if(append){
+			query = `select * from alarms WHERE time<'${oldest}' ${nameFilter2} order by time desc limit ${nrows}`;
 		} else {
-			query = `select * from alarms WHERE time<'${oldest}' order by time desc limit ${nrows}`;
+			const rowstoget = (tablesize==0) ? nrows : tablesize;
+			query = `select * from alarms ${nameFilter1} order by time desc limit ${rowstoget}`;
 		}
+		//console.log(`runnin query '${query}'`);
 		
 		GetPSQLTable(query, "root", "daq", true).then(function(result){
 			
-			console.log("updating data");
-			
 			let rows;
 			let temp_table;
-			
 			if(!append){
 				alarm_table.innerHTML = result;
 				rows = alarm_table.getElementsByTagName("tr");
@@ -97,7 +112,7 @@ function GetAlarms(append=false){
 
 
 function SilenceByDeviceName(){
-	const devName = document.getElementById("deviceName").value;
+	const devName = document.getElementById("deviceNameSilence").value;
 	if(devName =="") return;
 	
 	GetPSQLTable(`update alarms set silenced=1 where device='${devName}'`, "root", "daq", false);
