@@ -7,8 +7,16 @@
 //   GetSlowCommands(ip, port, async=false) - returns html to produce all slow control buttons of client
 //   SendSCCommand(ip, port, command_output, ...incommands) - command used by slow cotnrol buttons to send commands to clients
 //   GetPSQLTable(command, user, database, async=false) - get sql table from database
+//   GetPSQL(command, user, database, async=false) - query sql database, response returned as json object
 //   MakePlotDataFromPSQL(command, user, databse, output_data_array=null, async=false) - makes data for a plotly plot based on sql table
 //   MakePlot(div, data, layout, update=false) - makes or updates a plot div
+//   DrawRootPlot(div, obj) - draw a jsroot plot from jsroot plot object
+//   DrawRootPlotJSON(div, root_json) - draw a jsroot plot from jsroot compatible JSON string
+//   DrawRootPlotDB(div, plotname, plotver=-1) - draw a jsroot plot from database
+"use strict";
+
+//import { httpRequest, parse, draw, redraw, resize, toJSON, cleanup } from 'https://root.cern/js/latest/modules/main.mjs';
+import * as JSROOT from 'https://root.cern/js/latest/modules/main.mjs';
 
 /*
 function ResolveVariable(variable){
@@ -23,7 +31,9 @@ function ResolveVariable(variable){
 }
 */
 
-function HTTPRequest(method, url, async=false, data=null, user=null, password=null){
+let hostIP=""; //127.0.0.1";
+
+export function HTTPRequest(method, url, async=false, data=null, user=null, password=null){
     
     var xhr = new XMLHttpRequest();
     
@@ -32,6 +42,7 @@ function HTTPRequest(method, url, async=false, data=null, user=null, password=nu
     // Set the request header to indicate that the request body contains form data   
     if(method=="POST")  xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     
+    //console.log("HTTPRequest with post data: "+data);
     xhr.send(data);
     
     if(!async) return xhr.responseText
@@ -41,9 +52,21 @@ function HTTPRequest(method, url, async=false, data=null, user=null, password=nu
 	return new Promise(function(resolve, reject){
 	    
 	    xhr.onreadystatechange = function() {
-		if(this.readyState == 4 && this.status == 200) {		
-		    resolve(xhr.responseText);
-		}
+	    	// once the request is 'DONE' (ignore other status changes)
+	    	if(this.readyState == 4){
+	    		// resolve if status was OK (https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)
+	    		// i am unclear on whether some 300 status codes would also be acceptable, for example, 304 seems fine
+	    		// but what about 302, 307, etc? do we need to catch and handle the required redirects in such cases?
+				if((this.status > 199 && this.status <300) || this.status==304) {
+					resolve(xhr.responseText);
+				} else {
+					// else reject
+					//console.log("HTTPRequest FAILURE:");
+					//console.log(xhr);
+					reject("Request failed with status code "+xhr.status+": "+xhr.statusText);
+				}
+			}
+			return;
 	    }
 	    
 	});
@@ -52,7 +75,31 @@ function HTTPRequest(method, url, async=false, data=null, user=null, password=nu
     
 }
 
-function GetSDTable(filter=null, async=false) { 
+// a general asynchronous getter for fetching data from a url
+async function getDataFetchRequest(url, json_or_text="text"){
+	//console.log("getDataFetchRequest(",url,")");
+	try {
+		console.log("getDataFetchRequest fetching ",url," and waiting on response");
+		let response = await fetch(url);
+		console.log("getDataFetchRequest received response for ",url);
+		let thetext = "";
+		if(json_or_text=="json"){
+			console.log("getDataFetchRequest awaiting on conversion to text for ",url);
+			thetext = await response.text();
+		} else {
+			console.log("getDataFetchRequest awaiting on conversion to json for ",url);
+			thetext = await response.json();
+		}
+		console.log("getDataFetchRequest returning ",url," conversion result"); //,thetext);
+		return thetext;
+	} catch (err) {
+		console.log("Failed to get data from "+url, err);
+		return null;
+	}
+}
+
+
+export function GetSDTable(filter=null, async=false) { 
   //  filter= ResolveVariable(filter); 
    
     function ProcessTable(csvData){
@@ -64,16 +111,16 @@ function GetSDTable(filter=null, async=false) {
 	    var cells = row.split(",");
 	    
 	    if(cells.length == 5){
-		
-		var newrow = table.insertRow(table.rows.length);
-		var cell1 = "<td>[" + cells[0] + "]</td>";
-		var cell2 = "<td>" + cells[1] + "</td>";
-		var cell3 = "<td>" + cells[2] + "</td>";
-		var cell4 = "<td>" + cells[3] + "</td>";
-		var cell5 = "<td>" + cells[4] + "</td>";
-		if(filter=="")  newrow.innerHTML = cell1 + cell2 + cell3 + cell4 + cell5;
-		else if(cells[3]==filter) newrow.innerHTML = cell1 + cell2 + cell3 + cell4 + cell5;
-		
+			
+			if(cells[3]==filter){
+				var newrow = table.insertRow(table.rows.length);
+				var cell1 = "<td>[" + cells[0] + "]</td>";
+				var cell2 = "<td>" + cells[1] + "</td>";
+				var cell3 = "<td>" + cells[2] + "</td>";
+				var cell4 = "<td>" + cells[3] + "</td>";
+				var cell5 = "<td>" + cells[4] + "</td>";
+				newrow.innerHTML = cell1 + cell2 + cell3 + cell4 + cell5;
+			}
 	    }
 	});
 	
@@ -94,41 +141,61 @@ function GetSDTable(filter=null, async=false) {
     }
     
     else return ProcessTable(HTTPRequest("GET", "/cgi-bin/tablecontent5.cgi", false));
-    
-    
-    
+        
 }
 
 
-function GetIP(service_name, async=false){
+export function GetIP(service_name, async=false){
   //service_name= ResolveVariable(service_name);    
 
     if(async){
 	return new Promise(function(resolve, reject){
-	    
-	    GetSDTable(service_name, true).then(function(result){
 		
-		resolve(result.rows[0].cells[1].innerText);
+		GetSDTable(service_name, true).then(function(result){
+			if(result.rows === 'undefined' || !result.rows.length || 
+			   result.rows[0].cells === 'undefined' || !result.rows[0].cells.length){
+				reject("GetIP no matching services found!")
+				return "";
+			}
+			resolve(result.rows[0].cells[1].innerText);
 	    });
 	});
     }
     
     else{
-
-	return GetSDTable(service_name).rows[0].cells[1].innerText;
-	
+		let result = GetSDTable(service_name); // html table object
+		//console.log("GetIP got: ");   // result.rows is a htmlcollection
+		//console.log(result);
+		if(result.rows === 'undefined' || !result.rows.length || 
+		   result.rows[0].cells === 'undefined' || !result.rows[0].cells.length){
+			/*
+			console.log("GetIP no matching services found!");
+			console.log(result);
+			console.log(result.rows);
+			console.log(result.rows[0]);
+			console.log(result.rows[0].cells);
+			console.log(result.rows[0].cells[1]);
+			*/
+			return "";
+		}
+		return result.rows[0].cells[1].innerText;
+		
     }
 }
 
 
-function GetPort(service_name, async=false){
+export function GetPort(service_name, async=false){
     //service_name= ResolveVariable(service_name);
 
     if(async){
 	return new Promise(function(resolve, reject){
 	    
 	    GetSDTable(service_name, true).then(function(result){
-		
+		if(result.rows === 'undefined' || !result.rows.length || 
+		   result.rows[0].cells === 'undefined' || !result.rows[0].cells.length){
+			reject("GetPort no matching services found!");
+			return 0;
+		}
 		resolve(result.rows[0].cells[2].innerText);
 	    });
 	});
@@ -136,13 +203,21 @@ function GetPort(service_name, async=false){
     
     else{
 
-	return GetSDTable(service_name).rows[0].cells[2].innerText;
+		let result = GetSDTable(service_name); // html table object
+		//console.log("GetIP got: ");   // result.rows is a htmlcollection
+		//console.log(result);
+		if(result.rows === 'undefined' || !result.rows.length || 
+		   result.rows[0].cells === 'undefined' || !result.rows[0].cells.length){
+			//console.log("GetPort no matching services found!");
+			return 0;
+		}
+		return result.rows[0].cells[2].innerText;
 	
     }
 }
 
 
-function Command(ip, port, command, async=false){ //this command sends messages to services
+export function Command(ip, port, command, async=false){ //this command sends messages to services
     //ip= ResolveVariable(ip);
     //port= ResolveVariable(port);
     //command= ResolveVariable(command);
@@ -157,10 +232,12 @@ function Command(ip, port, command, async=false){ //this command sends messages 
 	
 	return new Promise(function(resolve, reject){
 	    
-	    HTTPRequest("POST", "/cgi-bin/sendcommand2nopadding.cgi", true, data_string).then(function(result){
-		
-		resolve(result.split("\n")[1]);
-		
+	    HTTPRequest("POST", "/cgi-bin/sendcommand2nopadding.cgi", true, data_string).then(
+	    function(result){
+			resolve(result.split("\n")[1]);
+	    }, 
+	    function(reason){
+	    	reject(reason);
 	    });
 	});
     }
@@ -290,15 +367,44 @@ function SendSCCommand(ip, port, command_output, ...incommands){
 }
 
 
-function GetPSQLTable(command, user, database, async=false){
+export function GetPSQLTable(command, user, database, async=false){
  
     var data_string = "user=" + user + "&db=" + database + "&command=" + command;
     
     return HTTPRequest("POST", "/cgi-bin/sqlquery.cgi", async, data_string);
 
-
 }
 
+export async function GetPSQL(command, user, database, async=false){
+    
+    let dataUrl = "/cgi-bin/sqlqueryjson.cgi";
+    var data_string = "user=" + user + "&db=" + database + "&command=" + command;
+    //console.log("GetPSQL got query: "+command+", data_string: "+data_string);
+    
+    // version using HTTPRequest
+    return HTTPRequest("POST", dataUrl, async, data_string);
+    
+    // version using getDataFetchRequest, which uses the fetch API rather than XMLHttpRequest
+    // see https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+    // in fact firefox reports:
+    // 'Synchronous XMLHttpRequest on the main thread is deprecated
+    //  because of its detrimental effects to the end user’s experience'
+    /*
+    dataUrl = dataUrl+"?"+data_string;
+    if(async){
+        // return promise
+        return getDataFetchRequest(dataUrl, "text");
+    } else {
+        // await promise and return json object
+        let responsepromise = getDataFetchRequest(dataUrl, "json");
+        //console.log("GetPSQL got promise: ",responsepromise);
+        let response = await responsepromise;
+        //console.log("GetPSQL got response: ",response);
+        return response;
+    }
+    */
+    
+}
 
 function MakePlotDataFromPSQL(command, user, databse, output_data_array=null, async=false){ //function to generate plotly plot
     
@@ -376,4 +482,89 @@ function MakePlot(div, data, layout, update=false){
 	else Plotly.redraw(div,data, layout);
     }
 }
-   
+
+// draw JSROOT plot from database
+export async function DrawRootPlotDB(div, plotname, plotver=-1){
+	
+	// postgres match doesn't like any extraneous spaces
+	plotname = plotname.trim();
+	//console.log("trimmed plot name: '",plotname,"'");
+	
+	let verselect = "";
+	if(typeof(plotver) != 'undefined' && plotver>0){
+		verselect = `AND version=${plotver}`;
+	}
+	
+	var command = "select data, draw_options from rootplots where name='"
+	           + plotname + "' " + verselect + " order by time desc limit 1";
+	
+	GetPSQLTable(command, "daq", async).then(function(result){
+		
+		var tmp_tab = document.createElement("table");
+		tmp_tab.innerHTML = result;
+		//console.log("tmp_tab is ",tmp_tab,", inner html is ",tmp_tab.innerHTML);
+		//console.log("tmp_tab rows is ",tmp_tab.rows);
+		
+		var data = tmp_tab.rows[1].cells[0].innerText;
+		var drawoptions = tmp_tab.rows[1].cells[1].innerText;
+		
+		//console.log("data was '",data,"'");
+		//console.log("draw_options was '",drawoptions,"'");
+		let obj = JSROOT.parse(data);
+		//console.log("obj is ",obj);
+		
+		return DrawRoootPlot(div, obj, drawoptions);
+		
+	}).catch(() => {
+		div.innerHTML = `"<h3>Can not get ${plotname} from the server</h3>`;
+	});
+	
+	return;
+};
+
+// Draw JSROOT plot directly from json
+export async function DrawRootPlotJSON(div, root_json, drawoptions=""){
+	
+	console.log("DrawRootPlotJSON called with json ");
+	console.log(root_json);
+	try {
+		const obj = JSROOT.parse(root_json);
+		console.log("parsed jsroot object is:");
+		console.log(obj);
+		
+		if(typeof(obj) == 'undefined'){
+			throw new Error(`JSROOT error parsing json ${root_json}'`);
+		}
+		return DrawRootPlot(div, obj, drawoptions);
+		
+	} catch(err){
+		console.error(err);
+		return;
+	}
+}
+
+// Draw JSROOT plot from jsroot object
+export async function DrawRootPlot(div, obj, drawoptions="", width=700, height=400){
+	
+	console.log("DrawRootPlot called");
+	try {
+		// FIXME better way to set the size, dynamically determined
+		// can we set the div size here? e.g. 
+		//div.style=`\"height=${height}, width=${width}\"`;
+		
+		// remove any existing plots - with calling this, plots will overlay (kinda like 'same')
+		JSROOT.cleanup(div.id);
+		
+		console.log("going to await draw of obj ");
+		console.log(obj);
+		console.log(`onto div ${div.id}`);
+		await JSROOT.draw(div.id, obj, drawoptions);
+		console.log("drawn");
+		
+	} catch(err){
+		console.error(err);
+		return;
+	}
+	
+	return;
+}

@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
   <head>
     <title>Alarms</title>
@@ -12,7 +13,17 @@
     <p> </p> 
     <h1 align="center">Alarms</h1>
     <p> </p>      
-    <div id="alarm output" style="padding: 20px"> </div>      
+    <div id="alarm_output" style="padding: 20px"> </div>
+    <br><br>
+    <label for="numrows">Num rows:</label>
+    <input id="numrows" type="number" style="background-color: white" class="form-control" value='50' >
+    <br><br>
+    <button id="loadMore">Load More Entries</button>
+    <br><br>
+    
+   <label for="deviceName">Silence All Alarms for Device: </label>
+   <input id="deviceName" type="text" placeholder="Device Name"  size="20">
+   <button id="btnSilenceAll">Silence</button>
 
     <p> </p>   
     
@@ -21,5 +32,5 @@
   </body>
 </html>
 
-<script src="/includes/functions.js?v=1" async></script>
-<script src="/Alarms/alarms.js?v=1" async></script>
+<script type="module" src="/includes/functions.js?v=1" async></script>
+<script type="module" src="/Alarms/alarms.js?v=1" async></script>
