@@ -369,8 +369,11 @@ function SendSCCommand(ip, port, command_output, ...incommands){
 
 export function GetPSQLTable(command, user, database, async=false){
  
-    var data_string = "user=" + user + "&db=" + database + "&command=" + command;
+    var data_string = "user="     + user
+                    + "&db="      + database
+                    + "&command=" + encodeURIComponent(command);
     
+    //console.log(`submitting query: '${data_string}'`);
     return HTTPRequest("POST", "/cgi-bin/sqlquery.cgi", async, data_string);
 
 }
@@ -498,7 +501,7 @@ export async function DrawRootPlotDB(div, plotname, plotver=-1){
 	var command = "select data, draw_options from rootplots where name='"
 	           + plotname + "' " + verselect + " order by time desc limit 1";
 	
-	GetPSQLTable(command, "daq", async).then(function(result){
+	GetPSQLTable(command, "root", "daq", true).then(function(result){
 		
 		var tmp_tab = document.createElement("table");
 		tmp_tab.innerHTML = result;
@@ -513,10 +516,11 @@ export async function DrawRootPlotDB(div, plotname, plotver=-1){
 		let obj = JSROOT.parse(data);
 		//console.log("obj is ",obj);
 		
-		return DrawRoootPlot(div, obj, drawoptions);
-		
-	}).catch(() => {
-		div.innerHTML = `"<h3>Can not get ${plotname} from the server</h3>`;
+		return DrawRootPlot(div, obj, drawoptions);
+	},
+	function(reason){
+		div.innerHTML = `"<h3>Can not get ${plotname} from the server: ${reason}</h3>`;
+		reject(reason);
 	});
 	
 	return;
