@@ -1,0 +1,46 @@
+<head>
+<title>ToolDAQ Webpage</title>
+<style>
+    .graph-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* Creates two equal columns */
+        gap: 10px; /* Adds space between grid items */
+    }
+    .graph {
+        height: 500px; /* Fixed height for each graph */
+    }
+</style>
+</head>
+
+
+
+
+<!--#include virtual="/includes/header.html" -->
+<!--#include virtual="../subheader.html" -->
+<!--#include virtual="/includes/drawer.html" -->
+
+
+
+<div id="cameras">
+  <br>
+  <a href="./T09Camera.jpg"><img id="T09Camera" src="./T09Camera.jpg"  width="600"></a>
+  <a href="./WaterCamera.jpg"><img id="WaterCamera" src="./WaterCamera.jpg"  width="600"></a>
+  <br>
+</div>
+
+<script>
+  // Function to change the image
+        function changeImage() {
+            // Increment the index (wrap around if it exceeds the array length)
+            //currentIndex = (currentIndex + 1) % images.length;
+            
+            // Get the image element and update the src attribute
+            document.getElementById("T09Camera").src = "./T09Camera.jpg?"+ new Date().getTime();
+	    document.getElementById("WaterCamera").src = "./WaterCamera.jpg?"+ new Date().getTime();
+	}
+
+        // Set an interval to change the image every minute (60,000 ms)
+        setInterval(changeImage, 60000);
+  
+</script>
+<!--#include virtual="/includes/footer.html" -->
