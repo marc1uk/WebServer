@@ -145,30 +145,6 @@ export function GetSDTable(filter=null, async=false) {
 }
 
 
-/*
-function GetSDTable(filter = null, async = false) {
-  function ProcessTable(csv) {
-    let table = document.createElement('table');
-    table.id = 'SDTable';
-
-    for (let row of csv.split('\n')) {
-      let cells = row.split(',');
-      if (cells.length != 5
-          || (filter !== null && filter != '' && filter != cells[3]))
-        continue;
-      let newrow = table.insertRow();
-      for (let cell of cells) newrow.insertCell().innerText = cell;
-    };
-
-    return table;
-  };
-
-  let request = HTTPRequest('GET', '/cgi-bin/tablecontent5.cgi', async);
-  if (async) return request.then(ProcessTable);
-  return ProcessTable(request);
-};
-*/
-
 export function GetIP(service_name, async=false){
   //service_name= ResolveVariable(service_name);    
 
