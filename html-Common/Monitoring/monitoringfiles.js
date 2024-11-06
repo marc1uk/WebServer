@@ -17,7 +17,7 @@ function GetPlotFiles(){ //command to retreive all plot files
     xhr.onreadystatechange = function() {
 
 	if (this.readyState == 4 && this.status == 200) {
-	    plots_output.innerHTML=xhr.responseText;	
+	    plots_output.innerHTML=xhr.responseText;
 	}
 	
 	updating=false;
