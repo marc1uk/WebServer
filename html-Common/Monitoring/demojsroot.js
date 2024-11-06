@@ -20,7 +20,7 @@ async function Init(){
 	//   DrawRootPlot(div, obj, width=700, height=400) - draw a jsroot plot from jsroot plot object
 	//   DrawRootPlotJSON(div, root_json) - draw a jsroot plot from jsroot compatible JSON string
 	//   DrawRootPlotDB(div, plotname, plotver=-1) - draw a jsroot plot from database
-	const thediv = document.getElementById("testroot");
+	const thediv = document.getElementById("jsroot_div");
 	
 	/*
 	// grab a demo root file off the web.

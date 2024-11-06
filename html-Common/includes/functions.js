@@ -503,11 +503,17 @@ export function MakePlot(div, data, layout, update=false){
 //   name --- plot name; when undefined returns an array of all plots in the database
 
 export function GetPlot(name) {
+  //console.log(`GetPlot called with arg ${name}`);
   let url = '/cgi-bin/getplot.cgi';
   if (name !== undefined) url += '?plot=' + name;
+  //console.log(`invoking url ${url}`);
   return HTTPRequest('GET', url, true).then(
     function (reply) {
       return JSON.parse(reply);
+    },
+    function(reason){
+      console.log(`GetPlot error: ${reason}`);
+      return;
     }
   );
 }
