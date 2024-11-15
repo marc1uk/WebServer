@@ -69,7 +69,7 @@ let plots = [
          },
          yaxis: {
             title: "Pressure [bar]",
-            range: [0, 5]
+            range: [0, 7]
          },
          //remove this if we don't have a second y axis 
          yaxis2: {
@@ -113,7 +113,7 @@ let plots = [
    },
    {
       graphDiv: document.getElementById("graph_3"), // The div element for the first plot
-      keys: ['QC1_Conductivity', 'QC2_Conductivity', 'TDS', 'UT1_Conductivity','Salinity'], // List of keys related to the plot
+      keys: ['UT1_Conductivity', 'QC1_Conductivity', 'QC2_Conductivity', 'TDS','Salinity'], // List of keys related to the plot
       y2keys: ['UT1_Conductivity','TDS'],
       selectedRange: 12 * 60 * 60 * 1000,
       data: [], // Initially an empty array for data
@@ -136,16 +136,16 @@ let plots = [
          },
          //remove this if we don't have a second y axis 
          yaxis2: {
-             title: "UT-1 Water Quality [μS/cm] & TDS", // Use the title from y2_plot1
+             title: "UT-1 Water Quality & TDS [a.u.]", // Use the title from y2_plot1
              overlaying: 'y', // Overlay on the primary y-axis
              side: 'right', // Position the y2 axis on the right side
-             range: [2, 6.8] // Set the range from y2_plot1
+             range: [0, 80] //[60, 220] // [2, 6.8] // Set the range from y2_plot1
           }
       }
    },
    {
       graphDiv: document.getElementById("graph_4"), // The div element for the first plot
-      keys: ['UT1_Temperature'], // List of keys related to the plot
+      keys: ['UT1_Temperature','QC1_Temperature','QC2_Temperature'], // List of keys related to the plot
       selectedRange: 24 * 60 * 60 * 1000,
       data: [], // Initially an empty array for data
       layout: {
@@ -163,7 +163,7 @@ let plots = [
          },
          yaxis: {
             title: "Water temp [°C]",
-            range: [13, 15]
+            range: [12.7, 20]
          },
       }
    },

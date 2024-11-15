@@ -1,0 +1,292 @@
+<head>
+<title>mPMT status page</title>
+</head>
+
+<!--#include virtual="/includes/header.html" -->
+<!--#include virtual="../subheader.html" -->
+<!--#include virtual="/includes/drawer.html" -->
+
+<div id='mpmts' style="width: 800px;"></div>
+<div id='mpmt'></div>
+
+<script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+<script src='../js/mpmtcommon.js'></script>
+<script>
+
+/*
+ Statuses: 0 - unknown - blue rgb(2, 119, 189)
+    1 - ok, no HV - greenyellow rgb(175, 180, 43)
+    2 - ok, HV on - green rgb(46, 125, 50)
+    3 - minor ptoblems orange rgb(230, 74, 25)
+    4 - major problems red rgb(238, 0, 7)
+    5 - stale info purple rgb(194, 24, 91)
+*/
+
+function id_and_status_to_colors(n,s) {
+    if (n.toUpperCase().startsWith("MPMT")) {
+        switch(s) {
+            case 1: return ['rgb(175, 180, 43)','rgba(175, 180, 43, 0.5)'];
+            case 2: return ['rgb(46, 125, 50)','rgba(46, 125, 50, 0.5)'];
+            case 3: return ['rgb(230, 74, 25)','rgba(230, 74, 25, 0.5)'];
+            case 4: return ['rgb(238, 0, 7)','rgba(238, 0, 7, 0.5)'];
+            case 5: return ['rgb(210, 89, 136)','rgba(210, 89, 136, 0.5)'];
+            case 9: return ['rgb(252, 252, 3)','rgba(252, 252, 3, 0.5)'];
+        }
+        return ['rgb(2, 119, 189)','rgba(2, 119, 189, 0.5)'];
+    }
+    if (n.toUpperCase()=="FD") {
+        return ['rgb(82, 28, 115)','rgba(82, 28, 115, 0.5)']
+    }
+    if (n.toUpperCase()=="EMPTY") {
+        return ['rgb(117, 117, 117)','rgba(117, 117, 117, 0.5)']
+    }
+}
+
+function status_from_table(status_table, cid) {
+    if (cid==-1)
+        return 0;
+    e = status_table.find((v) => {return v.cid==cid;});
+    if (e) {
+        return e.status;
+    }
+    return 0;
+}
+
+
+function do_plot(status_table,handler) {
+
+    var layout = {
+
+    title: 'MPMT View',
+    xaxis: {
+        range: [0, 16],
+        showgrid: false,
+        zeroline: false,
+        showticklabels: false,
+    },
+
+    yaxis: {
+        range: [0, 14],
+        showgrid: false,
+        zeroline: false,
+        showticklabels: false,
+    },
+
+    width: 1600,
+    height: 1400,
+    showlegend: false,
+    hovermode: 'closest',
+    layer: 'below',
+    shapes: [],
+    }
+
+    var d_x = [], d_y = [], d_t = [], d_t1 = [];
+
+    for (x = 0; x < 16; x++)
+        for (y = 0; y<14; y++) {        
+            exists = mpmts.find((m)=>{ return m.x==x && m.y==y})
+            if (exists) {
+                d_x.push(x+.5);
+                d_y.push(y+.5);
+                d_t.push(id_to_short(exists['id']));
+                d_t1.push(`${exists['s']}`);
+                c = id_and_status_to_colors(exists['id'],status_from_table(status_table,exists['cid']));
+                layout.shapes.push({
+                    type: 'path',
+                    fillcolor: c[1],
+                    line: {
+                        color: c[0]
+                    },
+                    path: `M ${x+0.05} ${y+0.33} L ${x+0.33} ${y+0.05} L ${x+0.66} ${y+0.05} L ${x+0.95} ${y+0.33} L ${x+0.95} ${y+0.66} L ${x+0.66} ${y+0.95} L ${x+0.33} ${y+0.95} L ${x+0.05} ${y+0.66}  Z`,
+                });
+            }
+        }
+
+    const legend = [
+        {"n": "mPMT, unknown state", "c": id_and_status_to_colors("mPMT",0)},
+        {"n": "mPMT, ok, no HV", "c": id_and_status_to_colors("mPMT",1)},
+        {"n": "mPMT, ok, HV on", "c": id_and_status_to_colors("mPMT",2)},
+        {"n": "mPMT, minor problem", "c": id_and_status_to_colors("mPMT",3)},
+        {"n": "mPMT, major problem", "c": id_and_status_to_colors("mPMT",4)},
+        {"n": "mPMT, stale information", "c": id_and_status_to_colors("mPMT",5)},
+        {"n": "mPMT, firmware done, just info", "c": id_and_status_to_colors("mPMT",9)},
+        {"n": "Far detector", "c": id_and_status_to_colors("FD",0)},
+        {"n": "Empty slot", "c": id_and_status_to_colors("Empty",0)},
+    ];
+
+    var yy = 10.0, xx = 12.0, l_x = [], l_y = [], l_t = [];
+
+    legend.forEach((l) => {
+        layout.shapes.push({
+            type: 'path',
+            fillcolor: l.c[1],
+            line: {
+                color: l.c[0]
+            },
+            path: `M ${xx} ${yy+0.05} L ${xx+3} ${yy+0.05} L ${xx+3} ${yy+0.35} L ${xx} ${yy+0.35} Z`,
+        });
+        l_x.push(xx+1.5);
+        l_y.push(yy+0.2);
+        l_t.push(l.n);
+        yy += 0.4;    
+    });
+
+
+    var plotdata = [{
+    x: d_x,
+    y: d_y,
+    mode: 'text',
+    text: d_t1,
+    textposition: 'top_center',
+    type: 'scatter',
+    hoverinfo: 'skip',
+    textfont: {
+        color: 'rgb(0,0,0)',
+        size: 12,
+        weight: 100,
+    }
+    },
+    {
+    x: d_x,
+    y: d_y,
+    mode: 'text',
+    text: d_t,
+    textposition: 'bottom_center',
+    type: 'scatter',
+    hoverinfo: 'skip',
+    textfont: {
+        color: 'rgb(0,0,0)',
+        size: 16,
+        weight: 200,
+    }
+    },
+    {
+    x: l_x,
+    y: l_y,
+    mode: 'text',
+    text: l_t,
+    textposition: 'middle_center',
+    type: 'scatter',
+    hoverinfo: 'skip',
+    textfont: {
+        color: 'rgb(0,0,0)',
+        size: 16,
+        weight: 200,
+    }
+    },
+    {
+    x: d_x,
+    y: d_y,
+    mode: 'markers',
+    type: 'scatter',    
+    hoverinfo: 'none',
+    marker: { size: 1,
+    opacity: 0.01 }
+    }];
+
+    Plotly.newPlot('mpmts', plotdata, layout);
+
+    var plot = document.getElementById('mpmts');
+    
+    plot.on('plotly_click', function(data){
+        if (data.event.button==0 && data.points.length>0) {            
+            x = data.points[0].x;
+            y = data.points[0].y;
+            exists = mpmts.find((m)=>{ return Math.abs(m.x+0.5-x)<0.45 && Math.abs(m.y+0.5-y)<0.45});
+            if (exists && exists['id'].toUpperCase().startsWith("MPMT")) {                
+                if (handler) {
+                    handler(exists);
+                }
+            }            
+        }        
+    });
+}
+
+function handle_click(mpmt) {
+    var e = document.getElementById('mpmt');
+    e.innerHTML = spinner(`Loading data for ${mpmt['cid']}`);
+
+}
+
+
+// use like: [{'cid':9, 'status': 1},{'cid':26, 'status': 2},{'cid':119, 'status': 3},{'cid':117, 'status': 4},{'cid':118, 'status': 5}]
+do_plot([
+    {'cid':45, 'status': 9},
+    {'cid':7, 'status': 9},
+    {'cid':92, 'status': 9},
+    {'cid':107, 'status': 9},
+    {'cid':26, 'status': 9},
+    {'cid':118, 'status': 9},
+    {'cid':13, 'status': 9},
+    {'cid':42, 'status': 9},
+    {'cid':21, 'status': 9},
+    {'cid':34, 'status': 9},
+    {'cid':99, 'status': 9},
+    {'cid':12, 'status': 9},
+    {'cid':40, 'status': 9},
+    {'cid':85, 'status': 9},
+    {'cid':46, 'status': 9},
+    {'cid':52, 'status': 9},
+    {'cid':15, 'status': 9},
+    {'cid':14, 'status': 9},
+    {'cid':110, 'status': 9},
+    {'cid':94, 'status': 9},
+    {'cid':103, 'status': 9},
+    {'cid':77, 'status': 9},
+    {'cid':93, 'status': 9},
+    {'cid':73, 'status': 9},
+    {'cid':8, 'status': 9},
+    {'cid':36, 'status': 9},
+    {'cid':104, 'status': 9},
+    {'cid':32, 'status': 9},
+    {'cid':105, 'status': 9},
+    {'cid':71, 'status': 9},
+    {'cid':41, 'status': 9},
+    {'cid':3, 'status': 9},
+    {'cid':6, 'status': 9},
+    {'cid':9, 'status': 9},
+    {'cid':17, 'status': 9},
+    {'cid':20, 'status': 9},
+    {'cid':23, 'status': 9},
+    {'cid':28, 'status': 9},
+    {'cid':29, 'status': 9},
+    {'cid':31, 'status': 9},
+    {'cid':130, 'status': 9},
+    {'cid':131, 'status': 9},
+    {'cid':132, 'status': 9},
+    {'cid':33, 'status': 9},
+    {'cid':35, 'status': 9},
+    {'cid':38, 'status': 9},
+    {'cid':39, 'status': 9},
+    {'cid':43, 'status': 9},
+    {'cid':44, 'status': 9},
+    {'cid':47, 'status': 9},
+    {'cid':76, 'status': 9},
+    {'cid':78, 'status': 9},
+    {'cid':79, 'status': 9},
+    {'cid':82, 'status': 9},
+    {'cid':83, 'status': 9},
+    {'cid':84, 'status': 9},
+    //{'cid':87, 'status': 9}, has giant SD problem
+    {'cid':89, 'status': 9},
+    {'cid':95, 'status': 9},
+    {'cid':96, 'status': 9},
+    {'cid':97, 'status': 9},
+    {'cid':98, 'status': 9},
+    {'cid':108, 'status': 9},
+    {'cid':111, 'status': 9},
+    {'cid':113, 'status': 9},
+    {'cid':115, 'status': 9},
+    {'cid':117, 'status': 9},
+    {'cid':119, 'status': 9},
+    {'cid':10, 'status': 9},
+    {'cid':16, 'status': 9},
+    {'cid':30, 'status': 9},
+    {'cid':50, 'status': 9},
+    {'cid':51, 'status': 9},
+    {'cid':80, 'status': 9},
+],handle_click);
+
+</script>
+
+<!--#include virtual="/includes/footer.html" -->
