@@ -540,8 +540,13 @@ export async function DrawRootPlotDB(div, plotname, plotver=-1){
 		//console.log("tmp_tab is ",tmp_tab,", inner html is ",tmp_tab.innerHTML);
 		//console.log("tmp_tab rows is ",tmp_tab.rows);
 		
-		var data = tmp_tab.rows[1].cells[0].innerText;
-		var drawoptions = tmp_tab.rows[1].cells[1].innerText;
+		if(tmp_tab.rows.length <1){
+			div.innerHTML = `"<h3>Can not find plot ${plotname}</h3>`;
+			return;
+		}
+		
+		let data = tmp_tab.rows[1].cells[0].innerText;
+		let drawoptions = tmp_tab.rows[1].cells[1].innerText;
 		
 		//console.log("data was '",data,"'");
 		//console.log("draw_options was '",drawoptions,"'");

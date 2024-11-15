@@ -187,7 +187,8 @@ function PopulateVersions(selectedVer=-1){
 	let selectedVerIndex=-1;
 	let versionarr = versionMap.get(selectedName);
 	// sort descending
-	versionarr.sort();
+	// we have to give it a weird prototype as by default it sorts alphabetically
+	versionarr.sort(function(a, b) { return a - b; });
 	versionarr.reverse();
 	
 	// if not told what version to select, look it up (to preserve user selection)
