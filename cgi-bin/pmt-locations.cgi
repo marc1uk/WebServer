@@ -1,17 +1,27 @@
 #!/bin/bash
 
-echo 'Content-type: text/csv'
+if [[ -z $PGHOST ]]; then
+  export PGHOST=192.168.10.17
+fi
+if [[ -z $PGUSER ]]; then
+  export PGUSER=root
+fi
 
-psql -h localhost \
-     -U root \
-     -d daq \
+psql -d daq \
      --csv \
      -c 'select id, x, y, z, location from pmt order by id' \
      2>&1 |
 {
-  read line
-  [[ $line =~ ^ERROR: ]] && echo 'Status: 400'
+  IFS= read line
+  if [[ $line =~ ^ERROR: ]] || [[ $line =~ ^psql: ]]; then
+    echo 'Content-type: text/plain'
+    echo 'Status: 400'
+  else
+    echo 'Content-type: text/csv'
+  fi
   echo
-  [[ -n $line ]] && echo "$line"
+  if [[ -n $line ]]; then
+    echo "$line"
+  fi
   exec cat
 }

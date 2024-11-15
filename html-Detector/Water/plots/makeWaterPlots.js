@@ -69,7 +69,7 @@ let plots = [
          },
          yaxis: {
             title: "Pressure [bar]",
-            range: [0, 5]
+            range: [0, 7]
          },
          //remove this if we don't have a second y axis 
          yaxis2: {
@@ -163,7 +163,7 @@ let plots = [
          },
          yaxis: {
             title: "Water temp [°C]",
-            range: [12.7, 16]
+            range: [12.7, 20]
          },
       }
    },

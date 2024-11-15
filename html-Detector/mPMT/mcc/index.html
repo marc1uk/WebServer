@@ -1,0 +1,606 @@
+<head>
+<title>MCC status page</title>
+
+<style>
+    #mpmt-svg-symbols{
+        display: none;
+    }
+table.mpmttable {
+  border: 1px solid #3F51B5;
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
+table.mpmttable td, table.mpmttable th {
+  border: 1px solid #AAAAAA;
+  padding: 3px 2px;
+}
+table.mpmttable tbody td {
+  font-size: 14px;
+}
+
+table.mpmttable tbody tr.separating-row {
+  border-top: 3px solid black;
+}
+
+table.mpmttable tbody tr.redback {
+    background-color: #ed9494;
+}
+table.mpmttable tbody tr.grayback {
+    background-color: #d4d4d4;
+}
+
+table.mpmttable tbody tr.staleback {
+    background-color: #ffb8e5;
+}
+
+table.mpmttable tbody.staleback {
+    background-color: #ffb8e5;
+}
+
+table.mpmttable tbody tr.yellowback {
+    background-color: #f4ff60;
+}
+
+table.mpmttable tbody td.staleback {
+    background-color: #ffb8e5;
+}
+table.mpmttable tbody td.whiteback {
+    background-color: #ffffff;
+}
+
+table.mpmttable thead {
+  background: #3F51B5;
+  border-bottom: 2px solid #444444;
+}
+table.mpmttable thead th {
+  font-size: 15px;
+  font-weight: bold;
+  color: #FFFFFF;
+  border-left: 2px solid #D0E4F5;
+  white-space: nowrap; 
+}
+table.mpmttable thead th:first-child {
+  border-left: none;
+}
+
+table.mpmttable tfoot {
+  font-size: 14px;
+  font-weight: bold;
+  color: #FFFFFF;
+  background: #B6C1FF;
+  border-top: 2px solid #444444;
+}
+table.mpmttable tfoot td {
+  font-size: 14px;
+}
+
+table.mpmttable tbody td.rightaligned {
+  text-align: right;
+}
+
+table.mpmttable tbody td.centered {
+  text-align: center;
+}
+
+table.mpmttable tfoot .links {
+  text-align: right;
+}
+table.mpmttable tfoot .links a{
+  display: inline-block;
+  background: #3F51B5;
+  color: #FFFFFF;
+  padding: 2px 8px;
+  border-radius: 5px;
+}
+
+table.mpmttable tbody td { 
+    white-space: nowrap; 
+}
+
+table.mpmttable th:last-child { 
+    width: 100%; 
+}
+
+span.mpmtred {
+    color: red;
+}
+
+span.mpmtgreen {
+    color: darkgreen;
+}
+
+span.mpmtgray {
+    color: #222222;
+}
+
+span.mpmtblack {
+    color: #000000;
+}
+
+div.pmtfont {
+    font-size: x-large;
+    white-space: nowrap;
+}
+
+input.mpmtgroupcheck {
+    height: 1.5em;
+    width: 1.5em;
+}
+
+.tooltip-no-underline {
+    border-bottom: none;
+}
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -60px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+span.mccgreen {
+    color: darkgreen;
+    font-size: larger;
+}
+
+span.mccred {
+    color: red;
+    font-size: larger;
+}
+
+/* Overlay to darken the background */
+.mpmt-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent dark overlay */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000; /* High z-index to appear above other elements */
+}
+
+/* Modal dialog box styling */
+.mpmt-modal-content {
+    background-color: #fff;
+    padding: 20px;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+/* Close button styling */
+.mpmt-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* General button styles */
+.mpmt-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 0 5px;
+    transition: background-color 0.3s;
+}
+
+/* OK button */
+.mpmt-button-ok {
+    background-color: #4CAF50; /* Green */
+    color: white;
+}
+
+.mpmt-button-ok:hover {
+    background-color: #45a049;
+}
+
+/* Cancel button */
+.mpmt-button-cancel {
+    background-color: #f44336; /* Red */
+    color: white;
+}
+
+.mpmt-button-cancel:hover {
+    background-color: #d32f2f;
+}
+
+p.mcc-message-text {
+    font-size: 16pt;
+    font-weight: bold;
+}
+
+
+    </style>
+    <svg id="mpmt-svg-symbols" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="mpmt-circle-red" viewBox="0 0 16 16"  width="16" height="16">
+        <circle
+       style="fill:#ff0000;fill-opacity:1;stroke:#ea331b;stroke-width:0.244834"
+       id="path184"
+       cx="3.6016788"
+       cy="3.5093286"
+       r="2.5612018" />
+    </symbol>
+    </svg>
+
+</head>
+
+<!--#include virtual="/includes/header.html" -->
+<!--#include virtual="../subheader.html" -->
+<!--#include virtual="/includes/drawer.html" -->
+<h4 style="text-align: center;">MCC online status table</h4>
+<!--<div>Legend: <span class='mpmtred'>&#x2611; - PMT with <b>HV ON</b></span>; 
+<span style="color: darkgreen;">&#x2610; - PMT with HV OFF</span>; 
+<span style="color: black;">&#x2612; - PMT DISABLED</span></div> -->
+<div id="lastupdate"></div>
+<div class="mpmt-modal-overlay" id="confirm-dialog" style="display:none;">
+    <div class="mpmt-modal-content">        
+        <h3>Confirm MCC Write</h3>
+        <p class='mcc-message-text' id='mcc-message'></p>
+        <button class="mpmt-button mpmt-button-ok" onclick="writeconfirmed()">OK</button>
+        <button class="mpmt-button mpmt-button-cancel" onclick="writecacelled()">Cancel</button>
+    </div>
+</div>
+<div id='mpmttable'></div>
+
+<script src='../js/mpmtcommon.js'></script>
+<script src='../js/modal.js'></script>
+<script>
+
+var localcontext = {}
+
+const mcc_status_table_columns = ["MCC","Channel","Voltage V","Current mA","Power W","mPMT","Patch panel/Port","Cable","On/Off","Execute",""];
+
+function sendMccCommand(btn,mcc) {
+    el = document.getElementsByName(`mccgroup${mcc}`)
+    ary = [0,0,0,0,0,0,0,0]
+    if (el.length) {
+            el.forEach((a) => {
+                if (a.checked) {
+                    ary[a.dataset.chan]=1
+                }
+            })
+    }
+    str = ""
+    ary.map((a) => str += `${a}`)    
+    localcontext["writemcc"] = {
+        'mcc':mcc,
+        'config':str
+    }
+    m = document.getElementById('mcc-message')
+    while(m.firstChild) m.removeChild(m.lastChild);
+    p = document.createElement("p")
+    p.appendChild(document.createTextNode(`Do you want to send '${str}' config`))
+    p.classList.add('mcc-message-text')
+    m.appendChild(p)
+    p = document.createElement("p")
+    p.appendChild(document.createTextNode(`to MCC ${mcc}?`))
+    p.classList.add('mcc-message-text')
+    m.appendChild(p)
+    document.getElementById('confirm-dialog').style.display = 'flex';
+}
+
+function writecacelled() {
+    localcontext["writemcc"] = {}
+    document.getElementById('confirm-dialog').style.display = 'none';
+}
+
+async function writeconfirmed() {
+    w = localcontext["writemcc"]
+    document.getElementById('confirm-dialog').style.display = 'none';
+    var body = `mcc=${w.mcc}&config=${w.config}`;
+    h = new Headers()
+    h.append("Content-Type", "application/x-www-form-urlencoded")
+    await ajaxcall({
+        "url": "/cgi-bin/writemcc.cgi",
+        "headers": h,
+        "method": "POST",
+        "body": body
+    }).catch((e) => {});
+}
+
+
+function update_group_buttons() {
+    localcontext['mccgroupcheck'] = []
+    for (mcc = 0;mcc <14;mcc++) {
+        el = document.getElementsByName(`mccgroup${mcc}`)        
+        if (el.length) {
+            el.forEach((a) => {
+                if (a.checked) {
+                    localcontext['mccgroupcheck'].push(a.id);
+                    ret = true;
+                }
+            })
+        }        
+    }
+}
+
+function fillstate() {
+    localcontext['mccgroupcheck'] = []
+    for (mcc=0; mcc<14; mcc++) {
+        for (chan=0;chan<8;chan++) {
+                localcontext['mccgroupcheck'].push(`mpmtgroup_${mcc}_${chan}`);
+        }
+    }
+}
+
+
+function build_table(data,age) {
+    thisrow = data[0]
+    rootel = document.getElementById("mpmttable");
+    t = document.createElement("table");
+    t.classList.add('mpmttable')
+    th = document.createElement("thead");
+    mcc_status_table_columns.forEach(element => {
+        el = document.createElement("th");
+        tx = document.createTextNode(element);
+        el.appendChild(tx);
+        th.appendChild(el);
+    });
+    
+    tb = document.createElement("tbody");
+    if (age>60) 
+        tb.classList.add('staleback')
+
+    for (mcc=0; mcc<14; mcc++) {
+        for (chan=0;chan<8;chan++) {
+            noV = false;
+            noData = true;
+            lowPower = false;
+            mpmt = undefined
+            filtpp = ppmap.filter((a) => a.mccno==mcc && a.mccchan==chan)
+            if (filtpp.length>0) {
+                mpmt = filtpp[0]
+            }
+
+
+            r = document.createElement("tr");
+            if (mcc>0 && chan==0)
+                r.classList.add('separating-row')
+            cell = document.createElement("td");
+            cell.classList.add('centered')
+            cell.appendChild(document.createTextNode(`${mcc}`))
+            r.appendChild(cell)
+            cell = document.createElement("td");
+            cell.classList.add('centered')
+            cell.appendChild(document.createTextNode(`${chan}`))
+            r.appendChild(cell)
+            // and now data 
+            cell = document.createElement("td");
+            cell.classList.add('rightaligned')
+            key = `mcc${mcc}_chan${chan}_voltage_V`
+            value = ""
+            if (key in thisrow['data']) {
+                value = thisrow['data'][key]
+                value = Number.parseFloat(value).toFixed(1);
+                if (value<10) {
+                    noV = true;
+                }
+                noData = false;
+            }
+            cell.appendChild(document.createTextNode(value))
+            r.appendChild(cell)
+            cell = document.createElement("td");
+            cell.classList.add('rightaligned')
+            key = `mcc${mcc}_chan${chan}_current_mA`
+            value = ""
+            if (key in thisrow['data']) {
+                value = thisrow['data'][key]
+                noData = false;
+            }
+            cell.appendChild(document.createTextNode(value))
+            r.appendChild(cell)
+            cell = document.createElement("td");
+            cell.classList.add('rightaligned')
+            key = `mcc${mcc}_chan${chan}_power_W`
+            value = ""
+            if (key in thisrow['data']) {
+                value = thisrow['data'][key]
+                value = Number.parseFloat(value).toFixed(2);
+                if (value<16)
+                    lowPower = true;
+                noData = false;
+            }
+            cell.appendChild(document.createTextNode(value))
+            r.appendChild(cell)
+            
+            cell = document.createElement("td");
+            if (mpmt) {
+                cell.appendChild(document.createTextNode(`MPMT${mpmt.cid}`))
+            } else {
+                cell.appendChild(document.createTextNode(""))
+            }
+            r.appendChild(cell)
+            cell = document.createElement("td");
+            if (mpmt) {
+                pp = ""
+                if (mpmt.patchno>0 && mpmt.patchport>0) {
+                    pp = `${mpmt.patchno}/${mpmt.patchport}`
+                }                    
+                cell.appendChild(document.createTextNode(pp))
+            } else {
+                cell.appendChild(document.createTextNode(""))
+            }
+            r.appendChild(cell)
+            cell = document.createElement("td");
+            if (mpmt) {
+                pp = ""
+                if (mpmt.cable>=0) {
+                    pp = `${mpmt.cable}`
+                }
+                cell.appendChild(document.createTextNode(pp))
+            } else {
+                cell.appendChild(document.createTextNode(""))
+            }
+            r.appendChild(cell)
+            
+            cell = document.createElement("td");
+            if (!noData && mpmt) {
+                rowcheck = document.createElement("input");
+                rowcheck.type = 'checkbox';
+                rowcheck.name = `mccgroup${mpmt.mccno}`;
+                rowcheck.value = mpmt.mcchan;
+                rowcheck.id = `mpmtgroup_${mpmt.mccno}_${mpmt.mccchan}`;
+                rowcheck.classList.add('mpmtgroupcheck');
+                rowcheck.setAttribute("data-mcc",mpmt.mccno);
+                rowcheck.setAttribute("data-chan",mpmt.mccchan);
+                rowcheck.addEventListener('click', update_group_buttons);
+                if ('mccgroupcheck' in localcontext) {
+                    if (localcontext['mccgroupcheck'].find((a) => a == rowcheck.id))
+                        rowcheck.checked = true;
+                }
+                cell.appendChild(rowcheck)
+            } else {
+                cell.appendChild(document.createTextNode(""))
+            }
+            r.appendChild(cell)
+
+            if (chan==0) {
+                cell = document.createElement("td");
+                cell.classList.add('centered')
+                cell.rowSpan=8
+                cell.colSpan=1
+                if (age>60) 
+                    cell.classList.add('staleback')
+                    else
+                    if (!noData)
+                        cell.classList.add('whiteback')
+                if (!noData && mpmt) {
+                    btnOn = document.createElement("button");
+                    btnOn.appendChild(document.createTextNode("Write"));
+                    btnOn.id = `mccbtnon${mpmt.mccno}`;
+                    btnOn.addEventListener('click',sendMccCommand.bind(this,btnOn,mpmt.mccno));
+                    cell.appendChild(btnOn);
+                } else {
+                    cell.appendChild(document.createTextNode(""))
+                }
+                r.appendChild(cell)
+            }
+
+            cell = document.createElement("td");
+            cell.appendChild(document.createTextNode(""))
+            r.appendChild(cell)
+
+            if (noData) {
+                r.classList.add('grayback');
+            } else {
+                if (noV) {
+                    r.classList.add('redback');
+                }
+                if (lowPower && !noV) {
+                    r.classList.add('yellowback');
+                }
+            }
+
+            tb.appendChild(r)
+        }
+    }
+
+    t.appendChild(th);
+    
+    t.appendChild(tb);
+    rootel.appendChild(t);
+}
+
+async function rebuildtable() {
+    mcc = await getLastMCC();
+    var age = 0
+    mcctimestamp = ""
+    if (mcc.length>0) {
+        d = mcc[0]['time']
+        mcctimestamp = new Date(d).toLocaleString();
+        age = (Date.parse(new Date()) - Date.parse(d))/1000;
+        age = Number.parseFloat(age).toFixed(0);
+    }
+    rootel = document.getElementById("mpmttable");
+    while(rootel.firstChild) rootel.removeChild(rootel.lastChild);
+    build_table(mcc,age);
+    lu = document.getElementById("lastupdate");
+    while(lu.firstChild) lu.removeChild(lu.lastChild);
+    updated = new Date().toLocaleString();
+
+    d = document.createElement('div')
+    d.appendChild(document.createTextNode("Last update: "))
+    span = document.createElement('span')
+    span.classList.add('mccgreen')
+    span.appendChild(document.createTextNode(`${updated}`))
+    d.appendChild(span)
+    d.appendChild(document.createTextNode(", MCC report timestamp: "))
+    span = document.createElement('span')
+    if (age>60)
+        span.classList.add('mccred')
+    else
+        span.classList.add('mccgreen')
+    span.appendChild(document.createTextNode(`${mcctimestamp}`))
+    d.appendChild(span)
+    d.appendChild(document.createTextNode(", Age: "))
+    span = document.createElement('span')
+    if (age>60)
+        span.classList.add('mccred')
+    else
+        span.classList.add('mccgreen')
+    span.appendChild(document.createTextNode(`${age}`))
+    d.appendChild(span)
+    d.appendChild(document.createTextNode(" s"))
+
+    lu.appendChild(d);
+ }
+
+ async function mpmttimer() {
+    await rebuildtable();
+    window.setTimeout(mpmttimer, 5000);
+ }
+
+document.addEventListener("DOMContentLoaded", async function () {
+    window.setTimeout(mpmttimer, 5000);
+    fillstate();
+    rebuildtable();
+});
+
+
+</script>
+
+<!--#include virtual="/includes/footer.html" -->

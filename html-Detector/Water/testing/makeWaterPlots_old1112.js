@@ -69,21 +69,20 @@ let plots = [
          },
          yaxis: {
             title: "Pressure [bar]",
-            range: [0, 7]
+            range: [0, 4]
          },
          //remove this if we don't have a second y axis 
          yaxis2: {
             title: "Flow [t/hr]", // Use the title from y2_plot1
             overlaying: 'y', // Overlay on the primary y-axis
             side: 'right', // Position the y2 axis on the right side
-            range: [2, 2.5] // Set the range from y2_plot1
+            range: [3, 4] // Set the range from y2_plot1
          }
       }
    },
    {
       graphDiv: document.getElementById("graph_2"), // The div element for the first plot
-      keys: ['UT1_Depth', 'LT1_Level', 'PT5_Depth'], // List of keys related to the plot
-      y2keys: ['PT5_Depth'],
+      keys: ['UT1_Depth', 'LT1_Level', 'PT6_Depth', 'PT5_Depth'], // List of keys related to the plot
       selectedRange: 8 * 60 * 60 * 1000,
       data: [], // Initially an empty array for data
       layout: {
@@ -101,20 +100,14 @@ let plots = [
          },
          yaxis: {
             title: "Detector Level [m]",
-            range: [3.28, 3.31]
-         },
-         yaxis2: {
-            title: "Detector Level, PT-5 [m]", // Use the title from y2_plot1
-            overlaying: 'y', // Overlay on the primary y-axis
-            side: 'right', // Position the y2 axis on the right side
-            range: [3.2, 3.3] // Set the range from y2_plot1
+            range: [3.2, 3.4]
          }
       }
    },
    {
       graphDiv: document.getElementById("graph_3"), // The div element for the first plot
-      keys: ['UT1_Conductivity', 'QC1_Conductivity', 'QC2_Conductivity', 'TDS','Salinity'], // List of keys related to the plot
-      y2keys: ['UT1_Conductivity','TDS'],
+      keys: ['QC1_Conductivity', 'QC2_Conductivity', 'UT1_Conductivity'], // List of keys related to the plot
+      y2keys: ['UT1_Conductivity'],
       selectedRange: 12 * 60 * 60 * 1000,
       data: [], // Initially an empty array for data
       layout: {
@@ -131,21 +124,21 @@ let plots = [
             rangeselector: selectorOptions
          },
          yaxis: {
-            title: "QC* Water Quality [μS/cm] & Salinity",
-            range: [0, 0.4]
+            title: "Water Quality [μS/cm]",
+            range: [0, 0.5]
          },
          //remove this if we don't have a second y axis 
          yaxis2: {
-             title: "UT-1 Water Quality & TDS [a.u.]", // Use the title from y2_plot1
-             overlaying: 'y', // Overlay on the primary y-axis
-             side: 'right', // Position the y2 axis on the right side
-             range: [0, 80] //[60, 220] // [2, 6.8] // Set the range from y2_plot1
-          }
+            title: "'Water Quality [μS/cm]", // Use the title from y2_plot1
+            overlaying: 'y', // Overlay on the primary y-axis
+            side: 'right', // Position the y2 axis on the right side
+            range: [3, 8] // Set the range from y2_plot1
+         }
       }
    },
    {
       graphDiv: document.getElementById("graph_4"), // The div element for the first plot
-      keys: ['UT1_Temperature','QC1_Temperature','QC2_Temperature'], // List of keys related to the plot
+      keys: ['UT1_Temperature'], // List of keys related to the plot
       selectedRange: 24 * 60 * 60 * 1000,
       data: [], // Initially an empty array for data
       layout: {
@@ -163,7 +156,7 @@ let plots = [
          },
          yaxis: {
             title: "Water temp [°C]",
-            range: [12.7, 20]
+            range: [20, 26]
          },
       }
    },
@@ -188,7 +181,7 @@ let plots = [
          },
          yaxis: {
             title: "Retention Tank PT3 [m]",
-            range: [0.3, 0.7]
+            range: [0.3, 1.5]
          },
          //remove this if we don't have a second y axis 
          yaxis2: {
@@ -197,30 +190,6 @@ let plots = [
             side: 'right', // Position the y2 axis on the right side
             range: [-0.5, 1.5] // Set the range from y2_plot1
          }
-      }
-   },
-   {
-      graphDiv: document.getElementById("graph_6"), // The div element for the first plot
-      keys: ['LeakDetector'], // List of keys related to the plot
-      selectedRange: 12 * 60 * 60 * 1000,
-      data: [], // Initially an empty array for data
-      layout: {
-         title: {
-            text: "Leak Detector",
-            font: { size: 16 },
-            yanchor: 'top',
-            xanchor: 'center',
-            y: 0.95, // Adjust this value to move the title down
-            x: 0.5, // Center the title horizontally
-         },
-         xaxis: {
-            title: "Time/ UTC",
-            rangeselector: selectorOptions
-         },
-         yaxis: {
-            title: "On/Off",
-            range: [-0.5, 1.5]
-         },
       }
    }
 
@@ -243,7 +212,6 @@ function gettable(command) { //generic funcion for returning SQL table
       xhr.send(dataString);
       xhr.onreadystatechange = function () {
          if (this.readyState == 4 && this.status == 200) {
-            console.log(`Response: ${xhr}`);;
             resolve(xhr.responseText);
          }
          //	    else reject(new Error('error loading'));
@@ -253,6 +221,7 @@ function gettable(command) { //generic funcion for returning SQL table
 
 async function getTimeDataForDevice(deviceName, time_option) {
    const selectedDevice = deviceName; // Fixed device value
+   // console.log("Selected Device: ", selectedDevice); // Log the selected device
 
    if (time_option === null) {
       var command = "select * from monitoring where device='" + selectedDevice + "' order by time asc";
@@ -268,8 +237,6 @@ async function getTimeDataForDevice(deviceName, time_option) {
 
       var tempDiv = document.createElement("div");
       tempDiv.innerHTML = result;
-
-      console.log(`Query Result: ${result}`);
 
       // Get the table from the temporary div
       var table = tempDiv.querySelector("#table");
@@ -336,7 +303,7 @@ function createSinglePlot(plot, xdata, ydata, now) {
    //add the range using the selected range 
    plot.layout.xaxis.range = [lowerLimit.toISOString(), now.toISOString()];
 
-   // console.log("graphdiv", plot.graphDiv)
+   console.log("graphdiv", plot.graphDiv)
    Plotly.purge(plot.graphDiv); // Clear any existing plot
    Plotly.newPlot(plot.graphDiv, plot.data, plot.layout); // Plot the data
 
@@ -344,7 +311,7 @@ function createSinglePlot(plot, xdata, ydata, now) {
 }
 
 function updateSinglePlot(plot, xdata_new, ydata_new, now) {
-   // console.log("Calling redrawplot")
+   console.log("Calling redrawplot")
 
    var lowerLimit = new Date(now.getTime() - plot.selectedRange);  // Subtract 1 hour
 
@@ -367,17 +334,15 @@ function updateSinglePlot(plot, xdata_new, ydata_new, now) {
 }
 
 async function makeplot(plotsVector) {
-   let now = new Date();  // Get current date and time
 
-   var time_option = null;  // avoid fetching all data to optimize the load time
-   var time_option_new = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-   console.log(`DateTime of 48 hrs ago: ${time_option_new}`);
+   var time_option = null;
 
    //set the range automatically
+   var now = new Date();  // Get current time
 
-   const [xdata, ydata] = await getTimeDataForDevice(deviceName, time_option_new);
+   const [xdata, ydata] = await getTimeDataForDevice(deviceName, time_option);
    for (iPlot = 0; iPlot < plotsVector.length; iPlot++) {
-      // console.log("graphdiv1", plotsVector[iPlot].graphDiv)
+      console.log("graphdiv1", plotsVector[iPlot].graphDiv)
       createSinglePlot(plotsVector[iPlot], xdata, ydata, now);
    }
 
@@ -385,7 +350,7 @@ async function makeplot(plotsVector) {
 
 
 async function updateplot(plotVector) { //fucntion to update plot
-   // console.log("updateplot vector")
+   console.log("updateplot vector")
    if (updating) return;
    updating = true;
 

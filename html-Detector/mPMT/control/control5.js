@@ -370,7 +370,7 @@ select.addEventListener('change', function() {
     }
 });
 
-const valid_options = [ "Status", "HV_OFF", "HV_ON", "Stop" ];
+const valid_options = [ "Status", "HV_OFF", "HV_ON", "Stop", "MPMTExcludedFromRun" ];
 
 function getcommands(){
     

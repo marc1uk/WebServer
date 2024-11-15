@@ -1,43 +1,42 @@
 <head>
-<title>ToolDAQ Webpage</title>
-<style>
-    .graph-container {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr); /* Creates two equal columns */
-        gap: 10px; /* Adds space between grid items */
-    }
-    .graph {
-        height: 500px; /* Fixed height for each graph */
-    }
-</style>
+  <title>ToolDAQ Webpage</title>
+  <link rel="stylesheet" type="text/css" href="../style/style.css" />
 </head>
-
-
-
 
 <!--#include virtual="/includes/header.html" -->
 <!--#include virtual="../subheader.html" -->
 <!--#include virtual="/includes/drawer.html" -->
 
-
 <script type="module" src="/includes/functions.js"></script>
+<script src="./js/Utils.js"></script>
+<script src="./js/MPMTDataQueryFunctions.js"></script>
 
 <div id="status"><br></div>
 
+<div class="mpmt-selection-box">
+  <p> CHOOSE MPMT: </p>
+  <div class="mpmt-selection-form">
+    <label for="fname">MPMT #</label>
+    <input type="text" id="mPMTTextBox" name="mPMTTextBox"><br><br>
+    <div class="submit-button-frame">
+      <button class="submit-button" id="findMPMTButton">Submit</button>
+    </div>
+  </div>
+
+</div>
+
 <!-- test plotting with jsroot -->
 <!-- NOTE: YOU MUST SPECIFY AT LEAST ONE DIMENSION TO YOUR PLOT DIV,
-     ELSE THE PLOT WILL BE 0 SIZE AND INVISIBLE -->
+         ELSE THE PLOT WILL BE 0 SIZE AND INVISIBLE -->
 <div class="graph-container">
-    <div id="graph_1" style="height: 500px;"></div>
-    <div id="graph_2" style="height: 500px;"></div>
-    <div id="graph_3" style="height: 500px;"></div>
-    <div id="graph_4" style="height: 500px;"></div>
-    <div id="graph_5" style="height: 500px;"></div>
-    <div id="graph_6" style="height: 500px;"></div>
+  <div id="graph_0" class="graph"></div>
+  <div id="graph_1" class="graph"></div>
+  <div id="graph_2" class="graph"></div>
+  <div id="graph_3" class="graph"></div>
+  <div id="graph_4" class="graph"></div>
+  <div id="graph_5" class="graph"></div>
 </div>
 
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-<!-- <script src="./demojsroot.js"></script> -->
-<script src="./makeMultiPMTPlots.js"></script>
-<script type="module" src="./statusbox.js"></script>
-<!--#include virtual="/includes/footer.html" -->
+
+<script src="./js/MakeMultiPMTPlots.js"></script>
