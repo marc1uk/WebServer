@@ -6,7 +6,6 @@
 }
 .graph {
   height: 500px; /* Fixed height for each graph */
-  visibility:hidden;
 }
 
 /* Dropdown Button */

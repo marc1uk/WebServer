@@ -6,6 +6,7 @@
 include
 lib
 */a.out
+html-Detector/Data
 # build products
 main
 NodeDaemon

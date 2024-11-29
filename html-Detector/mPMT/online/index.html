@@ -307,7 +307,7 @@ input.mpmtgroupcheck {
 
 var localcontext = {}
 
-const mpmt_status_table_columns = ["ID","Report age","HV_ON","HV operation","Clock status","Boot clock","Boot opening","Config","Load",""];
+const mpmt_status_table_columns = ["ID","Report age","HV_ON","HV operation","Clock status","Boot clock","Boot opening","Config","Load","Ver. app","Ver. system",""];
 
 const showToast = (
     message = "Sample Message",
@@ -414,6 +414,14 @@ function update_group_buttons() {
     el = document.getElementById("mpmtgroupon")
     if (el)
         el.disabled = !ret;
+}
+
+function twoline(a,b) {
+    so = document.createElement("span")
+    so.appendChild(document.createTextNode(a))
+    so.appendChild(document.createElement("br"))
+    so.appendChild(document.createTextNode(b))
+    return so
 }
 
 function build_table_row(rowdata,edata,devdata) {
@@ -625,6 +633,24 @@ function build_table_row(rowdata,edata,devdata) {
         sta.appendChild(btnLoad)
     }
     sta.appendChild(document.createTextNode(""));
+    r.appendChild(sta);
+
+    sta = document.createElement("td");
+    if (hasData && 'boot' in thisrow) {
+        if ('boot_app_version' in thisrow['boot'] && 'boot_app_version_generated' in thisrow['boot']) {
+            sta.appendChild(twoline(thisrow['boot']["boot_app_version"],thisrow['boot']["boot_app_version_generated"]))
+        }
+    } else
+        sta.appendChild(document.createTextNode(""));
+    r.appendChild(sta);
+
+    sta = document.createElement("td");
+    if (hasData && 'boot' in thisrow) {
+        if ("boot_system_version" in thisrow['boot'] && "boot_system_build" in thisrow['boot']) {
+            sta.appendChild(twoline(thisrow['boot']["boot_system_version"],thisrow['boot']["boot_system_build"]))
+        }
+    } else
+        sta.appendChild(document.createTextNode(""));
     r.appendChild(sta);
     
     sta = document.createElement("td");

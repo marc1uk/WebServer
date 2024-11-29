@@ -29,3 +29,11 @@ fifoArr = fifoArr.concat(newArr);
 // console.log("enqueue 3: ", fifoArr)
 return fifoArr;
 }
+
+const differentiate = (arr, dx) => {
+let resultArray = [];
+for(let i = 0; i < arr.length - 1; i++) {
+  resultArray[i] = (arr[i + 1] - arr[i]) / dx;
+}
+return resultArray;
+} 

@@ -23,17 +23,18 @@
  }
 
  async function getTimeDataForDevice(deviceName, time_option) {
-    const selectedDevice = deviceName; // Fixed device value
- 
-    if (time_option === null) {
-       var command = "select * from monitoring where device='" + selectedDevice + "' order by time desc limit 1000";
-       console.log("select SQL command: ", command);
-    } else {
-       //time option needs to be a string to specify only get data after the last available data
-       //this command is used to update and append
-       var command = "select * from monitoring where device='" + selectedDevice + "' and time>'" + time_option + "' order by time asc limit 10;  ";
-       console.log("select SQL command: ", command);
-    }
+   const selectedDevice = deviceName; // Fixed device value
+   console.log("Selected Device: ", selectedDevice); // Log the selected device
+
+   if (time_option === null) {
+      var command = "select * from monitoring where device like '" + selectedDevice + "' order by time desc limit 1000";
+      console.log("select SQL command: ", command);
+   } else {
+      //time option needs to be a string to specify only get data after the last available data
+      //this command is used to update and append
+      var command = "select * from monitoring where device like '" + selectedDevice + "' and time>'" + time_option + "' order by time asc limit 1000;  ";
+      console.log("select SQL command: ", command);
+   }
  
     // Call getTable command asynchronously
     try {

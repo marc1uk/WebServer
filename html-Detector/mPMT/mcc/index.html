@@ -508,11 +508,11 @@ function build_table(data,age) {
                     else
                     if (!noData)
                         cell.classList.add('whiteback')
-                if (!noData && mpmt) {
+                if (!noData && ppmap.filter((a) => a.mccno==mcc).length > 0 ) {
                     btnOn = document.createElement("button");
                     btnOn.appendChild(document.createTextNode("Write"));
-                    btnOn.id = `mccbtnon${mpmt.mccno}`;
-                    btnOn.addEventListener('click',sendMccCommand.bind(this,btnOn,mpmt.mccno));
+                    btnOn.id = `mccbtnon${mcc}`;
+                    btnOn.addEventListener('click',sendMccCommand.bind(this,btnOn,mcc));
                     cell.appendChild(btnOn);
                 } else {
                     cell.appendChild(document.createTextNode(""))
