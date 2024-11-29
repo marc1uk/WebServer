@@ -1,5 +1,5 @@
 "use strict;"
-import { GetPSQLTable, GetPlot } from "/includes/functions.js";
+import { GetPSQLTable } from "/includes/functions.js";
 
 var last;
 var updateinterval;
