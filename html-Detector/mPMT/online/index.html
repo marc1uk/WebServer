@@ -307,7 +307,7 @@ input.mpmtgroupcheck {
 
 var localcontext = {}
 
-const mpmt_status_table_columns = ["ID","Report age","HV_ON","HV operation","Clock status","Boot clock","Boot opening","Config","Load","Ver. app","Ver. system",""];
+const mpmt_status_table_columns = ["ID","Report age","HV_ON","HV operation","Clock status","Boot clock","Boot opening","Config","Load","Ver. app","Ver. system","Comment",""];
 
 const showToast = (
     message = "Sample Message",
@@ -651,6 +651,14 @@ function build_table_row(rowdata,edata,devdata) {
         }
     } else
         sta.appendChild(document.createTextNode(""));
+    r.appendChild(sta);
+    
+    sta = document.createElement("td");
+    if (rowdata["comment"]) {
+        sta.appendChild(document.createTextNode(rowdata["comment"]));
+    } else {
+        sta.appendChild(document.createTextNode(""));
+    }
     r.appendChild(sta);
     
     sta = document.createElement("td");

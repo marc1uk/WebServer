@@ -292,7 +292,7 @@ p.mcc-message-text {
 
 var localcontext = {}
 
-const mcc_status_table_columns = ["MCC","Channel","Voltage V","Current mA","Power W","mPMT","Patch panel/Port","Cable","On/Off","Execute",""];
+const mcc_status_table_columns = ["MCC","Channel","Voltage V","Current mA","Power W","mPMT","Patch panel/Port","Cable","On/Off","Execute","Comment",""];
 
 function sendMccCommand(btn,mcc) {
     el = document.getElementsByName(`mccgroup${mcc}`)
@@ -478,15 +478,15 @@ function build_table(data,age) {
             r.appendChild(cell)
             
             cell = document.createElement("td");
-            if (!noData && mpmt) {
+            if (!noData) {
                 rowcheck = document.createElement("input");
                 rowcheck.type = 'checkbox';
-                rowcheck.name = `mccgroup${mpmt.mccno}`;
-                rowcheck.value = mpmt.mcchan;
-                rowcheck.id = `mpmtgroup_${mpmt.mccno}_${mpmt.mccchan}`;
+                rowcheck.name = `mccgroup${mcc}`;
+                rowcheck.value = chan;
+                rowcheck.id = `mpmtgroup_${mcc}_${chan}`;
                 rowcheck.classList.add('mpmtgroupcheck');
-                rowcheck.setAttribute("data-mcc",mpmt.mccno);
-                rowcheck.setAttribute("data-chan",mpmt.mccchan);
+                rowcheck.setAttribute("data-mcc",mcc);
+                rowcheck.setAttribute("data-chan",chan);
                 rowcheck.addEventListener('click', update_group_buttons);
                 if ('mccgroupcheck' in localcontext) {
                     if (localcontext['mccgroupcheck'].find((a) => a == rowcheck.id))
@@ -508,7 +508,7 @@ function build_table(data,age) {
                     else
                     if (!noData)
                         cell.classList.add('whiteback')
-                if (!noData && ppmap.filter((a) => a.mccno==mcc).length > 0 ) {
+                if (!noData) {
                     btnOn = document.createElement("button");
                     btnOn.appendChild(document.createTextNode("Write"));
                     btnOn.id = `mccbtnon${mcc}`;
@@ -520,9 +520,20 @@ function build_table(data,age) {
                 r.appendChild(cell)
             }
 
+
+            cell = document.createElement("td");
+            cmt = mcccomments.filter((a) => a.mcc==mcc && a.chan==chan)
+	    if (cmt && cmt.length > 0) {
+                cell.appendChild(document.createTextNode(cmt[0].comment))
+            } else { 
+                cell.appendChild(document.createTextNode(""))
+            }
+            r.appendChild(cell)
+
             cell = document.createElement("td");
             cell.appendChild(document.createTextNode(""))
             r.appendChild(cell)
+
 
             if (noData) {
                 r.classList.add('grayback');
