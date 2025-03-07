@@ -235,49 +235,49 @@ async function GetTraces(name){
 	
 	if(name=="darktrace_pars"){
 		// mean, width
-		urls = new Map([["mean_LEDA", "http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=dark_mean&b=275_A&c="+histlength+"&e="+debug],
-		                ["width_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=dark_range&b=275_A&c="+histlength+"&e="+debug],
-		                ["mean_LEDB", "http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=dark_mean&b=275_B&c="+histlength+"&e="+debug],
-		                ["width_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=dark_range&b=275_B&c="+histlength+"&e="+debug]]);
+		urls = new Map([["mean_LEDA", "/cgi-bin/marcus/get_measurement_values.cgi?a=dark_mean&b=275_A&c="+histlength+"&e="+debug],
+		                ["width_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=dark_range&b=275_A&c="+histlength+"&e="+debug],
+		                ["mean_LEDB", "/cgi-bin/marcus/get_measurement_values.cgi?a=dark_mean&b=275_B&c="+histlength+"&e="+debug],
+		                ["width_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=dark_range&b=275_B&c="+histlength+"&e="+debug]]);
 	}
 	
 	else if(name=="rawtrace_pars"){
 		// min, max
-		urls = new Map([["min_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_min&b=275_A&c="+histlength+"&e="+debug],
-		                ["max_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_max&b=275_A&c="+histlength+"&e="+debug],
-		                ["min_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_min&b=275_B&c="+histlength+"&e="+debug],
-		                ["max_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_max&b=275_B&c="+histlength+"&e="+debug]]);
+		urls = new Map([["min_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=raw_min&b=275_A&c="+histlength+"&e="+debug],
+		                ["max_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=raw_max&b=275_A&c="+histlength+"&e="+debug],
+		                ["min_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=raw_min&b=275_B&c="+histlength+"&e="+debug],
+		                ["max_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=raw_max&b=275_B&c="+histlength+"&e="+debug]]);
 	}
 	
 	else if(name=="purefit_pars"){
 		// tfitresultptr (pars, success, chi2)
 		// MarcusAnalysis
-//		urls = new Map([["chi2","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_chi2&c="+histlength+"&e="+debug],
-//		                ["stretch_x","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_stretchx&c="+histlength+"&e="+debug],
-//		                ["stretch_y","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_stretchy&c="+histlength+"&e="+debug],
-//		                ["shift_x","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shiftx&c="+histlength+"&e="+debug],
-//		                ["shift_y","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shifty&c="+histlength+"&e="+debug],
-//		                ["linear_bg","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_linearcomp&c="+histlength+"&e="+debug],
-//		                ["shoulder_width","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shoulderwid&c="+histlength+"&e="+debug],
-//		                ["shoulder_amp","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shoulderamp&c="+histlength+"&e="+debug],
-//		                ["shoulder_pos","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shoulderpos&c="+histlength+"&e="+debug]]);
+//		urls = new Map([["chi2","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_chi2&c="+histlength+"&e="+debug],
+//		                ["stretch_x","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_stretchx&c="+histlength+"&e="+debug],
+//		                ["stretch_y","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_stretchy&c="+histlength+"&e="+debug],
+//		                ["shift_x","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shiftx&c="+histlength+"&e="+debug],
+//		                ["shift_y","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shifty&c="+histlength+"&e="+debug],
+//		                ["linear_bg","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_linearcomp&c="+histlength+"&e="+debug],
+//		                ["shoulder_width","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shoulderwid&c="+histlength+"&e="+debug],
+//		                ["shoulder_amp","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shoulderamp&c="+histlength+"&e="+debug],
+//		                ["shoulder_pos","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_shoulderpos&c="+histlength+"&e="+debug]]);
 		
 		// MatthewAnalysisStrikesBack
-		urls = new Map([["pure_scaling_A","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_scaling&b=275_A&c="+histlength+"&e="+debug],
-		                ["pure_translation_A","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_translation&b=275_A&c="+histlength+"&e="+debug],
-		                ["pure_stretch_A","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_stretch&b=275_A&c="+histlength+"&e="+debug],
-//		                ["gd_scaling_A","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=gd_scaling&b=275_A&c="+histlength+"&e="+debug],  // FIXME currently fixed to 0, fit sidebands only
-		                ["second_order_background_A","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=second_order_background&b=275_A&c="+histlength+"&e="+debug],
-		                ["first_order_background_A","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=first_order_background&b=275_A&c="+histlength+"&e="+debug],
-//		                ["zeroth_order_background_A","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=zeroth_order_background&b=275_A&c="+histlength+"&e="+debug]  // FIXME currently fixed to 0, redundant with pure_scaling due to incorrect implementation
+		urls = new Map([["pure_scaling_A","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_scaling&b=275_A&c="+histlength+"&e="+debug],
+		                ["pure_translation_A","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_translation&b=275_A&c="+histlength+"&e="+debug],
+		                ["pure_stretch_A","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_stretch&b=275_A&c="+histlength+"&e="+debug],
+//		                ["gd_scaling_A","/cgi-bin/marcus/get_measurement_values.cgi?a=gd_scaling&b=275_A&c="+histlength+"&e="+debug],  // FIXME currently fixed to 0, fit sidebands only
+		                ["second_order_background_A","/cgi-bin/marcus/get_measurement_values.cgi?a=second_order_background&b=275_A&c="+histlength+"&e="+debug],
+		                ["first_order_background_A","/cgi-bin/marcus/get_measurement_values.cgi?a=first_order_background&b=275_A&c="+histlength+"&e="+debug],
+//		                ["zeroth_order_background_A","/cgi-bin/marcus/get_measurement_values.cgi?a=zeroth_order_background&b=275_A&c="+histlength+"&e="+debug]  // FIXME currently fixed to 0, redundant with pure_scaling due to incorrect implementation
 
-		                ["pure_scaling_B","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_scaling&b=275_B&c="+histlength+"&e="+debug],
-		                ["pure_translation_B","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_translation&b=275_B&c="+histlength+"&e="+debug],
-		                ["pure_stretch_B","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=pure_stretch&b=275_B&c="+histlength+"&e="+debug],
-//		                ["gd_scaling_B","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=gd_scaling&b=275_B&c="+histlength+"&e="+debug],  // FIXME currently fixed to 0, fit sidebands only
-		                ["second_order_background_B","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=second_order_background&b=275_B&c="+histlength+"&e="+debug],
-		                ["first_order_background_B","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=first_order_background&b=275_B&c="+histlength+"&e="+debug]
-//		                ["zeroth_order_background_B","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=zeroth_order_background&b=275_B&c="+histlength+"&e="+debug]  // FIXME currently fixed to 0, redundant with pure_scaling due to incorrect implementation
+		                ["pure_scaling_B","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_scaling&b=275_B&c="+histlength+"&e="+debug],
+		                ["pure_translation_B","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_translation&b=275_B&c="+histlength+"&e="+debug],
+		                ["pure_stretch_B","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_stretch&b=275_B&c="+histlength+"&e="+debug],
+//		                ["gd_scaling_B","/cgi-bin/marcus/get_measurement_values.cgi?a=gd_scaling&b=275_B&c="+histlength+"&e="+debug],  // FIXME currently fixed to 0, fit sidebands only
+		                ["second_order_background_B","/cgi-bin/marcus/get_measurement_values.cgi?a=second_order_background&b=275_B&c="+histlength+"&e="+debug],
+		                ["first_order_background_B","/cgi-bin/marcus/get_measurement_values.cgi?a=first_order_background&b=275_B&c="+histlength+"&e="+debug]
+//		                ["zeroth_order_background_B","/cgi-bin/marcus/get_measurement_values.cgi?a=zeroth_order_background&b=275_B&c="+histlength+"&e="+debug]  // FIXME currently fixed to 0, redundant with pure_scaling due to incorrect implementation
 
                        ]);
 	}
@@ -285,101 +285,101 @@ async function GetTraces(name){
 	else if(name=="absfit_pars"){
 		// tfitresultptr (pars, success, chi2)
 		// MatthewAnalysisStrikesBack
-		urls = new Map([["y_scaling_A","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar0&b=275_A&c="+histlength+"&e="+debug],
-		                ["x_trans_A","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar1&b=275_A&c="+histlength+"&e="+debug],
-		                ["bg_exp_mag_A","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar2&b=275_A&c="+histlength+"&e="+debug],
-		                ["bg_exp_dk_rate_A","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar3&b=275_A&c="+histlength+"&e="+debug],
-//		                ["redundant_A","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar4&b=275_A&c="+histlength+"&e="+debug],
-		                ["const_off_A","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar5&b=275_A&c="+histlength+"&e="+debug],
-		                ["y_scaling_B","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar0&b=275_B&c="+histlength+"&e="+debug],
-		                ["x_trans_B","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar1&b=275_B&c="+histlength+"&e="+debug],
-		                ["bg_exp_mag_B","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar2&b=275_B&c="+histlength+"&e="+debug],
-		                ["bg_exp_dk_rate_B","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar3&b=275_B&c="+histlength+"&e="+debug],
-//		                ["redundant_B","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar4&b=275_B&c="+histlength+"&e="+debug],
-		                ["const_off_B","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar5&b=275_B&c="+histlength+"&e="+debug]]);
+		urls = new Map([["y_scaling_A","/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar0&b=275_A&c="+histlength+"&e="+debug],
+		                ["x_trans_A","/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar1&b=275_A&c="+histlength+"&e="+debug],
+		                ["bg_exp_mag_A","/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar2&b=275_A&c="+histlength+"&e="+debug],
+		                ["bg_exp_dk_rate_A","/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar3&b=275_A&c="+histlength+"&e="+debug],
+//		                ["redundant_A","/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar4&b=275_A&c="+histlength+"&e="+debug],
+		                ["const_off_A","/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar5&b=275_A&c="+histlength+"&e="+debug],
+		                ["y_scaling_B","/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar0&b=275_B&c="+histlength+"&e="+debug],
+		                ["x_trans_B","/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar1&b=275_B&c="+histlength+"&e="+debug],
+		                ["bg_exp_mag_B","/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar2&b=275_B&c="+histlength+"&e="+debug],
+		                ["bg_exp_dk_rate_B","/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar3&b=275_B&c="+histlength+"&e="+debug],
+//		                ["redundant_B","/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar4&b=275_B&c="+histlength+"&e="+debug],
+		                ["const_off_B","/cgi-bin/marcus/get_measurement_values.cgi?a=abs_fitpar5&b=275_B&c="+histlength+"&e="+debug]]);
 	}
 	
 	else if(name=="simplefit_pars"){
 		// custom object (chi2, TODO fit pars?)
-		urls = new Map([["peak1_chi2_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak1_chi2&b=275_A&c="+histlength+"&e="+debug],
-		                ["peak2_chi2_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak2_chi2&b=275_A&c="+histlength+"&e="+debug],
-		                ["peak1_chi2_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak1_chi2&b=275_B&c="+histlength+"&e="+debug],
-		                ["peak2_chi2_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak2_chi2&b=275_B&c="+histlength+"&e="+debug]]);
+		urls = new Map([["peak1_chi2_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak1_chi2&b=275_A&c="+histlength+"&e="+debug],
+		                ["peak2_chi2_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak2_chi2&b=275_A&c="+histlength+"&e="+debug],
+		                ["peak1_chi2_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak1_chi2&b=275_B&c="+histlength+"&e="+debug],
+		                ["peak2_chi2_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peak2_chi2&b=275_B&c="+histlength+"&e="+debug]]);
 	}
 	
 	else if(name=="complexfit_pars"){
 		// custom object (chi2, TODO fit pars?)
-		urls = new Map([["chi2_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_chi2&b=275_A&c="+histlength+"&e="+debug],
-		                ["chi2_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_chi2&b=275_B&c="+histlength+"&e="+debug]
+		urls = new Map([["chi2_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=complex_chi2&b=275_A&c="+histlength+"&e="+debug],
+		                ["chi2_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=complex_chi2&b=275_B&c="+histlength+"&e="+debug]
 		                ]);
 	}
 	
 	else if(name=="peak1_height"){
-		urls = new Map([["rawfit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight1&b=275_A&c="+histlength+"&e="+debug],
-		                ["simplefit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight1&b=275_A&c="+histlength+"&e="+debug],
-		                ["complexfit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight1&b=275_A&c="+histlength+"&e="+debug],
-		                ["rawfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight1&b=275_B&c="+histlength+"&e="+debug],
-		                ["simplefit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight1&b=275_B&c="+histlength+"&e="+debug],
-		                ["complexfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight1&b=275_B&c="+histlength+"&e="+debug]]);
+		urls = new Map([["rawfit_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight1&b=275_A&c="+histlength+"&e="+debug],
+		                ["simplefit_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight1&b=275_A&c="+histlength+"&e="+debug],
+		                ["complexfit_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight1&b=275_A&c="+histlength+"&e="+debug],
+		                ["rawfit_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight1&b=275_B&c="+histlength+"&e="+debug],
+		                ["simplefit_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight1&b=275_B&c="+histlength+"&e="+debug],
+		                ["complexfit_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight1&b=275_B&c="+histlength+"&e="+debug]]);
 	}
 	
 	else if(name=="peak2_height"){
-		urls = new Map([["rawfit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight2&b=275_A&c="+histlength+"&e="+debug],
-		                ["simplefit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight2&b=275_A&c="+histlength+"&e="+debug],
-		                ["complexfit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight2&b=275_A&c="+histlength+"&e="+debug],
-		                ["rawfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight2&b=275_B&c="+histlength+"&e="+debug],
-		                ["simplefit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight2&b=275_B&c="+histlength+"&e="+debug],
-		                ["complexfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight2&b=275_B&c="+histlength+"&e="+debug]]);
+		urls = new Map([["rawfit_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight2&b=275_A&c="+histlength+"&e="+debug],
+		                ["simplefit_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight2&b=275_A&c="+histlength+"&e="+debug],
+		                ["complexfit_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight2&b=275_A&c="+histlength+"&e="+debug],
+		                ["rawfit_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheight2&b=275_B&c="+histlength+"&e="+debug],
+		                ["simplefit_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheight2&b=275_B&c="+histlength+"&e="+debug],
+		                ["complexfit_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheight2&b=275_B&c="+histlength+"&e="+debug]]);
 	}
 	
 	else if(name=="peak_diff"){
-		urls = new Map([["rawfit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheightdiff&b=275_A&c="+histlength+"&e="+debug],
-		                ["simplefit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheightdiff&b=275_A&c="+histlength+"&e="+debug],
-		                ["complexfit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheightdiff&b=275_A&c="+histlength+"&e="+debug],
-		                ["rawfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheightdiff&b=275_B&c="+histlength+"&e="+debug],
-		                ["simplefit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheightdiff&b=275_B&c="+histlength+"&e="+debug],
-		                ["complexfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheightdiff&b=275_B&c="+histlength+"&e="+debug]]);
+		urls = new Map([["rawfit_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheightdiff&b=275_A&c="+histlength+"&e="+debug],
+		                ["simplefit_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheightdiff&b=275_A&c="+histlength+"&e="+debug],
+		                ["complexfit_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheightdiff&b=275_A&c="+histlength+"&e="+debug],
+		                ["rawfit_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=raw_peakheightdiff&b=275_B&c="+histlength+"&e="+debug],
+		                ["simplefit_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=simple_peakheightdiff&b=275_B&c="+histlength+"&e="+debug],
+		                ["complexfit_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=complex_peakheightdiff&b=275_B&c="+histlength+"&e="+debug]]);
 	}
 	
 	else if(name=="gdconcentration"){
 		// custom object
 		// MarcusAnalysis
-//		urls = new Map([["rawfit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_gdconc&b=275_A&c="+histlength+"&e="+debug],
-//		                ["simple_fit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_gdconc&b=275_A&c="+histlength+"&e="+debug],
-//		                ["complex_fit_LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_gdconc&b=275_A&c="+histlength+"&e="+debug],
-//		                ["rawfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=raw_gdconc&b=275_B&c="+histlength+"&e="+debug],
-//		                ["simplefit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=simple_gdconc&b=275_B&c="+histlength+"&e="+debug],
-//		                ["complexfit_LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=complex_gdconc&b=275_B&c="+histlength+"&e="+debug]]);
+//		urls = new Map([["rawfit_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=raw_gdconc&b=275_A&c="+histlength+"&e="+debug],
+//		                ["simple_fit_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=simple_gdconc&b=275_A&c="+histlength+"&e="+debug],
+//		                ["complex_fit_LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=complex_gdconc&b=275_A&c="+histlength+"&e="+debug],
+//		                ["rawfit_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=raw_gdconc&b=275_B&c="+histlength+"&e="+debug],
+//		                ["simplefit_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=simple_gdconc&b=275_B&c="+histlength+"&e="+debug],
+//		                ["complexfit_LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=complex_gdconc&b=275_B&c="+histlength+"&e="+debug]]);
 		// MatthewAnalysisStrikesBack
-		urls = new Map([["LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=gdconc&b=275_A&c="+histlength+"&e="+debug],
-		                ["LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=gdconc&b=275_B&c="+histlength+"&e="+debug]]);
+		urls = new Map([["LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a=gdconc&b=275_A&c="+histlength+"&e="+debug],
+		                ["LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a=gdconc&b=275_B&c="+histlength+"&e="+debug]]);
 	}
 	
 	else if(name=="valve_state"){
 		// custom object
-		urls = new Map([["invalve","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=invalve"],
-		                ["outvalve","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=outvalve"]]);
+		urls = new Map([["invalve","/cgi-bin/marcus/get_measurement_values.cgi?a=invalve"],
+		                ["outvalve","/cgi-bin/marcus/get_measurement_values.cgi?a=outvalve"]]);
 	}
 	
 	else if(name=="pi_mem"){
 		// custom object
-		urls = new Map([["mem_free","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=mem&c="+histlength+"&e="+debug],
-		                ["cpu_usage","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=cpu&c="+histlength+"&e="+debug],
-		                ["disk_usage","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=hdd1&c="+histlength+"&e="+debug],
-		                ["temperature","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=temp&c="+histlength+"&e="+debug]]);
+		urls = new Map([["mem_free","/cgi-bin/marcus/get_measurement_values.cgi?a=mem&c="+histlength+"&e="+debug],
+		                ["cpu_usage","/cgi-bin/marcus/get_measurement_values.cgi?a=cpu&c="+histlength+"&e="+debug],
+		                ["disk_usage","/cgi-bin/marcus/get_measurement_values.cgi?a=hdd1&c="+histlength+"&e="+debug],
+		                ["temperature","/cgi-bin/marcus/get_measurement_values.cgi?a=temp&c="+histlength+"&e="+debug]]);
 	}
 	
 	else if(name=="valve_temps"){
 		// custom object
-		//urls = new Map([["valve1_temp","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=valve1_temp&c="+histlength+"&e="+debug],
-		//                ["valve2_temp","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=valve2_temp&c="+histlength+"&e="+debug]]);
-		urls = new Map([["valve_temp","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=valve_temp&c="+histlength+"&e="+debug]]);
+		//urls = new Map([["valve1_temp","/cgi-bin/marcus/get_measurement_values.cgi?a=valve1_temp&c="+histlength+"&e="+debug],
+		//                ["valve2_temp","/cgi-bin/marcus/get_measurement_values.cgi?a=valve2_temp&c="+histlength+"&e="+debug]]);
+		urls = new Map([["valve_temp","/cgi-bin/marcus/get_measurement_values.cgi?a=valve_temp&c="+histlength+"&e="+debug]]);
 	}
 	
 	else /*if(name=="metric")*/ {
 		// 
-		urls = new Map([["LEDA","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a="+name+"&b=275_A&c="+histlength+"&e="+debug],
-		                ["LEDB","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a="+name+"&b=275_B&c="+histlength+"&e="+debug]]);
+		urls = new Map([["LEDA","/cgi-bin/marcus/get_measurement_values.cgi?a="+name+"&b=275_A&c="+histlength+"&e="+debug],
+		                ["LEDB","/cgi-bin/marcus/get_measurement_values.cgi?a="+name+"&b=275_B&c="+histlength+"&e="+debug]]);
 	}
 	
 	//console.log("GetTraces got ",urls.size," urls for name ",name);
@@ -580,7 +580,7 @@ function check_for_new_data2(name) {
 	let timecheckname = "raw_gdconc";
 	if(name=="valve_state") timecheckname = "valvestate_inlet";
 	if(name=="pi_mem") timecheckname = "mem";
-	let getTimeUrl = "http://192.168.2.54/cgi-bin/marcus/get_last_trace_time.cgi?a="+timecheckname;
+	let getTimeUrl = "/cgi-bin/marcus/get_last_trace_time.cgi?a="+timecheckname;
 	//console.log("checking for new data for ",name," at ",getTimeUrl);
 	
 	try {

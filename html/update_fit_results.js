@@ -6,7 +6,7 @@ import { getDataFetchRequest } from './update_traces.js';
 async function GetFitStatus(){
 	
 	// send off a fetch request for the data
-	let datapromise = getDataFetchRequest("http://192.168.2.54/cgi-bin/marcus/get_fit_results.cgi", "text");
+	let datapromise = getDataFetchRequest("/cgi-bin/marcus/get_fit_results.cgi", "text");
 	
 	// register callback that will update the webpage based on the data once it arrives
 	datapromise.then(UpdateFitInfo);

@@ -249,7 +249,7 @@ function check_for_new_data() {
 	console.log("last_trace.js checking for new data");
 	
 	// check if the timestamp of the last trace has changed
-	let timeUrl = "http://192.168.2.54/cgi-bin/marcus/get_last_trace_time.cgi";
+	let timeUrl = "/cgi-bin/marcus/get_last_trace_time.cgi";
 	
 	// make a fetch request (i.e. invoke cgi script) to obtain a promise to data.
 	let timestampPromise = GetDataFetchRequest(timeUrl, 'text');
@@ -290,7 +290,7 @@ function check_for_new_data() {
 				// newest timestamp suggests we have new data! let's plot it.
 				//console.log("timestamp promise said we had new data, let's fetch it");
 				
-				let dataUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi";
+				let dataUrl = "/cgi-bin/marcus/get_latest_trace.cgi";
 				// we can attach 'then' handlers straight onto a function call that returns a promise
 				GetDataFetchRequest(dataUrl, "json").then(
 					// hanlder function once new data is returned

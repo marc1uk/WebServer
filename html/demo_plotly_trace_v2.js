@@ -128,7 +128,7 @@ function check_for_new_data() {
 	// ---------------
 	// get the timestamp of when the last trace was most recently updated
 	try {
-		let timestamp = GetDataFetchRequest("http://192.168.2.54/cgi-bin/marcus/get_last_trace_time.cgi");
+		let timestamp = GetDataFetchRequest("/cgi-bin/marcus/get_last_trace_time.cgi");
 		let newdataavailable = checkReturnedTimeStamp('last_trace', timestamp);
 		// register callbacks for when the timestamp promise returns
 		newdataavailable.then(
@@ -148,7 +148,7 @@ function check_for_new_data() {
 					// newest timestamp suggests we have new data! let's plot it.
 					console.log("timestamp promise said we had new data, let's fetch it");
 					
-					let dataUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi";
+					let dataUrl = "/cgi-bin/marcus/get_latest_trace.cgi";
 					// we can attach 'then' handlers straight onto a function call that returns a promise
 					GetDataFetchRequest(dataUrl).then(
 						// hanlder function once new data is returned

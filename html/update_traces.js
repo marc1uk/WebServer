@@ -165,11 +165,11 @@ async function UpdatePlot(name){
 	if(name=="dark_subtracted_data"){
 		// we'll overlay several traces on this plot - the dark subtracted trace,
 		// split into the sideband (fitted) region and the in-band (absorption) region
-		let intraceUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=dark_subtracted_data_in";
-		let outtraceUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=dark_subtracted_data_out";
+		let intraceUrl = "/cgi-bin/marcus/get_latest_trace.cgi?a=dark_subtracted_data_in";
+		let outtraceUrl = "/cgi-bin/marcus/get_latest_trace.cgi?a=dark_subtracted_data_out";
 		// we'll also overlay the original pure, and the result of the pure fitted to the data
-		let pureTraceUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=dark_subtracted_pure";
-		let pureFittedUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=pure_scaled";
+		let pureTraceUrl = "/cgi-bin/marcus/get_latest_trace.cgi?a=dark_subtracted_pure";
+		let pureFittedUrl = "/cgi-bin/marcus/get_latest_trace.cgi?a=pure_scaled";
 		// fetch tha data for all traces in parallel
 		console.log("UpdatePlot submitting 4 fetch requests for dark sub traces.");
 		console.log(name," fetch 1");
@@ -224,8 +224,8 @@ async function UpdatePlot(name){
 	} else if(name=="absorbance_trace"){
 	
 		// overlay data and fit
-		let dataUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=absorbance_trace";
-		let fitUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=absfit";
+		let dataUrl = "/cgi-bin/marcus/get_latest_trace.cgi?a=absorbance_trace";
+		let fitUrl = "/cgi-bin/marcus/get_latest_trace.cgi?a=absfit";
 		// fetch tha data for the two traces in parallel
 		console.log("UpdatePlot submitting 2 fetch requests for absorbance traces.");
 		console.log(name," fetch 1");
@@ -252,7 +252,7 @@ async function UpdatePlot(name){
 		
 	} else {
 		console.log("UpdatePlot submitting fetch request for trace data ",name);
-		let dataUrl = "http://192.168.2.54/cgi-bin/marcus/get_latest_trace.cgi?a=" + name;
+		let dataUrl = "/cgi-bin/marcus/get_latest_trace.cgi?a=" + name;
 		let newdata_promise = getDataFetchRequest(dataUrl, "json");
 		console.log("UpdatePlot awaiting parsetrace for ",name);
 		//console.log("building traces from data ",newdata);
@@ -289,9 +289,9 @@ function check_for_new_data(name) {
 	console.log("check_for_new_data called for ",name);
 	let getTimeUrl = "";
 	if(name=="dark_subtracted_data"){
-		getTimeUrl = "http://192.168.2.54/cgi-bin/marcus/get_last_trace_time.cgi?a=dark_subtracted_data_in";
+		getTimeUrl = "/cgi-bin/marcus/get_last_trace_time.cgi?a=dark_subtracted_data_in";
 	} else {
-		getTimeUrl = "http://192.168.2.54/cgi-bin/marcus/get_last_trace_time.cgi?a=" + name;
+		getTimeUrl = "/cgi-bin/marcus/get_last_trace_time.cgi?a=" + name;
 	}
 	//console.log("checking for new data for ",name," at ",getTimeUrl);
 	

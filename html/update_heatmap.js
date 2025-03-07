@@ -114,14 +114,14 @@ async function GetTraces(name){
 	
 	if(name=="transparency_samples"){
 		// mean, width
-		urls = new Map([["red", "http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency&d=red&c="+histlength],
-		                ["green","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency&d=green&c="+histlength],
-		                ["blue","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency&d=blue&c="+histlength]]);
+		urls = new Map([["red", "/cgi-bin/marcus/get_measurement_values.cgi?a=transparency&d=red&c="+histlength],
+		                ["green","/cgi-bin/marcus/get_measurement_values.cgi?a=transparency&d=green&c="+histlength],
+		                ["blue","/cgi-bin/marcus/get_measurement_values.cgi?a=transparency&d=blue&c="+histlength]]);
 	}
 	
 	if(name=="transparency_heatmap"){
 		// mean, width
-		urls = new Map([["heatmap","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=transparency_heatmap&c="+histlength]]);
+		urls = new Map([["heatmap","/cgi-bin/marcus/get_measurement_values.cgi?a=transparency_heatmap&c="+histlength]]);
 	}
 	
 	//console.log("GetTraces got ",urls.size," urls for name ",name);
@@ -201,7 +201,7 @@ async function UpdateHeatmap(name){
 // retrieve new data and update the plot
 function check_for_new_data3(name) {
 	
-	let getTimeUrl = "http://192.168.2.54/cgi-bin/marcus/get_last_trace_time.cgi";
+	let getTimeUrl = "/cgi-bin/marcus/get_last_trace_time.cgi";
 	//console.log("checking for new data for ",name," at ",getTimeUrl);
 	
 	try {

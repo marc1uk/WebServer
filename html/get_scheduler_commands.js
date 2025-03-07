@@ -49,7 +49,7 @@ function updateSchedulerCommands() {
 	// or by giving the active row a unique class, and setting the css style of it?
 	try {
 		// GetDataFetchRequest is defined in last_trace.js
-		GetDataFetchRequest("http://192.168.2.54/cgi-bin/marcus/get_scheduler_commands.cgi").then(
+		GetDataFetchRequest("/cgi-bin/marcus/get_scheduler_commands.cgi").then(
 			function(result){
 				// get the div element to update
 				let HTMLDIV = document.getElementById('scheduler_commands');
