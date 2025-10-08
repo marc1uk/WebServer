@@ -357,8 +357,8 @@ async function GetTraces(name){
 	
 	else if(name=="valve_state"){
 		// custom object
-		urls = new Map([["invalve","/cgi-bin/marcus/get_measurement_values.cgi?a=invalve"],
-		                ["outvalve","/cgi-bin/marcus/get_measurement_values.cgi?a=outvalve"]]);
+		urls = new Map([["switching","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=switching_valve"],
+		                ["holding","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=holding_valve"]]);
 	}
 	
 	else if(name=="pi_mem"){
@@ -518,8 +518,16 @@ async function UpdateTimeSeries(name){
 	
 	// set plot type for each trace to scatter
 	for(let i = 0; i < traces.length; i++) {
-		traces[i]['type'] = 'scatter';
+		traces[i]['type'] = 'scattergl';
 		traces[i]['mode'] = 'markers+lines';
+		// FIXME HACK for alignment XXX XXX XXX XXX
+		/*
+		if(name=='gdconcentration'){
+			for(let j=0; j<traces[i].y.length; j++){
+				if(traces[i].y[j] < 0.0599) traces[i].y[j] = traces[i].y[j] + 0.0009;
+			}
+		}
+		*/
 	}
 	
 	//console.log("UpdateTimeSeries for name ",name," had ",traces.length," traces");

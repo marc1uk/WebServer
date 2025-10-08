@@ -93,16 +93,16 @@
         <input type="text" class="btn" name="source_url" value="URL" style="display: none;">
         </div>
         
-        <!-- INLET VALVE -->
+        <!-- INLET/SWITCHING VALVE -->
         <div class="form-row d-flex justify-content-center">
-        <label for="invalve" class="col col-form-label" style="text-align: right;">Inlet Valve: </label>
-        <input name="Valve_inlet" id="invalve" type="submit" class="btn btn-warning" value="UNKNOWN" >
+        <label for="switching" class="col col-form-label" style="text-align: right;">Valve Switching Output: </label>
+        <input name="Valve_inlet" id="switching" type="submit" class="btn btn-warning" value="UNKNOWN" >
         </div>
          
         <!-- OUTLET VALVE -->
         <div class="form-row d-flex justify-content-center">
-        <label for="outvalve" class="col col-form-label" style="text-align: right;">Outlet Valve: </label>
-        <input name="Valve_outlet" id="outvalve" type="submit" class="btn btn-warning" value="UNKNOWN" >
+        <label for="holding" class="col col-form-label" style="text-align: right;">Valve Holding Output: </label>
+        <input name="Valve_outlet" id="holding" type="submit" class="btn btn-warning" value="UNKNOWN" >
         <input type="text" class="btn" name="source_url" value="URL" style="display: none;">
         </div>
         

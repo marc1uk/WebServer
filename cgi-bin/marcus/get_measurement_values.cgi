@@ -50,10 +50,12 @@ else
 	DBNAME="rundb"
 fi
 
-DEBUGCRIT='run>10000 AND'
-#DEBUGCRIT="run>10000 AND timestamp > '2023-12-26'::timestamptz AND timestamp < '2024-02-01'::timestamptz AND"
 if [ "${DEBUG}" == "false" ]; then
 	DEBUGCRIT="run<10000 AND"
+else
+	DEBUGCRIT='run>20000 AND'
+	#DEBUGCRIT='run>10000 AND run<20000 AND'
+	#DEBUGCRIT="run>10000 AND timestamp > '2023-12-26'::timestamptz AND timestamp < '2024-02-01'::timestamptz AND"
 fi
 
 TOOL='MatthewAnalysisStrikesBack'
@@ -129,6 +131,8 @@ KNOWN_MEASUREMENTS_Y['hdd1']="SELECT hdd1 FROM stats ORDER BY time DESC"
 
 KNOWN_MEASUREMENTS_Y['invalve']="SELECT values->'invalve' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_Y['outvalve']="SELECT values->'outvalve' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['switching_valve']="SELECT values->'switching_valve' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_Y['holding_valve']="SELECT values->'holding_valve' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_Y['pump']="SELECT values->'pump' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_Y['power']="SELECT values->'power' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_Y['valve_temp']="SELECT values FROM webpage WHERE name='valve_temp' ORDER BY timestamp DESC"
@@ -196,6 +200,8 @@ KNOWN_MEASUREMENTS_X['hdd1']="SELECT time FROM stats ORDER BY time DESC"
 
 KNOWN_MEASUREMENTS_X['invalve']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_X['outvalve']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['switching_valve']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
+KNOWN_MEASUREMENTS_X['holding_valve']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_X['pump']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE AND name='gpio_status' BY timestamp DESC"
 KNOWN_MEASUREMENTS_X['power']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_X['valve_temp']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE name='valve_temp' ORDER BY timestamp DESC"

@@ -1,6 +1,21 @@
 #!/bin/bash
+#set -x
 
 CGIDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+############################################################
+############################################################
+# FIXME OVERRIDE TEMPORARILY DUE TO ISSUES
+#echo "#bf{#color[2]{GAD CURRENTLY UNDERGOING MAINTENANCE, ABNORMALITIES CAN BE SAFELY IGNORED}}" > ${CGIDIR}/gadstatus.txt
+#cp ${CGIDIR}/blank.png ${CGIDIR}/transparency_history.png
+#cp ${CGIDIR}/blank.png ${CGIDIR}/gdconc_history.png
+#cd /home/gad/GDConcMeasure/
+#. Setup.sh
+#cd ${CGIDIR}
+#${CGIDIR}/makeStatusFile ${CGIDIR}/gadstatus.txt
+#exit 0
+############################################################
+############################################################
 
 # check hardware status; power on, spectrometer connected, etc.
 # invoke cgi script, using tail -n -2 to strip first two lines, which are for html only
@@ -285,6 +300,7 @@ echo "formatting done"
 ########################################
 
 DUMMYGDONLY=0
+echo "flag is '$1':'${DUMMYGDONLY}'"
 if [ ${DUMMYGDONLY} -eq 0 ] && [ -n $1 ] && [ "$1" == "dummy" ]; then
 	RANDMINS=$(seq 3 1 10 | shuf | head -n1)
 	RANDSECS=$(seq 0 1 60 | shuf | head -n1)
@@ -320,7 +336,7 @@ fi
 # XXX is it worth plotting all these timestamps? is it sufficient to have just
 # one timestamp per LED? entries are made even if the fitting fails right,
 # which would show up on the graph..
-#bf{#color[2]{GAD CURRENTLY UNDERGOING MAINTENANCE, ABNORMALITIES CAN BE SAFELY IGNORED}}
+#bf{#color[2]{GAD EXPERIENCING TECHNICAL DIFFICULTIES, NO NEED TO CONTACT EXPERTS}}
 cat << EOF > ${CGIDIR}/gadstatus.txt
 
 #bf{#color[9]{Check this timestamp is within 10 minutes of the current time}}

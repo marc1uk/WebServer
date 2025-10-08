@@ -20,7 +20,7 @@ async function GetHardwareStatus(){
 	let datapromises = new Map();
 	for(const akey of urls.keys()){
 		//console.log("getting data promise for url ",urls.get(akey));
-		datapromises.set(akey, getDataFetchRequest(urls.get(akey), "text"));
+		datapromises.set(akey, getDataFetchRequest(urls.get(akey), "json"));
 	}
 	
 	// call handlers that will update the webpage based on the data as it arrives
@@ -34,9 +34,11 @@ async function UpdateHWInfo(name, responsepromise){
 	
 	// need to wait for the reponse to come in before we can handle it
 	let response = await responsepromise;
-	if(name=="power" || name=="pump" || name=="invalve" || name=="outvalve"){
+	if(name=="power" || name=="pump" || name=="holding" || name=="switching"){
 		let HTMLDIV = document.getElementById(name);
 		HTMLDIV.value=response;
+		//console.log(`state of ${name} is ${response}`);
+		//console.log(responsepromise);
 		if(response=="ON" || response=="OPEN" || response=="ONLINE"){
 			HTMLDIV.classList.remove('btn-danger');
 			HTMLDIV.classList.remove('btn-warning');

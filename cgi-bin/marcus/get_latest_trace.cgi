@@ -3,12 +3,16 @@
 # must have this or it complains 'malformed header'
 echo -e "Content-type:text/html\n"
 
+#LOGFILE=/tmp/getlatesttrace.log
+LOGFILE=/dev/null
+date > ${LOGFILE}
+
 # return a dummy value on error
 DUMMYSTRING='{"xvals":[],"yvals":[],"xerrs":[],"yerrs":[]}'
 
 #echo "QUERY_STRING is ${QUERY_STRING}"
-QUERY_STRING=${QUERY_STRING:-"a=last_trace"}
-PATTERN='a=(.*)'
+QUERY_STRING=${QUERY_STRING:-"a=last_trace&b=0"}
+PATTERN='a=([^&]+)&b=(.*)'
 [[ ${QUERY_STRING} =~ ${PATTERN} ]]
 if [ $? -ne 0 ]; then
 	#echo "unrecognised trace type: '"${QUERY_STRING}"'"
@@ -16,10 +20,26 @@ if [ $? -ne 0 ]; then
 	exit 1;
 fi
 TRACE=${BASH_REMATCH[1]}
-#echo "known measurement '${TRACE}'"
+DEBUG=${BASH_REMATCH[2]}
+echo "measurement '${TRACE}'" >> ${LOGFILE}
+echo "DEBUG is '${DEBUG}'"  >> ${LOGFILE}
+
+DEBUGCRIT=""
+if [ "${DEBUG}" == "true" ]; then
+	# latest trace is stored in webpage table which doesn't have a run number field so we put it in the data field
+	#DEBUGCRIT="encode(data,'escape')::json->'run'>10000 AND"
+	# for the moment not all entries have this format, and casting to JSON throws an error if its not valid
+	# (this not only skips such rows but kills the whole query)
+	# so we have this crazy over-complicated thing
+	DEBUGCRIT="data IS NOT NULL AND SUBSTRING(encode(data,'escape')::text,1,1)='{' AND (encode(data,'escape')::json->>'run')::int > 10000 AND"
+fi
+echo "DEBUGCRIT is '${DEBUGCRIT}'"  >> ${LOGFILE}
+
+QUERY="SELECT values::json->'xvals' FROM webpage WHERE ${DEBUGCRIT} name='${TRACE}' ORDER BY timestamp DESC LIMIT 1;";
+echo "query will be '${QUERY}'" >> ${LOGFILE}
 
 # print out array of wavelengths,
-RETX=$(psql -U postgres -d rundb -A -t -c "SELECT values::json->'xvals' FROM webpage WHERE name='"${TRACE}"' ORDER BY timestamp DESC LIMIT 1;")
+RETX=$(psql -U postgres -d rundb -A -t -c "${QUERY}")
 # we definitely need an x-array
 if [ $? -ne 0 ] || [ -z "${RETX}" ]; then
 	#echo "no x array"
@@ -27,7 +47,9 @@ if [ $? -ne 0 ] || [ -z "${RETX}" ]; then
 	exit 1;
 fi
 #echo "got X"
-RETY=$(psql -U postgres -d rundb -A -t -c "SELECT values::json->'yvals' FROM webpage WHERE name='"${TRACE}"' ORDER BY timestamp DESC LIMIT 1;")
+QUERY="SELECT values::json->'yvals' FROM webpage WHERE ${DEBUGCRIT} name='${TRACE}' ORDER BY timestamp DESC LIMIT 1;"
+echo "query will be '${QUERY}'" >> ${LOGFILE}
+RETY=$(psql -U postgres -d rundb -A -t -c "${QUERY}" )
 # we definitely need a y array
 if [ $? -ne 0 ] || [ -z "${RETY}" ]; then
 	#echo "no y array"
@@ -46,18 +68,18 @@ PATTERN='\[[0-9, .-]+\]'
 # https://stackoverflow.com/questions/55377810/bash-regex-with-hyphen-and-dot
 [[ ${RETX} =~ ${PATTERN} ]]
 if [ $? -ne 0 ]; then
-	#echo "failed to match x array pattern"
-	#echo "RET: '${RETX}'"
-	#echo "PATTERN: '${PATTERN}'"
+	echo "failed to match x array pattern" >> ${LOGFILE}
+	echo "RET: '${RETX}'" >> ${LOGFILE}
+	echo "PATTERN: '${PATTERN}'" >> ${LOGFILE}
 	echo ${DUMMYSTRING}
 	exit 1;
 fi
 #echo "x matches pattern "
 [[ ${RETY} =~ ${PATTERN} ]]
 if [ $? -ne 0 ]; then
-	#echo "failed to match y array pattern"
-	#echo "RET: '${RETY}'"
-	#echo "PATTERN: '${PATTERN}'"
+	echo "failed to match y array pattern" >> ${LOGFILE}
+	echo "RET: '${RETY}'" >> ${LOGFILE}
+	echo "PATTERN: '${PATTERN}'" >> ${LOGFILE}
 	echo ${DUMMYSTRING}
 	exit 1;
 fi
@@ -66,20 +88,20 @@ fi
 RET='{"xvals":'"${RETX}, "'"yvals":'"${RETY}"
 
 # we may optionally have x and y error arrays
-RETEX=$(psql -U postgres -d rundb -A -t -c "SELECT values::json->'xerrs' FROM webpage WHERE name='"${TRACE}"' ORDER BY timestamp DESC LIMIT 1;")
+RETEX=$(psql -U postgres -d rundb -A -t -c "SELECT values::json->'xerrs' FROM webpage WHERE ${DEBUGCRIT} name='"${TRACE}"' ORDER BY timestamp DESC LIMIT 1;")
 RETEXOK=$?
-RETEY=$(psql -U postgres -d rundb -A -t -c "SELECT values::json->'yerrs' FROM webpage WHERE name='"${TRACE}"' ORDER BY timestamp DESC LIMIT 1;")
+RETEY=$(psql -U postgres -d rundb -A -t -c "SELECT values::json->'yerrs' FROM webpage WHERE ${DEBUGCRIT} name='"${TRACE}"' ORDER BY timestamp DESC LIMIT 1;")
 RETEYOK=$?
 #RET=$(psql -U postgres -d rundb -A -t -c "SELECT values FROM webpage WHERE name='"${TRACE}"' ORDER BY timestamp DESC LIMIT 1;")
 
 if [ ${RETEXOK} -eq 0 ] && [ ! -z "${RETEX}" ]; then
 	# add x error array
-	#echo "adding x err array"
+	echo "adding x err array" >> ${LOGFILE}
 	RET="${RET},"'"xerr":'"${RETEX}"
 fi
 if [ ${RETEYOK} -eq 0 ] && [ ! -z "${RETEY}" ]; then
 	# add y error array
-	#echo "adding y err array"
+	echo "adding y err array" >> ${LOGFILE}
 	RET="${RET},"'"yerr":'"${RETEY}"
 fi
 
