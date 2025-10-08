@@ -10,8 +10,8 @@ async function GetHardwareStatus(){
 	
 	urls = new Map([["power", "/cgi-bin/marcus/get_power_state.cgi"],
 	                ["pump", "/cgi-bin/marcus/get_pump_state.cgi"],
-	                ["invalve", "/cgi-bin/marcus/get_valve_state.cgi?&a=inlet"],
-	                ["outvalve", "/cgi-bin/marcus/get_valve_state.cgi?&a=outlet"],
+	                ["switching", "/cgi-bin/marcus/get_valve_state.cgi?&a=switching"],
+	                ["holding", "/cgi-bin/marcus/get_valve_state.cgi?&a=holding"],
 	                ["pwmboard", "/cgi-bin/marcus/get_pwmboard_state.cgi"],
 	                ["spectrometer", "/cgi-bin/marcus/get_spectrometer_state.cgi"],
 	                ["ledswitches", "/cgi-bin/marcus/get_led_states.cgi"]]);

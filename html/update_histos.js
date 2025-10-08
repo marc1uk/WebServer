@@ -357,8 +357,8 @@ async function GetTraces(name){
 	
 	else if(name=="valve_state"){
 		// custom object
-		urls = new Map([["switching","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=switching_valve"],
-		                ["holding","http://192.168.2.54/cgi-bin/marcus/get_measurement_values.cgi?a=holding_valve"]]);
+		urls = new Map([["switching","/cgi-bin/marcus/get_measurement_values.cgi?a=switching_valve"],
+		                ["holding","/cgi-bin/marcus/get_measurement_values.cgi?a=holding_valve"]]);
 	}
 	
 	else if(name=="pi_mem"){
