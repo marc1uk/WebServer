@@ -133,7 +133,8 @@
 <!--        <div class="d-flex justify-content-center"> -->
           <!-- LED STATES -->
           <div class="form-check form-switch ">
-            <?php $data = file_get_contents("/cgi-bin/marcus/get_led_buttons.cgi",0); echo $data; ?>
+          <!-- we need to encode it as a url to get it to run the cgi, not dump its contents -->
+            <?php $data = file_get_contents("http://localhost/cgi-bin/marcus/get_led_buttons.cgi",0); echo $data; ?>
           </div>
 <!--        </div> --> <!-- end vertical alignment div -->
       </form>

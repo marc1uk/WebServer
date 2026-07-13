@@ -44,7 +44,7 @@ done
 if [ -z "${LED}" ]; then
 	LED="%"
 fi
-if [ "${MEASUREMENT}" == "mem" ] || [ "${MEASUREMENT}" == "cpu" ] || [ "${MEASUREMENT}" == "hdd1" ] || [ "${MEASUREMENT}" == "temp" ]; then
+if [ "${MEASUREMENT}" == "mem" ] || [ "${MEASUREMENT}" == "cpu" ] || [ "${MEASUREMENT}" == "hdd1" ] || [ "${MEASUREMENT}" == "temp" ] || [ "${MEASUREMENT}" == "valve_temp" ]; then
 	DBNAME="gd"
 else
 	DBNAME="rundb"
@@ -53,7 +53,7 @@ fi
 if [ "${DEBUG}" == "false" ]; then
 	DEBUGCRIT="run<10000 AND"
 else
-	DEBUGCRIT='run>20000 AND'
+	DEBUGCRIT='run>10000 AND run<10500 AND'
 	#DEBUGCRIT='run>10000 AND run<20000 AND'
 	#DEBUGCRIT="run>10000 AND timestamp > '2023-12-26'::timestamptz AND timestamp < '2024-02-01'::timestamptz AND"
 fi
@@ -128,6 +128,7 @@ KNOWN_MEASUREMENTS_Y['mem']="SELECT mem FROM stats ORDER BY time DESC"
 KNOWN_MEASUREMENTS_Y['cpu']="SELECT cpu FROM stats ORDER BY time DESC"
 KNOWN_MEASUREMENTS_Y['temp']="SELECT temp FROM stats ORDER BY time DESC"
 KNOWN_MEASUREMENTS_Y['hdd1']="SELECT hdd1 FROM stats ORDER BY time DESC"
+KNOWN_MEASUREMENTS_Y['valve_temp']="SELECT valve_temp FROM stats ORDER BY time DESC"
 
 KNOWN_MEASUREMENTS_Y['invalve']="SELECT values->'invalve' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_Y['outvalve']="SELECT values->'outvalve' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
@@ -135,7 +136,8 @@ KNOWN_MEASUREMENTS_Y['switching_valve']="SELECT values->'switching_valve' FROM w
 KNOWN_MEASUREMENTS_Y['holding_valve']="SELECT values->'holding_valve' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_Y['pump']="SELECT values->'pump' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_Y['power']="SELECT values->'power' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_Y['valve_temp']="SELECT values FROM webpage WHERE name='valve_temp' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS_Y['valve_temp']="SELECT values FROM webpage WHERE name='valve_temp' ORDER BY timestamp DESC"
+
 
 declare -A KNOWN_MEASUREMENTS_X
 KNOWN_MEASUREMENTS_X['dark_mean']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM data WHERE ${DEBUGCRIT} tool='${TOOL}' AND name='darktrace_params' AND ledname LIKE '${LED}' ORDER BY timestamp DESC"
@@ -197,6 +199,7 @@ KNOWN_MEASUREMENTS_X['mem']="SELECT time FROM stats ORDER BY time DESC"
 KNOWN_MEASUREMENTS_X['cpu']="SELECT time FROM stats ORDER BY time DESC"
 KNOWN_MEASUREMENTS_X['temp']="SELECT time FROM stats ORDER BY time DESC"
 KNOWN_MEASUREMENTS_X['hdd1']="SELECT time FROM stats ORDER BY time DESC"
+KNOWN_MEASUREMENTS_X['valve_temp']="SELECT time FROM stats ORDER BY time DESC"
 
 KNOWN_MEASUREMENTS_X['invalve']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_X['outvalve']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
@@ -204,7 +207,7 @@ KNOWN_MEASUREMENTS_X['switching_valve']="SELECT timestamp at time zone 'europe/l
 KNOWN_MEASUREMENTS_X['holding_valve']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
 KNOWN_MEASUREMENTS_X['pump']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE AND name='gpio_status' BY timestamp DESC"
 KNOWN_MEASUREMENTS_X['power']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE name='gpio_status' ORDER BY timestamp DESC"
-KNOWN_MEASUREMENTS_X['valve_temp']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE name='valve_temp' ORDER BY timestamp DESC"
+#KNOWN_MEASUREMENTS_X['valve_temp']="SELECT timestamp at time zone 'europe/london' at time zone 'jst' FROM webpage WHERE name='valve_temp' ORDER BY timestamp DESC"
 
 if [[ ! " ${!KNOWN_MEASUREMENTS_X[*]} " =~ " ${MEASUREMENT} " ]] || [[ ! " ${!KNOWN_MEASUREMENTS_Y[*]} " =~ " ${MEASUREMENT} " ]]; then
 	echo "measuremenet '${MEASUREMENT}' not in array" >> ./debug.txt

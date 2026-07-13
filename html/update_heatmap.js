@@ -170,6 +170,7 @@ async function UpdateHeatmap(name){
 	
 	//console.log("UpdateHeatmap for name ",name," had ",traces.length," traces");
 	//console.log("UpdateHeatmap for ",name," traces[0] is ",traces[0]);
+	const linecolours = ['red', 'green', 'blue'];
 	
 	// set plot type to heatmap
 	if(name=="transparency_heatmap"){
@@ -179,6 +180,8 @@ async function UpdateHeatmap(name){
 		for(let i=0; i<traces.length; ++i){
 			traces[i]['type'] = 'scatter';
 			traces[i]['mode'] = 'lines+markers';
+			traces[i]['marker'] = { color: linecolours[i] };
+			traces[i]['line'] = { color: linecolours[i] };
 		}
 	}
 	

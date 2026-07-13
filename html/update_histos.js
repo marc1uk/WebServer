@@ -266,7 +266,7 @@ async function GetTraces(name){
 		urls = new Map([["pure_scaling_A","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_scaling&b=275_A&c="+histlength+"&e="+debug],
 		                ["pure_translation_A","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_translation&b=275_A&c="+histlength+"&e="+debug],
 		                ["pure_stretch_A","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_stretch&b=275_A&c="+histlength+"&e="+debug],
-//		                ["gd_scaling_A","/cgi-bin/marcus/get_measurement_values.cgi?a=gd_scaling&b=275_A&c="+histlength+"&e="+debug],  // FIXME currently fixed to 0, fit sidebands only
+		                ["gd_scaling_A","/cgi-bin/marcus/get_measurement_values.cgi?a=gd_scaling&b=275_A&c="+histlength+"&e="+debug],  // FIXME currently fixed to 0, fit sidebands only
 		                ["second_order_background_A","/cgi-bin/marcus/get_measurement_values.cgi?a=second_order_background&b=275_A&c="+histlength+"&e="+debug],
 		                ["first_order_background_A","/cgi-bin/marcus/get_measurement_values.cgi?a=first_order_background&b=275_A&c="+histlength+"&e="+debug],
 //		                ["zeroth_order_background_A","/cgi-bin/marcus/get_measurement_values.cgi?a=zeroth_order_background&b=275_A&c="+histlength+"&e="+debug]  // FIXME currently fixed to 0, redundant with pure_scaling due to incorrect implementation
@@ -274,7 +274,7 @@ async function GetTraces(name){
 		                ["pure_scaling_B","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_scaling&b=275_B&c="+histlength+"&e="+debug],
 		                ["pure_translation_B","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_translation&b=275_B&c="+histlength+"&e="+debug],
 		                ["pure_stretch_B","/cgi-bin/marcus/get_measurement_values.cgi?a=pure_stretch&b=275_B&c="+histlength+"&e="+debug],
-//		                ["gd_scaling_B","/cgi-bin/marcus/get_measurement_values.cgi?a=gd_scaling&b=275_B&c="+histlength+"&e="+debug],  // FIXME currently fixed to 0, fit sidebands only
+		                ["gd_scaling_B","/cgi-bin/marcus/get_measurement_values.cgi?a=gd_scaling&b=275_B&c="+histlength+"&e="+debug],  // FIXME currently fixed to 0, fit sidebands only
 		                ["second_order_background_B","/cgi-bin/marcus/get_measurement_values.cgi?a=second_order_background&b=275_B&c="+histlength+"&e="+debug],
 		                ["first_order_background_B","/cgi-bin/marcus/get_measurement_values.cgi?a=first_order_background&b=275_B&c="+histlength+"&e="+debug]
 //		                ["zeroth_order_background_B","/cgi-bin/marcus/get_measurement_values.cgi?a=zeroth_order_background&b=275_B&c="+histlength+"&e="+debug]  // FIXME currently fixed to 0, redundant with pure_scaling due to incorrect implementation

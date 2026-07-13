@@ -35,7 +35,7 @@ if [ "${DEBUG}" == "true" ]; then
 fi
 echo "DEBUGCRIT is '${DEBUGCRIT}'"  >> ${LOGFILE}
 
-QUERY="SELECT values::json->'xvals' FROM webpage WHERE ${DEBUGCRIT} name='${TRACE}' ORDER BY timestamp DESC LIMIT 1;";
+QUERY="SELECT values::json->'xvals' FROM webpage WHERE ${DEBUGCRIT} name='${TRACE}' ORDER BY id DESC LIMIT 1;"; # order by timestamp
 echo "query will be '${QUERY}'" >> ${LOGFILE}
 
 # print out array of wavelengths,
@@ -47,7 +47,7 @@ if [ $? -ne 0 ] || [ -z "${RETX}" ]; then
 	exit 1;
 fi
 #echo "got X"
-QUERY="SELECT values::json->'yvals' FROM webpage WHERE ${DEBUGCRIT} name='${TRACE}' ORDER BY timestamp DESC LIMIT 1;"
+QUERY="SELECT values::json->'yvals' FROM webpage WHERE ${DEBUGCRIT} name='${TRACE}' ORDER BY id DESC LIMIT 1;" # order by timestamp
 echo "query will be '${QUERY}'" >> ${LOGFILE}
 RETY=$(psql -U postgres -d rundb -A -t -c "${QUERY}" )
 # we definitely need a y array
@@ -88,9 +88,9 @@ fi
 RET='{"xvals":'"${RETX}, "'"yvals":'"${RETY}"
 
 # we may optionally have x and y error arrays
-RETEX=$(psql -U postgres -d rundb -A -t -c "SELECT values::json->'xerrs' FROM webpage WHERE ${DEBUGCRIT} name='"${TRACE}"' ORDER BY timestamp DESC LIMIT 1;")
+RETEX=$(psql -U postgres -d rundb -A -t -c "SELECT values::json->'xerrs' FROM webpage WHERE ${DEBUGCRIT} name='"${TRACE}"' ORDER BY id DESC LIMIT 1;")
 RETEXOK=$?
-RETEY=$(psql -U postgres -d rundb -A -t -c "SELECT values::json->'yerrs' FROM webpage WHERE ${DEBUGCRIT} name='"${TRACE}"' ORDER BY timestamp DESC LIMIT 1;")
+RETEY=$(psql -U postgres -d rundb -A -t -c "SELECT values::json->'yerrs' FROM webpage WHERE ${DEBUGCRIT} name='"${TRACE}"' ORDER BY id DESC LIMIT 1;")
 RETEYOK=$?
 #RET=$(psql -U postgres -d rundb -A -t -c "SELECT values FROM webpage WHERE name='"${TRACE}"' ORDER BY timestamp DESC LIMIT 1;")
 
